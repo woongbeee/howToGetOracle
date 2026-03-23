@@ -1,0 +1,5 @@
+export { parseSQL } from './parser'
+export { optimize } from './planGenerator'
+export { generateAccessPaths, estimateJoinCost, computeSelectivity } from './estimator'
+export { getTableStats, getColumnStats, TABLE_STATS } from './stats'
+export type * from './types'
