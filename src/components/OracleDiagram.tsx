@@ -321,7 +321,7 @@ export function OracleDiagram() {
   const stepLabel = STEP_PROCESS_LABEL[displayStep]
 
   return (
-    <div className="flex h-full flex-col gap-3 overflow-auto p-4">
+    <div className="flex h-full flex-col gap-3 overflow-y-auto p-4">
       {/* Instance header */}
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-2 rounded-lg border border-blue-300 bg-blue-50 px-3 py-1.5">

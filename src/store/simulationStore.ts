@@ -174,14 +174,14 @@ export const useSimulationStore = create<SimulationState & SimulationActions>((s
         label: '쿼리 파싱',
         message: 'Server Process가 SQL 수신 → Syntax 검사 → Semantic 검사 (테이블·컬럼 존재 여부)',
         result: 'info',
-        duration: 800,
+        duration: 1400,
       },
       {
         step: 'library-cache-check',
         label: 'Library Cache 탐색',
         message: `Shared Pool → Library Cache에서 동일 쿼리(Hash값) 탐색 중…`,
         result: 'info',
-        duration: 1000,
+        duration: 1800,
       },
       ...(libraryCacheHit
         ? [
@@ -190,7 +190,7 @@ export const useSimulationStore = create<SimulationState & SimulationActions>((s
               label: 'Library Cache HIT',
               message: 'Soft Parse 성공 — 캐시된 실행 계획 재사용. Hard Parse 불필요',
               result: 'hit' as StepSummary['result'],
-              duration: 800,
+              duration: 1400,
             },
           ]
         : [
@@ -199,14 +199,14 @@ export const useSimulationStore = create<SimulationState & SimulationActions>((s
               label: 'Library Cache MISS',
               message: 'Hard Parse 시작 — 캐시에 없음. Data Dictionary Cache 참조 필요',
               result: 'miss' as StepSummary['result'],
-              duration: 700,
+              duration: 1200,
             },
             {
               step: 'dict-cache-lookup' as SimulationStep,
               label: 'Dict Cache 조회',
               message: 'Data Dictionary Cache에서 테이블·컬럼·인덱스 메타데이터 조회',
               result: 'info' as StepSummary['result'],
-              duration: 800,
+              duration: 1400,
             },
             {
               step: 'optimizing' as SimulationStep,
@@ -215,7 +215,7 @@ export const useSimulationStore = create<SimulationState & SimulationActions>((s
                 ? `Cost-Based Optimizer 실행 계획 생성 완료 — 총 비용 ${chosenPlan.totalCost.toFixed(1)}, 예상 rows ${chosenPlan.estimatedRows} [${planDesc}]`
                 : 'Cost-Based Optimizer(CBO)가 최적 실행 계획 생성 중',
               result: 'ok' as StepSummary['result'],
-              duration: 1400,
+              duration: 2400,
             },
           ]),
       {
@@ -223,7 +223,7 @@ export const useSimulationStore = create<SimulationState & SimulationActions>((s
         label: 'Buffer Cache 탐색',
         message: 'Database Buffer Cache에서 필요한 데이터 블록 탐색',
         result: 'info',
-        duration: 900,
+        duration: 1600,
       },
       ...(bufferCacheHit
         ? [
@@ -232,7 +232,7 @@ export const useSimulationStore = create<SimulationState & SimulationActions>((s
               label: 'Buffer Cache HIT',
               message: '데이터 블록이 메모리(Buffer Cache)에 존재 — 디스크 I/O 없이 반환',
               result: 'hit' as StepSummary['result'],
-              duration: 700,
+              duration: 1200,
             },
           ]
         : [
@@ -243,14 +243,14 @@ export const useSimulationStore = create<SimulationState & SimulationActions>((s
                 ? 'Buffer Flush 이후 캐시가 비워짐 — 디스크 I/O 필요'
                 : '데이터 블록이 메모리에 없음 — 디스크 I/O 발생',
               result: 'miss' as StepSummary['result'],
-              duration: 600,
+              duration: 1000,
             },
             {
               step: 'disk-io' as SimulationStep,
               label: '디스크 I/O',
               message: 'DBWn이 Data File에서 블록 읽기 → Buffer Cache에 로드 (Physical Read)',
               result: 'info' as StepSummary['result'],
-              duration: 1200,
+              duration: 2000,
             },
           ]),
       {
@@ -258,14 +258,14 @@ export const useSimulationStore = create<SimulationState & SimulationActions>((s
         label: '결과 반환',
         message: '결과 집합(Result Set)을 PGA(세션 메모리)로 전달 → 클라이언트 응답',
         result: 'ok',
-        duration: 600,
+        duration: 1000,
       },
       {
         step: 'complete',
         label: '실행 완료',
         message: '쿼리 실행 완료',
         result: 'ok',
-        duration: 400,
+        duration: 700,
       },
     ]
 

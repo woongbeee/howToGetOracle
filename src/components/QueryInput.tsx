@@ -158,6 +158,29 @@ function SummaryTimeline({ selectedStep, onSelect }: {
   )
 }
 
+// ── SQL Syntax Highlighter ─────────────────────────────────────────────────
+
+const SQL_KEYWORDS = /\b(SELECT|FROM|WHERE|JOIN|LEFT|RIGHT|INNER|OUTER|FULL|CROSS|ON|AND|OR|NOT|IN|EXISTS|BETWEEN|LIKE|IS|NULL|AS|DISTINCT|ORDER|BY|GROUP|HAVING|LIMIT|OFFSET|INSERT|INTO|VALUES|UPDATE|SET|DELETE|CREATE|TABLE|INDEX|DROP|ALTER|ADD|COLUMN|PRIMARY|KEY|FOREIGN|REFERENCES|UNIQUE|DEFAULT|CONSTRAINT|VIEW|UNION|ALL|CASE|WHEN|THEN|ELSE|END|WITH|ASC|DESC|COUNT|SUM|AVG|MIN|MAX|COALESCE|NVL|DECODE|ROWNUM|ROWID)\b/gi
+
+const SQL_NUMBERS = /\b\d+(\.\d+)?\b/g
+
+function highlightSQL(text: string): string {
+  const escaped = text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+
+  // Split by string literals first to protect their contents from keyword matching
+  return escaped.split(/('[^']*')/g).map((part, i) => {
+    if (i % 2 === 1) {
+      return `<span class="text-emerald-500">${part}</span>`
+    }
+    return part
+      .replace(SQL_NUMBERS, (m) => `<span class="text-amber-500">${m}</span>`)
+      .replace(SQL_KEYWORDS, (m) => `<span class="text-blue-500 font-bold">${m.toUpperCase()}</span>`)
+  }).join('')
+}
+
 // ── Main Component ─────────────────────────────────────────────────────────
 
 export function QueryInput() {
@@ -165,6 +188,14 @@ export function QueryInput() {
   const { startSimulation, resetSimulation, isRunning, isComplete, setHighlightedStep, highlightedStep, flushBuffers } =
     useSimulationStore()
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const highlightRef = useRef<HTMLDivElement>(null)
+
+  const syncScroll = () => {
+    if (textareaRef.current && highlightRef.current) {
+      highlightRef.current.scrollTop = textareaRef.current.scrollTop
+      highlightRef.current.scrollLeft = textareaRef.current.scrollLeft
+    }
+  }
 
   const handleRun = () => {
     const q = input.trim()
@@ -179,10 +210,10 @@ export function QueryInput() {
   }
 
   return (
-    <div className="flex h-full flex-col gap-2 bg-card p-3">
+    <div className="flex flex-col gap-2 bg-card p-3">
 
       {/* Log / Summary */}
-      <div className="min-h-0 flex-1 overflow-y-auto rounded-lg border bg-muted/30 px-3 py-2">
+      <div className="max-h-48 overflow-y-auto rounded-lg border bg-muted/30 px-3 py-2">
         <AnimatePresence mode="wait">
           {isComplete ? (
             <motion.div key="summary" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="h-full">
@@ -212,18 +243,26 @@ export function QueryInput() {
       {/* Input row */}
       <div className="flex gap-2">
         <div className="relative flex-1">
-          <span className="absolute left-3 top-2.5 font-mono text-sm font-bold text-orange-500">
+          <span className="absolute left-3 top-2.5 z-10 font-mono text-sm font-bold text-orange-500">
             SQL&gt;
           </span>
+          {/* Highlight layer — sits behind the transparent textarea */}
+          <div
+            ref={highlightRef}
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 overflow-hidden whitespace-pre-wrap break-words rounded-lg border border-transparent bg-background py-2 pl-14 pr-3 font-mono text-sm leading-[1.5rem]"
+            dangerouslySetInnerHTML={{ __html: highlightSQL(input) || '' }}
+          />
           <textarea
             ref={textareaRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
+            onScroll={syncScroll}
             placeholder="SELECT * FROM EMPLOYEES"
             rows={2}
             disabled={isRunning}
-            className="w-full resize-none rounded-lg border border-input bg-background py-2 pl-14 pr-3 font-mono text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground focus:border-ring focus:ring-2 focus:ring-ring/20 disabled:opacity-50"
+            className="relative w-full resize-none rounded-lg border border-input bg-transparent py-2 pl-14 pr-3 font-mono text-sm text-transparent caret-foreground outline-none transition-all placeholder:text-muted-foreground focus:border-ring focus:ring-2 focus:ring-ring/20 disabled:opacity-50"
           />
         </div>
 

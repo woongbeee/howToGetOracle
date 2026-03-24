@@ -39,9 +39,12 @@ Zustand 단일 스토어. 핵심 상태:
 - `highlightedStep` — 사용자가 stepSummary 타임라인을 클릭하면 해당 단계로 핀 고정 (null이면 현재 단계 따라감)
 - `dataFlowArrows` — 컴포넌트 간 애니메이션 화살표
 - `stepLog / stepSummary` — 실행 로그 및 요약
-- `cachedQueries` — Library Cache에 있는 쿼리 목록 (Library Cache Hit/Miss 판단 기준)
+- `cachedQueries` — Library Cache에 있는 쿼리 목록 (최대 8개, FIFO). 3개 시드 쿼리로 초기화되어 Library Cache Hit 시나리오 즉시 테스트 가능
 - `optimizerResult: OptimizerResult | null` — CBO 결과
+- `bufferFlushed` — `flushBuffers()` 호출 후 `true`가 되어 다음 시뮬레이션에서 반드시 Buffer Miss 발생; 시뮬레이션 완료 시 자동으로 `false` 리셋
 - `flushBuffers()` — DBWn+CKPT 플러시 애니메이션 단독 실행 (시뮬레이션과 무관)
+
+Library Cache Hit 판단: 쿼리 문자열을 `trim().toUpperCase()`로 정규화 후 `cachedQueries`와 완전 일치 비교. Buffer Cache Hit 판단: `bufferFlushed`가 false이면 `Math.random() > 0.5`로 무작위 결정.
 
 ### CBO 옵티마이저 (`src/lib/optimizer/`)
 
@@ -61,7 +64,7 @@ Oracle CBO를 모방한 순수 TypeScript 구현:
 
 ### 컴포넌트 구조
 
-`App.tsx`가 최상위 뷰 상태(`simulator` / `erd`)와 패널 열림 상태를 로컬 state로 관리한다. 시뮬레이션 관련 상태는 전부 store에서 가져옴.
+`App.tsx`가 최상위 뷰 상태(`simulator` / `erd`)와 패널 열림 상태를 로컬 state로 관리한다. 시뮬레이션 관련 상태는 전부 store에서 가져옴. QueryInput 패널은 드래그 핸들로 높이 조절 가능 (120px–520px, 기본 208px); `window` 이벤트 리스너로 구현.
 
 - `OracleDiagram` — Oracle 인스턴스 구조 시각화 (SGA 하위: Library Cache, Dict Cache, Buffer Cache, Redo Log Buffer; Background Processes; Disk)
 - `QueryInput` — SQL 입력 + 실시간 로그(실행 중) / 요약 타임라인(완료 후) + 샘플 쿼리 버튼
