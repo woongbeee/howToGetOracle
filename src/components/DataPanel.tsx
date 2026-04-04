@@ -2,10 +2,20 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { SCHEMAS } from '@/data/index'
 import type { Schema, SchemaTable } from '@/data/types'
+import { useSimulationStore } from '@/store/simulationStore'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { cn } from '@/lib/utils'
+
+function TableSelectPrompt() {
+  const lang = useSimulationStore((s) => s.lang)
+  return (
+    <div className="flex h-full items-center justify-center text-xs text-muted-foreground">
+      {lang === 'ko' ? '위에서 테이블을 선택하세요' : 'Select a table above'}
+    </div>
+  )
+}
 
 interface DataPanelProps {
   open: boolean
@@ -232,9 +242,7 @@ export function DataPanel({ open, onToggle }: DataPanelProps) {
               {viewMode === 'schema' && <SchemaView schema={selectedSchema} />}
               {viewMode === 'table' && selectedTable && <TableView table={selectedTable} />}
               {viewMode === 'table' && !selectedTable && (
-                <div className="flex h-full items-center justify-center text-xs text-muted-foreground">
-                  위에서 테이블을 선택하세요
-                </div>
+                <TableSelectPrompt />
               )}
             </div>
           </motion.div>

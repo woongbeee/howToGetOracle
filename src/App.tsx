@@ -1,23 +1,49 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { OracleDiagram } from '@/components/OracleDiagram'
 import { QueryInput } from '@/components/QueryInput'
 import { DataPanel } from '@/components/DataPanel'
 import { SchemaDiagramView } from '@/components/SchemaDiagram'
 import { OptimizerPanel } from '@/components/OptimizerPanel'
+import { LandingPage } from '@/components/LandingPage'
 import { useSimulationStore } from '@/store/simulationStore'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 
+type AppView = 'landing' | 'simulator' | 'erd'
 type MainView = 'simulator' | 'erd'
 
 export function App() {
+  const [appView, setAppView] = useState<AppView>('landing')
   const [dataPanelOpen, setDataPanelOpen] = useState(false)
   const [mainView, setMainView] = useState<MainView>('simulator')
   const [optimizerOpen, setOptimizerOpen] = useState(false)
   const optimizerResult = useSimulationStore((s) => s.optimizerResult)
   const isRunning = useSimulationStore((s) => s.isRunning)
+  const lang = useSimulationStore((s) => s.lang)
+  const setLang = useSimulationStore((s) => s.setLang)
+
+  useEffect(() => {
+    const root = document.getElementById('root')
+    if (!root) return
+    if (appView === 'landing') {
+      root.classList.add('landing')
+    } else {
+      root.classList.remove('landing')
+    }
+  }, [appView])
+
+  if (appView === 'landing') {
+    return (
+      <LandingPage
+        onEnter={(view) => {
+          setMainView(view)
+          setAppView(view)
+        }}
+      />
+    )
+  }
 
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-background text-foreground">
@@ -30,6 +56,15 @@ export function App() {
           <div className="h-3 w-3 rounded-full bg-yellow-400" />
           <div className="h-3 w-3 rounded-full bg-green-400" />
         </div>
+
+        <Separator orientation="vertical" className="h-4" />
+
+        <button
+          onClick={() => setAppView('landing')}
+          className="font-mono text-xs text-muted-foreground transition-colors hover:text-foreground"
+        >
+          ← Home
+        </button>
 
         <Separator orientation="vertical" className="h-4" />
 
@@ -70,6 +105,12 @@ export function App() {
         )}
 
         <div className="ml-auto flex items-center gap-2">
+          <button
+            onClick={() => setLang(lang === 'ko' ? 'en' : 'ko')}
+            className="flex items-center gap-1 rounded-full border bg-muted px-2.5 py-0.5 font-mono text-[10px] font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+          >
+            🌐 {lang === 'ko' ? 'EN' : '한국어'}
+          </button>
           {isRunning ? (
             <Badge variant="outline" className="font-mono text-[10px]">
               <span className="mr-1.5 inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-orange-400" />

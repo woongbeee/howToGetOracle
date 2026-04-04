@@ -20,6 +20,7 @@ const RESULT_CLS: Record<StepSummary['result'], { dot: string; badge: string; se
 
 function LiveLog() {
   const stepLog = useSimulationStore((s) => s.stepLog)
+  const lang = useSimulationStore((s) => s.lang)
   const endRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -30,7 +31,9 @@ function LiveLog() {
     <div className="flex h-full flex-col justify-end gap-0.5">
       {stepLog.length === 0 ? (
         <p className="font-mono text-xs text-muted-foreground">
-          쿼리를 실행하면 Oracle 내부 처리 과정이 여기에 표시됩니다.
+          {lang === 'ko'
+            ? '쿼리를 실행하면 Oracle 내부 처리 과정이 여기에 표시됩니다.'
+            : 'Run a query to see Oracle internal processing steps here.'}
         </p>
       ) : (
         stepLog.map((log, i) => (
@@ -41,7 +44,7 @@ function LiveLog() {
             className="flex gap-2 font-mono text-xs"
           >
             <span className="whitespace-nowrap text-muted-foreground">
-              {new Date(log.timestamp).toLocaleTimeString('ko-KR', { hour12: false })}
+              {new Date(log.timestamp).toLocaleTimeString(lang === 'ko' ? 'ko-KR' : 'en-US', { hour12: false })}
             </span>
             <span className="text-orange-500">›</span>
             <span className="text-foreground">{log.message}</span>
@@ -110,10 +113,19 @@ function SummaryItem({
         )}
       </div>
 
-      <span className="shrink-0 self-center font-mono text-[9px] text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100">
-        {isSelected ? '핀 해제 ✕' : '클릭하여 하이라이트'}
-      </span>
+      <PinHint isSelected={isSelected} />
     </motion.button>
+  )
+}
+
+function PinHint({ isSelected }: { isSelected: boolean }) {
+  const lang = useSimulationStore((s) => s.lang)
+  return (
+    <span className="shrink-0 self-center font-mono text-[9px] text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100">
+      {isSelected
+        ? (lang === 'ko' ? '핀 해제 ✕' : 'Unpin ✕')
+        : (lang === 'ko' ? '클릭하여 하이라이트' : 'Click to highlight')}
+    </span>
   )
 }
 
@@ -123,12 +135,13 @@ function SummaryTimeline({ selectedStep, onSelect }: {
 }) {
   const stepSummary = useSimulationStore((s) => s.stepSummary)
   const currentStep = useSimulationStore((s) => s.currentStep)
+  const lang = useSimulationStore((s) => s.lang)
 
   return (
     <div className="flex h-full flex-col">
       <div className="mb-1.5 flex items-center gap-2">
         <span className="font-mono text-[9px] font-bold uppercase tracking-widest text-muted-foreground">
-          처리 요약
+          {lang === 'ko' ? '처리 요약' : 'Execution Summary'}
         </span>
         <div className="h-px flex-1 bg-border" />
         {selectedStep && (
@@ -136,7 +149,7 @@ function SummaryTimeline({ selectedStep, onSelect }: {
             onClick={() => onSelect(null)}
             className="font-mono text-[9px] text-muted-foreground transition-colors hover:text-foreground"
           >
-            핀 해제 ✕
+            {lang === 'ko' ? '핀 해제 ✕' : 'Unpin ✕'}
           </button>
         )}
       </div>
@@ -187,6 +200,7 @@ export function QueryInput() {
   const [input, setInput] = useState('')
   const { startSimulation, resetSimulation, isRunning, isComplete, setHighlightedStep, highlightedStep, flushBuffers } =
     useSimulationStore()
+  const lang = useSimulationStore((s) => s.lang)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const highlightRef = useRef<HTMLDivElement>(null)
 
@@ -273,7 +287,7 @@ export function QueryInput() {
         >
           {isRunning ? (
             <motion.span animate={{ opacity: [1, 0.4, 1] }} transition={{ repeat: Infinity, duration: 1 }}>
-              실행 중…
+              {lang === 'ko' ? '실행 중…' : 'Running…'}
             </motion.span>
           ) : 'RUN ⏎'}
         </Button>
@@ -282,7 +296,9 @@ export function QueryInput() {
           variant="outline"
           onClick={() => flushBuffers()}
           disabled={isRunning}
-          title="Buffer Cache의 Dirty Buffer를 DBWn이 Data File로 씁니다 (Checkpoint)"
+          title={lang === 'ko'
+            ? 'Buffer Cache의 Dirty Buffer를 DBWn이 Data File로 씁니다 (Checkpoint)'
+            : 'DBWn writes Dirty Buffers from Buffer Cache to Data Files (Checkpoint)'}
           className="self-end font-mono text-sm"
         >
           Buffer Flush
@@ -294,7 +310,7 @@ export function QueryInput() {
           disabled={isRunning}
           className="self-end font-mono text-sm"
         >
-          초기화
+          {lang === 'ko' ? '초기화' : 'Reset'}
         </Button>
       </div>
     </div>

@@ -1,5 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { useSimulationStore, STEP_PROCESS_LABEL } from '@/store/simulationStore'
+import type { Lang } from '@/store/simulationStore'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 
@@ -143,6 +144,7 @@ function LibraryCacheBlock() {
   const currentStep = useSimulationStore((s) => s.currentStep)
   const cachedQueries = useSimulationStore((s) => s.cachedQueries)
   const query = useSimulationStore((s) => s.query)
+  const lang = useSimulationStore((s) => s.lang)
 
   const isSearching = currentStep === 'library-cache-check'
   const isHit = currentStep === 'library-cache-hit'
@@ -165,7 +167,7 @@ function LibraryCacheBlock() {
         Library Cache
       </div>
       <div className="mt-1 text-[10px] leading-snug text-muted-foreground">
-        파싱된 SQL·실행 계획 캐싱. Soft Parse 활성화
+        {lang === 'ko' ? '파싱된 SQL·실행 계획 캐싱. Soft Parse 활성화' : 'Caches parsed SQL & execution plans. Enables Soft Parse'}
       </div>
 
       <AnimatePresence>
@@ -236,6 +238,7 @@ function LibraryCacheBlock() {
 function BufferCacheBlock() {
   const active = useIsActive('buffer-cache')
   const currentStep = useSimulationStore((s) => s.currentStep)
+  const lang = useSimulationStore((s) => s.lang)
 
   const isChecking = currentStep === 'buffer-cache-check'
   const isHit = currentStep === 'buffer-cache-hit'
@@ -275,7 +278,7 @@ function BufferCacheBlock() {
         Database Buffer Cache
       </div>
       <div className="mt-1 text-[10px] leading-snug text-muted-foreground">
-        디스크 블록 메모리 캐시. LRU 관리
+        {lang === 'ko' ? '디스크 블록 메모리 캐시. LRU 관리' : 'In-memory disk block cache. LRU managed'}
       </div>
 
       <AnimatePresence>
@@ -302,7 +305,9 @@ function BufferCacheBlock() {
             ))}
             {(isMiss || isDiskIo) && (
               <div className="col-span-3 mt-0.5 font-mono text-[9px] text-orange-600">
-                {isDiskIo ? '↑ Disk → Buffer 로드 중…' : '블록 없음 → Disk I/O 필요'}
+                {isDiskIo
+                  ? (lang === 'ko' ? '↑ Disk → Buffer 로드 중…' : '↑ Loading Disk → Buffer…')
+                  : (lang === 'ko' ? '블록 없음 → Disk I/O 필요' : 'Block not found → Disk I/O required')}
               </div>
             )}
           </motion.div>
@@ -317,8 +322,10 @@ function BufferCacheBlock() {
 export function OracleDiagram() {
   const currentStep = useSimulationStore((s) => s.currentStep)
   const highlightedStep = useSimulationStore((s) => s.highlightedStep)
+  const lang = useSimulationStore((s) => s.lang)
   const displayStep = highlightedStep ?? currentStep
-  const stepLabel = STEP_PROCESS_LABEL[displayStep]
+  const stepLabel = STEP_PROCESS_LABEL[lang][displayStep]
+  const D = DIAGRAM_TEXT[lang]
 
   return (
     <div className="flex h-full flex-col gap-3 overflow-y-auto p-4">
@@ -350,8 +357,8 @@ export function OracleDiagram() {
 
       {/* Server Process + PGA */}
       <div className="grid grid-cols-2 gap-2">
-        <Block id="server-process" label="Server Process" description="사용자 요청 수신, SQL 파싱 수행" accent="teal" />
-        <Block id="pga" label="PGA" sublabel="Program Global Area" description="세션별 독립 메모리. Sort/Hash 작업 영역" accent="teal" />
+        <Block id="server-process" label="Server Process" description={D.serverProcess} accent="teal" />
+        <Block id="pga" label="PGA" sublabel="Program Global Area" description={D.pga} accent="teal" />
       </div>
 
       {/* SGA */}
@@ -363,15 +370,15 @@ export function OracleDiagram() {
           <SectionLabel color="indigo">Shared Pool</SectionLabel>
           <div className="grid grid-cols-2 gap-2">
             <LibraryCacheBlock />
-            <Block id="dict-cache" label="Data Dictionary Cache" description="테이블·컬럼 메타데이터. Hard Parse 시 조회" accent="indigo" />
+            <Block id="dict-cache" label="Data Dictionary Cache" description={D.dictCache} accent="indigo" />
           </div>
         </div>
 
         {/* Buffer Cache + Redo + Undo */}
         <div className="grid grid-cols-3 gap-2">
           <BufferCacheBlock />
-          <Block id="redo-buffer" label="Redo Log Buffer" description="변경사항 순차 기록. LGWR → 디스크" accent="orange" />
-          <Block id="undo" label="Undo Segment" description="롤백 및 읽기 일관성 (Read Consistency)" accent="amber" />
+          <Block id="redo-buffer" label="Redo Log Buffer" description={D.redoBuffer} accent="orange" />
+          <Block id="undo" label="Undo Segment" description={D.undo} accent="amber" />
         </div>
       </div>
 
@@ -379,11 +386,11 @@ export function OracleDiagram() {
       <div className="rounded-xl border-2 border-amber-200 bg-amber-50/40 p-3 shadow-sm">
         <SectionLabel color="amber">Background Processes</SectionLabel>
         <div className="grid grid-cols-5 gap-2">
-          <ProcessBadge id="dbwr" label="DBWn" description="Dirty Buffer → 데이터 파일 쓰기"          color="orange" />
-          <ProcessBadge id="lgwr" label="LGWR" description="Redo Buffer → Redo Log 파일 쓰기"        color="orange" />
-          <ProcessBadge id="ckpt" label="CKPT" description="체크포인트 정보 기록"                     color="amber" />
-          <ProcessBadge id="smon" label="SMON" description="Instance Recovery, 임시 세그먼트 정리"    color="amber" />
-          <ProcessBadge id="pmon" label="PMON" description="실패한 프로세스 복구, 락 해제"             color="teal" />
+          <ProcessBadge id="dbwr" label="DBWn" description={D.dbwr} color="orange" />
+          <ProcessBadge id="lgwr" label="LGWR" description={D.lgwr} color="orange" />
+          <ProcessBadge id="ckpt" label="CKPT" description={D.ckpt} color="amber" />
+          <ProcessBadge id="smon" label="SMON" description={D.smon} color="amber" />
+          <ProcessBadge id="pmon" label="PMON" description={D.pmon} color="teal" />
         </div>
       </div>
 
@@ -391,12 +398,47 @@ export function OracleDiagram() {
       <div className="rounded-xl border-2 border-slate-300 bg-slate-50/60 p-3 shadow-sm">
         <SectionLabel color="slate">Disk Storage</SectionLabel>
         <div className="grid grid-cols-4 gap-2">
-          <Block id="disk"          label="Data Files"       description="테이블·인덱스 실제 데이터"  accent="slate" />
-          <Block id="redo-log-file" label="Online Redo Logs" description="순환 로그. 장애 복구용"      accent="slate" />
-          <Block id="control-file"  label="Control File"     description="DB 구조·상태 메타데이터"    accent="slate" />
-          <Block id="archive-log"   label="Archive Logs"     description="전체 복구용 아카이브"        accent="slate" />
+          <Block id="disk"          label="Data Files"       description={D.dataFiles}   accent="slate" />
+          <Block id="redo-log-file" label="Online Redo Logs" description={D.redoLogs}    accent="slate" />
+          <Block id="control-file"  label="Control File"     description={D.controlFile} accent="slate" />
+          <Block id="archive-log"   label="Archive Logs"     description={D.archiveLogs} accent="slate" />
         </div>
       </div>
     </div>
   )
+}
+
+const DIAGRAM_TEXT: Record<Lang, Record<string, string>> = {
+  ko: {
+    serverProcess: '사용자 요청 수신, SQL 파싱 수행',
+    pga:           '세션별 독립 메모리. Sort/Hash 작업 영역',
+    dictCache:     '테이블·컬럼 메타데이터. Hard Parse 시 조회',
+    redoBuffer:    '변경사항 순차 기록. LGWR → 디스크',
+    undo:          '롤백 및 읽기 일관성 (Read Consistency)',
+    dbwr:          'Dirty Buffer → 데이터 파일 쓰기',
+    lgwr:          'Redo Buffer → Redo Log 파일 쓰기',
+    ckpt:          '체크포인트 정보 기록',
+    smon:          'Instance Recovery, 임시 세그먼트 정리',
+    pmon:          '실패한 프로세스 복구, 락 해제',
+    dataFiles:     '테이블·인덱스 실제 데이터',
+    redoLogs:      '순환 로그. 장애 복구용',
+    controlFile:   'DB 구조·상태 메타데이터',
+    archiveLogs:   '전체 복구용 아카이브',
+  },
+  en: {
+    serverProcess: 'Receives user requests, performs SQL parsing',
+    pga:           'Per-session private memory. Sort/Hash work area',
+    dictCache:     'Table/column metadata. Accessed during Hard Parse',
+    redoBuffer:    'Sequential change recording. LGWR → disk',
+    undo:          'Rollback and Read Consistency support',
+    dbwr:          'Dirty Buffer → Data File writes',
+    lgwr:          'Redo Buffer → Redo Log file writes',
+    ckpt:          'Records checkpoint information',
+    smon:          'Instance Recovery, temp segment cleanup',
+    pmon:          'Failed process recovery, lock release',
+    dataFiles:     'Actual table/index data on disk',
+    redoLogs:      'Circular logs for crash recovery',
+    controlFile:   'DB structure and state metadata',
+    archiveLogs:   'Archive logs for full recovery',
+  },
 }

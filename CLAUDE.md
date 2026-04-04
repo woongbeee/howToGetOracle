@@ -25,7 +25,7 @@ npm run preview   # 빌드 결과물 미리보기
 사용자 SQL 입력 (QueryInput)
   → simulationStore.startSimulation()
       → lib/optimizer/index.ts: optimize(sql)   ← CBO 실행 계획 생성
-      → 15단계 시뮬레이션 루프 (각 단계마다 activeComponents 업데이트)
+      → 13단계 시뮬레이션 루프 (각 단계마다 activeComponents 업데이트)
   → OracleDiagram (activeComponents에 따라 블록 하이라이트/애니메이션)
   → OptimizerPanel (OptimizerResult 표시)
   → QueryInput 하단 (stepLog 실시간, stepSummary 완료 후)
@@ -85,6 +85,14 @@ Oracle CBO를 모방한 순수 TypeScript 구현:
 - **ESLint**: TypeScript·React 문법 오류만 검사 (타입 오류, hooks 규칙, react-refresh)
 - **Prettier** + `prettier-plugin-tailwindcss`: 포매팅·들여쓰기·Tailwind 클래스 자동 정렬
 - `eslint-config-prettier`로 두 도구 충돌 방지
+
+## 주요 의존성
+
+- `zustand` — 전역 상태 관리
+- `@xyflow/react` — ERD React Flow 기반 그래프 렌더링 (`SchemaDiagram`)
+- `framer-motion` — 시뮬레이션 애니메이션 (화살표, 컴포넌트 하이라이트 전환)
+- `@base-ui/react` + `shadcn` — UI 컴포넌트 기반
+- `tailwindcss` v4 — CSS-first 설정 방식 (`@import "tailwindcss"` in `index.css`)
 
 ## 테마 / 스타일링
 
