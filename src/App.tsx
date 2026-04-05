@@ -5,13 +5,14 @@ import { DataPanel } from '@/components/DataPanel'
 import { SchemaDiagramView } from '@/components/SchemaDiagram'
 import { OptimizerPanel } from '@/components/OptimizerPanel'
 import { LandingPage } from '@/components/LandingPage'
+import { IndexPage } from '@/components/index/IndexPage'
 import { useSimulationStore } from '@/store/simulationStore'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 
-type AppView = 'landing' | 'simulator' | 'erd'
+type AppView = 'landing' | 'simulator' | 'erd' | 'index'
 type MainView = 'simulator' | 'erd'
 
 export function App() {
@@ -38,11 +39,19 @@ export function App() {
     return (
       <LandingPage
         onEnter={(view) => {
-          setMainView(view)
-          setAppView(view)
+          if (view === 'index') {
+            setAppView('index')
+          } else {
+            setMainView(view)
+            setAppView(view)
+          }
         }}
       />
     )
+  }
+
+  if (appView === 'index') {
+    return <IndexPage onBack={() => setAppView('landing')} />
   }
 
   return (

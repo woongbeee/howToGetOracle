@@ -13,6 +13,7 @@ const T = {
       'SQL 쿼리를 입력하면 Oracle 인스턴스 내부의 실행 과정을 단계별로 시각화합니다. SGA, PGA, CBO Optimizer까지 — 눈으로 직접 확인하세요.',
     ctaPrimary: '시뮬레이터 시작하기',
     ctaSecondary: 'Schema ERD 보기',
+    ctaIndex: '인덱스 학습하기',
     howTitle: '이렇게 작동합니다',
     howSteps: [
       { num: '01', label: 'SQL 입력', desc: 'SELECT 쿼리를 직접 입력하거나 샘플 쿼리를 선택합니다.' },
@@ -41,6 +42,15 @@ const T = {
         desc: 'HR 스키마와 CO 스키마의 테이블 관계를 React Flow 기반 인터랙티브 다이어그램으로 탐색합니다.',
         tags: ['HR Schema', 'CO Schema', 'FK 관계'],
         color: 'gold',
+        view: 'erd',
+      },
+      {
+        icon: '🔍',
+        title: 'Index Internals',
+        desc: 'B-Tree / Bitmap / 복합 / FBI 인덱스 구조를 인터랙티브 시각화로 학습합니다. 스캔 방식 애니메이션, 비트맵 AND/OR 연산까지.',
+        tags: ['B-Tree', 'Bitmap', 'Skip Scan'],
+        color: 'violet',
+        view: 'index',
       },
     ],
     footer: '© 2025 Oracle DB Internals Simulator — 교육 목적으로 제작되었습니다.',
@@ -54,6 +64,7 @@ const T = {
       'Visualize what happens inside an Oracle instance step by step when you run a SQL query. SGA, PGA, CBO Optimizer — see it with your own eyes.',
     ctaPrimary: 'Launch Simulator',
     ctaSecondary: 'View Schema ERD',
+    ctaIndex: 'Learn Indexes',
     howTitle: 'How it works',
     howSteps: [
       { num: '01', label: 'Enter SQL', desc: 'Type a SELECT query or pick one of the built-in sample queries.' },
@@ -82,6 +93,15 @@ const T = {
         desc: 'Explore HR and CO schema table relationships through an interactive React Flow diagram with FK edges.',
         tags: ['HR Schema', 'CO Schema', 'FK Relations'],
         color: 'gold',
+        view: 'erd',
+      },
+      {
+        icon: '🔍',
+        title: 'Index Internals',
+        desc: 'Learn B-Tree, Bitmap, Composite, and Function-Based indexes through interactive visualizations — scan animations, bitmap AND/OR operations, and more.',
+        tags: ['B-Tree', 'Bitmap', 'Skip Scan'],
+        color: 'violet',
+        view: 'index',
       },
     ],
     footer: '© 2025 Oracle DB Internals Simulator — Built for educational purposes.',
@@ -114,6 +134,14 @@ const colorMap = {
     num: 'text-yellow-500',
     dot: 'bg-yellow-400',
   },
+  violet: {
+    border: 'border-violet-200',
+    iconBg: 'bg-violet-50',
+    tag: 'bg-violet-50 text-violet-700 border-violet-200',
+    glow: 'from-violet-50/80 to-transparent',
+    num: 'text-violet-500',
+    dot: 'bg-violet-400',
+  },
 }
 
 const fadeUp = {
@@ -131,7 +159,7 @@ const stagger = {
 }
 
 interface Props {
-  onEnter: (view: 'simulator' | 'erd') => void
+  onEnter: (view: 'simulator' | 'erd' | 'index') => void
 }
 
 export function LandingPage({ onEnter }: Props) {
@@ -270,6 +298,14 @@ export function LandingPage({ onEnter }: Props) {
           >
             ⬡ {t.ctaSecondary}
           </Button>
+          <Button
+            variant="outline"
+            size="lg"
+            onClick={() => onEnter('index')}
+            className="h-11 gap-2 border-violet-300 px-6 font-mono text-sm text-violet-700 hover:bg-violet-50"
+          >
+            🔍 {t.ctaIndex}
+          </Button>
         </motion.div>
 
         {/* Mini SQL preview */}
@@ -360,15 +396,18 @@ export function LandingPage({ onEnter }: Props) {
         >
           {t.features.map((feat, i) => {
             const c = colorMap[feat.color as keyof typeof colorMap]
+            const hasView = 'view' in feat
             return (
               <motion.div
                 key={i}
                 variants={fadeUp}
                 custom={i}
                 whileHover={{ y: -4, transition: { duration: 0.2 } }}
+                onClick={hasView ? () => onEnter((feat as typeof feat & { view: 'simulator' | 'erd' | 'index' }).view) : undefined}
                 className={cn(
                   'relative flex flex-col gap-4 overflow-hidden rounded-xl border bg-card p-6 shadow-xs',
-                  c.border
+                  c.border,
+                  hasView && 'cursor-pointer'
                 )}
               >
                 {/* Glow top */}

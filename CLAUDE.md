@@ -34,6 +34,7 @@ npm run preview   # 빌드 결과물 미리보기
 ### 상태 관리 (`src/store/simulationStore.ts`)
 
 Zustand 단일 스토어. 핵심 상태:
+- `lang: 'ko' | 'en'` — UI 언어 설정 (`setLang()`으로 전환). `STEP_TEXTS`와 `STEP_PROCESS_LABEL`이 각 언어별 문자열 맵을 보유
 - `currentStep / isRunning / isComplete` — 시뮬레이션 제어
 - `activeComponents: Set<string>` — OracleDiagram에서 어떤 블록을 활성화할지
 - `highlightedStep` — 사용자가 stepSummary 타임라인을 클릭하면 해당 단계로 핀 고정 (null이면 현재 단계 따라감)
@@ -60,17 +61,21 @@ Oracle CBO를 모방한 순수 TypeScript 구현:
 - `hrSchema.ts` — HR 스키마 7개 테이블 (EMPLOYEES, DEPARTMENTS 등) + 샘플 데이터
 - `coSchema.ts` — CO(Customer Orders) 스키마 5개 테이블 + 샘플 데이터
 - `dataset.ts` — DataPanel용 단순 `DATASET: Table[]` (스키마 무관, 별도 플랫 구조)
+- `index.ts` — `src/data/` 배럴 파일. `SCHEMAS`, `SAMPLE_QUERIES`, 두 스키마, `largeDataGenerator` 함수를 한 곳에서 re-export
+- `largeDataGenerator.ts` — IndexPage용 대용량 가상 데이터 생성기 (Mulberry32 PRNG, 시드 기반). EMPLOYEES 10k, ORDERS 50k, ORDER_ITEMS 100k 등 카디널리티 프로파일별 테이블 생성; 모듈 import 시 1회 생성 후 캐시됨
 - `stats.ts`의 TABLE_STATS와 스키마 이름이 일치해야 CBO가 올바르게 동작
 
 ### 컴포넌트 구조
 
-`App.tsx`가 최상위 뷰 상태(`simulator` / `erd`)와 패널 열림 상태를 로컬 state로 관리한다. 시뮬레이션 관련 상태는 전부 store에서 가져옴. QueryInput 패널은 드래그 핸들로 높이 조절 가능 (120px–520px, 기본 208px); `window` 이벤트 리스너로 구현.
+`App.tsx`가 최상위 뷰 상태(`AppView: 'landing' | 'simulator' | 'erd' | 'index'`)와 패널 열림 상태를 로컬 state로 관리한다. 앱 진입점은 항상 `LandingPage`이며, CTA 버튼으로 `simulator`, `erd`, 또는 `index` 뷰로 이동한다. 시뮬레이션 관련 상태는 전부 store에서 가져옴. QueryInput 패널은 드래그 핸들로 높이 조절 가능 (120px–520px, 기본 208px); `window` 이벤트 리스너로 구현.
 
+- `LandingPage` — 진입 화면: 앱 소개, 주요 기능, 시뮬레이터/ERD/인덱스 진입 CTA. `lang` 토글 포함
 - `OracleDiagram` — Oracle 인스턴스 구조 시각화 (SGA 하위: Library Cache, Dict Cache, Buffer Cache, Redo Log Buffer; Background Processes; Disk)
 - `QueryInput` — SQL 입력 + 실시간 로그(실행 중) / 요약 타임라인(완료 후) + 샘플 쿼리 버튼
 - `DataPanel` — 좌측 사이드바: 스키마 정의 뷰 / 테이블 데이터 뷰 (토글)
 - `SchemaDiagram` (`SchemaDiagramView` export) — React Flow 기반 ERD (FK 관계 시각화)
 - `OptimizerPanel` — 우측 사이드바: CBO 3단계, 액세스 패스 후보, 조인 방법, 실행 계획 트리
+- `index/IndexPage` — Oracle 인덱스 교육 뷰 (탭: Overview / B-Tree / Bitmap / Composite & More). `lang`은 store에서 읽음. 하위 섹션 컴포넌트(`BTreeSection`, `BitmapSection`, `CompositeSection`, `IndexTypesOverview`)는 `lang` prop을 직접 받음
 
 ## 코드 스타일
 
