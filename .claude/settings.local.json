@@ -8,7 +8,8 @@
       "Bash(npx shadcn@latest add badge card separator --yes)",
       "Bash(gh repo:*)",
       "Bash(where gh:*)",
-      "Bash(winget list:*)"
+      "Bash(winget list:*)",
+      "Bash(grep:*)"
     ]
   }
 }

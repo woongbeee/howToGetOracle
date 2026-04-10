@@ -6,105 +6,97 @@ import { cn } from '@/lib/utils'
 
 const T = {
   ko: {
-    badge: '교육용 시뮬레이터',
+    badge: '인터랙티브 교육서',
     heroTitle1: 'Oracle Database',
-    heroTitle2: '내부 동작 시뮬레이터',
+    heroTitle2: '완전 학습 가이드',
     heroDesc:
-      'SQL 쿼리를 입력하면 Oracle 인스턴스 내부의 실행 과정을 단계별로 시각화합니다. SGA, PGA, CBO Optimizer까지 — 눈으로 직접 확인하세요.',
-    ctaPrimary: '시뮬레이터 시작하기',
-    ctaSecondary: 'Schema ERD 보기',
-    ctaIndex: '인덱스 학습하기',
-    howTitle: '이렇게 작동합니다',
+      'SQL 내부 동작부터 인덱스, 옵티마이저, 조인, 파티셔닝까지 — 애니메이션과 시뮬레이터가 내장된 동적 교육서로 Oracle을 마스터하세요.',
+    ctaPrimary: '학습 시작하기',
+    howTitle: '이렇게 학습합니다',
     howSteps: [
-      { num: '01', label: 'SQL 입력', desc: 'SELECT 쿼리를 직접 입력하거나 샘플 쿼리를 선택합니다.' },
-      { num: '02', label: '실행 시뮬레이션', desc: 'Oracle 인스턴스 컴포넌트가 순서대로 활성화되며 처리 흐름을 보여줍니다.' },
-      { num: '03', label: '결과 분석', desc: 'CBO 실행 계획, Cache Hit/Miss 여부, 각 단계별 상세 로그를 확인합니다.' },
+      { num: '01', label: '목차 탐색', desc: '8개 챕터로 구성된 체계적인 커리큘럼을 목차에서 탐색합니다.' },
+      { num: '02', label: '개념 학습', desc: '각 섹션에서 핵심 개념을 설명과 인터랙티브 애니메이션으로 학습합니다.' },
+      { num: '03', label: '시뮬레이터 실습', desc: '각 챕터 마지막의 시뮬레이터에서 직접 쿼리를 입력해 확인합니다.' },
     ],
-    featTitle: '주요 기능',
+    featTitle: '학습 목차',
     features: [
       {
-        icon: '⚡',
-        title: 'CBO Optimizer 시각화',
-        desc: 'Cost-Based Optimizer의 3단계 최적화 과정 — Query Transformer, Estimator, Plan Generator — 를 실시간으로 확인합니다.',
-        tags: ['액세스 패스', '조인 방법', '실행 계획 트리'],
+        icon: '⚙',
+        title: '내부 구조와 프로세스',
+        desc: 'SGA, PGA, Buffer Cache, Library Cache, 백그라운드 프로세스의 동작 원리와 Internals Simulator.',
+        tags: ['SGA', 'PGA', 'Buffer Cache'],
         color: 'sapphire',
       },
       {
-        icon: '🗃',
-        title: 'Buffer & Library Cache',
-        desc: 'Library Cache Hit/Miss, Buffer Cache Hit/Miss 시나리오를 직접 실험하고, DBWn 플러시 동작까지 시뮬레이션합니다.',
-        tags: ['Library Cache', 'Buffer Cache', 'DBWn·CKPT'],
+        icon: '🔍',
+        title: '인덱스 원리와 스캔 방식',
+        desc: 'B-Tree / Bitmap / 복합 인덱스 구조와 스캔 애니메이션. Index Simulator 포함.',
+        tags: ['B-Tree', 'Bitmap', 'Skip Scan'],
+        color: 'violet',
+      },
+      {
+        icon: '🔗',
+        title: '조인 원리와 활용',
+        desc: 'Nested Loop, Hash, Sort-Merge Join 알고리즘과 스텝별 인터랙티브 시뮬레이션.',
+        tags: ['NL Join', 'Hash Join', 'Sort-Merge'],
         color: 'tangerine',
       },
       {
-        icon: '⬡',
-        title: 'Schema ERD',
-        desc: 'HR 스키마와 CO 스키마의 테이블 관계를 React Flow 기반 인터랙티브 다이어그램으로 탐색합니다.',
-        tags: ['HR Schema', 'CO Schema', 'FK 관계'],
+        icon: '⚡',
+        title: '옵티마이저 + 쿼리 변환',
+        desc: 'CBO 3단계 파이프라인, 선택도, 액세스 패스, 서브쿼리 Unnesting, 뷰 Merging.',
+        tags: ['CBO', 'Selectivity', 'Unnesting'],
         color: 'gold',
-        view: 'erd',
-      },
-      {
-        icon: '🔍',
-        title: 'Index Internals',
-        desc: 'B-Tree / Bitmap / 복합 / FBI 인덱스 구조를 인터랙티브 시각화로 학습합니다. 스캔 방식 애니메이션, 비트맵 AND/OR 연산까지.',
-        tags: ['B-Tree', 'Bitmap', 'Skip Scan'],
-        color: 'violet',
-        view: 'index',
       },
     ],
-    footer: '© 2025 Oracle DB Internals Simulator — 교육 목적으로 제작되었습니다.',
+    footer: '© 2026 Oracle DB Internals — 교육 목적으로 제작되었습니다.',
     langToggle: 'EN',
   },
   en: {
-    badge: 'Educational Simulator',
+    badge: 'Interactive Learning Book',
     heroTitle1: 'Oracle Database',
-    heroTitle2: 'Internals Simulator',
+    heroTitle2: 'Complete Learning Guide',
     heroDesc:
-      'Visualize what happens inside an Oracle instance step by step when you run a SQL query. SGA, PGA, CBO Optimizer — see it with your own eyes.',
-    ctaPrimary: 'Launch Simulator',
-    ctaSecondary: 'View Schema ERD',
-    ctaIndex: 'Learn Indexes',
-    howTitle: 'How it works',
+      'From SQL internals to indexes, optimizer, joins, and partitioning — master Oracle with a dynamic book featuring built-in animations and simulators.',
+    ctaPrimary: 'Start Learning',
+    howTitle: 'How to learn',
     howSteps: [
-      { num: '01', label: 'Enter SQL', desc: 'Type a SELECT query or pick one of the built-in sample queries.' },
-      { num: '02', label: 'Run Simulation', desc: 'Oracle instance components activate in sequence, showing the full processing flow.' },
-      { num: '03', label: 'Analyze Results', desc: 'Inspect the CBO execution plan, Cache Hit/Miss outcomes, and per-step detail logs.' },
+      { num: '01', label: 'Browse the TOC', desc: 'Navigate a structured curriculum of 8 chapters from the sidebar table of contents.' },
+      { num: '02', label: 'Learn Concepts', desc: 'Each section combines clear explanations with interactive animations.' },
+      { num: '03', label: 'Use Simulators', desc: 'Run queries in the chapter-end simulators to see concepts in action.' },
     ],
-    featTitle: 'Key Features',
+    featTitle: 'Curriculum',
     features: [
       {
-        icon: '⚡',
-        title: 'CBO Optimizer Visualization',
-        desc: "Watch the Cost-Based Optimizer's three-stage pipeline — Query Transformer, Estimator, Plan Generator — in real time.",
-        tags: ['Access Paths', 'Join Methods', 'Plan Tree'],
+        icon: '⚙',
+        title: 'Internals & Processes',
+        desc: 'SGA, PGA, Buffer Cache, Library Cache, background processes, and the Internals Simulator.',
+        tags: ['SGA', 'PGA', 'Buffer Cache'],
         color: 'sapphire',
       },
       {
-        icon: '🗃',
-        title: 'Buffer & Library Cache',
-        desc: 'Experiment with Library Cache Hit/Miss and Buffer Cache Hit/Miss scenarios. Trigger a DBWn flush and watch what changes.',
-        tags: ['Library Cache', 'Buffer Cache', 'DBWn·CKPT'],
+        icon: '🔍',
+        title: 'Index Internals & Scans',
+        desc: 'B-Tree / Bitmap / Composite index structure with scan animations. Includes Index Simulator.',
+        tags: ['B-Tree', 'Bitmap', 'Skip Scan'],
+        color: 'violet',
+      },
+      {
+        icon: '🔗',
+        title: 'Join Principles & Usage',
+        desc: 'Nested Loop, Hash, and Sort-Merge join algorithms with step-by-step interactive simulations.',
+        tags: ['NL Join', 'Hash Join', 'Sort-Merge'],
         color: 'tangerine',
       },
       {
-        icon: '⬡',
-        title: 'Schema ERD',
-        desc: 'Explore HR and CO schema table relationships through an interactive React Flow diagram with FK edges.',
-        tags: ['HR Schema', 'CO Schema', 'FK Relations'],
+        icon: '⚡',
+        title: 'Optimizer + Query Transform',
+        desc: 'CBO 3-stage pipeline, selectivity, access paths, subquery unnesting, view merging.',
+        tags: ['CBO', 'Selectivity', 'Unnesting'],
         color: 'gold',
-        view: 'erd',
-      },
-      {
-        icon: '🔍',
-        title: 'Index Internals',
-        desc: 'Learn B-Tree, Bitmap, Composite, and Function-Based indexes through interactive visualizations — scan animations, bitmap AND/OR operations, and more.',
-        tags: ['B-Tree', 'Bitmap', 'Skip Scan'],
-        color: 'violet',
-        view: 'index',
       },
     ],
-    footer: '© 2025 Oracle DB Internals Simulator — Built for educational purposes.',
+    footer: '© 2025 Oracle DB Internals — Built for educational purposes.',
     langToggle: '한국어',
   },
 }
@@ -159,7 +151,7 @@ const stagger = {
 }
 
 interface Props {
-  onEnter: (view: 'simulator' | 'erd' | 'index') => void
+  onEnter: () => void
 }
 
 export function LandingPage({ onEnter }: Props) {
@@ -283,29 +275,29 @@ export function LandingPage({ onEnter }: Props) {
           animate="visible"
           className="mt-10 flex flex-wrap items-center justify-center gap-3"
         >
-          <Button
-            size="lg"
-            onClick={() => onEnter('simulator')}
-            className="h-11 gap-2 px-6 font-mono text-sm"
-          >
-            ⚙ {t.ctaPrimary}
-          </Button>
-          <Button
-            variant="outline"
-            size="lg"
-            onClick={() => onEnter('erd')}
-            className="h-11 gap-2 px-6 font-mono text-sm"
-          >
-            ⬡ {t.ctaSecondary}
-          </Button>
-          <Button
-            variant="outline"
-            size="lg"
-            onClick={() => onEnter('index')}
-            className="h-11 gap-2 border-violet-300 px-6 font-mono text-sm text-violet-700 hover:bg-violet-50"
-          >
-            🔍 {t.ctaIndex}
-          </Button>
+          <div className="relative">
+            {/* Pulsing glow ring */}
+            <motion.div
+              animate={{ scale: [1, 1.12, 1], opacity: [0.5, 0.15, 0.5] }}
+              transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
+              className="pointer-events-none absolute inset-0 rounded-xl bg-blue-500 blur-xl"
+            />
+            <Button
+              size="lg"
+              onClick={() => onEnter()}
+              className="relative h-14 gap-3 px-10 font-mono text-base font-bold shadow-lg shadow-blue-500/30 transition-transform duration-150 hover:scale-[1.03] active:scale-[0.98]"
+            >
+              <span className="text-lg">📖</span>
+              {t.ctaPrimary}
+              <motion.span
+                animate={{ x: [0, 4, 0] }}
+                transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+                className="ml-1"
+              >
+                →
+              </motion.span>
+            </Button>
+          </div>
         </motion.div>
 
         {/* Mini SQL preview */}
@@ -396,18 +388,16 @@ export function LandingPage({ onEnter }: Props) {
         >
           {t.features.map((feat, i) => {
             const c = colorMap[feat.color as keyof typeof colorMap]
-            const hasView = 'view' in feat
             return (
               <motion.div
                 key={i}
                 variants={fadeUp}
                 custom={i}
                 whileHover={{ y: -4, transition: { duration: 0.2 } }}
-                onClick={hasView ? () => onEnter((feat as typeof feat & { view: 'simulator' | 'erd' | 'index' }).view) : undefined}
+                onClick={() => onEnter()}
                 className={cn(
-                  'relative flex flex-col gap-4 overflow-hidden rounded-xl border bg-card p-6 shadow-xs',
-                  c.border,
-                  hasView && 'cursor-pointer'
+                  'relative flex cursor-pointer flex-col gap-4 overflow-hidden rounded-xl border bg-card p-6 shadow-xs',
+                  c.border
                 )}
               >
                 {/* Glow top */}
@@ -447,9 +437,28 @@ export function LandingPage({ onEnter }: Props) {
           whileInView="visible"
           viewport={{ once: true, amount: 0.5 }}
         >
-          <Button size="lg" onClick={() => onEnter('simulator')} className="h-12 gap-2 px-8 font-mono text-sm">
-            ⚙ {t.ctaPrimary}
-          </Button>
+          <div className="relative">
+            <motion.div
+              animate={{ scale: [1, 1.12, 1], opacity: [0.5, 0.15, 0.5] }}
+              transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
+              className="pointer-events-none absolute inset-0 rounded-xl bg-blue-500 blur-xl"
+            />
+            <Button
+              size="lg"
+              onClick={() => onEnter()}
+              className="relative h-14 gap-3 px-10 font-mono text-base font-bold shadow-lg shadow-blue-500/30 transition-transform duration-150 hover:scale-[1.03] active:scale-[0.98]"
+            >
+              <span className="text-lg">📖</span>
+              {t.ctaPrimary}
+              <motion.span
+                animate={{ x: [0, 4, 0] }}
+                transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+                className="ml-1"
+              >
+                →
+              </motion.span>
+            </Button>
+          </div>
         </motion.div>
       </section>
 
@@ -468,6 +477,15 @@ export function LandingPage({ onEnter }: Props) {
             </motion.span>
           </AnimatePresence>
         </p>
+        <a
+          href="https://woongbee.notion.site"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-2 inline-flex items-center gap-1.5 font-mono text-[11px] text-muted-foreground/50 transition-colors hover:text-muted-foreground"
+        >
+          developed by <span className="font-semibold">Woongbee</span>
+          <span className="text-[10px]">↗</span>
+        </a>
       </footer>
     </div>
   )
