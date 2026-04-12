@@ -45,6 +45,20 @@ interface Props {
 
 `bookStructure.ts`의 `BOOK_CHAPTERS`가 단일 진실 공급원(TOC 데이터). 새 섹션 추가 시 여기만 수정하면 TOC·breadcrumb·Prev/Next가 자동 반영된다.
 
+현재 `SectionRouter` 접두사 → 컴포넌트 매핑:
+| 접두사 | 컴포넌트 | 파일 |
+|--------|----------|------|
+| `internals-` | `InternalsPage` | `src/book/chapters/InternalsPage.tsx` |
+| `index-` | `IndexChapterPage` | `src/book/chapters/IndexChapterPage.tsx` |
+| `join-` | `JoinPage` | `src/book/chapters/JoinPage.tsx` |
+| `optimizer-` | `OptimizerChapterPage` | `src/book/chapters/OptimizerChapterPage.tsx` |
+| `qt-` | `QueryTransformPage` | `src/book/chapters/QueryTransformPage.tsx` |
+| `sort-` | `SortPage` | `src/book/chapters/SortPage.tsx` |
+| `partition-` | `PartitionPage` | `src/book/chapters/PartitionPage.tsx` |
+| `parallel-` | `ParallelPage` | `src/book/chapters/ParallelPage.tsx` |
+
+각 챕터 페이지는 `sectionId`를 받아 내부적으로 `if/switch`로 섹션별 콘텐츠를 분기한다.
+
 새 챕터 추가 체크리스트:
 1. `BOOK_CHAPTERS`에 챕터 항목 추가 (`color`는 `BookContent.tsx`의 `COLOR_MAP` 키 중 하나여야 함: `blue|violet|emerald|orange|cyan|rose|amber|teal`)
 2. 챕터 페이지 컴포넌트 생성 (`src/book/chapters/`)
@@ -86,6 +100,16 @@ Oracle CBO를 모방한 순수 TypeScript 구현:
 
 `stats.ts`의 `TABLE_STATS` 테이블 이름이 `hrSchema.ts`·`coSchema.ts`의 스키마 이름과 일치해야 CBO가 올바르게 동작한다.
 
+### 시뮬레이터 컴포넌트 (`src/components/`)
+
+Internals 시뮬레이터를 구성하는 핵심 컴포넌트들:
+- `OracleDiagram.tsx` — 인스턴스 블록 다이어그램 (activeComponents에 따라 하이라이트)
+- `QueryInput.tsx` — SQL 입력창 + `LiveLog` / `SummaryTimeline` named export
+- `OptimizerPanel.tsx` — CBO 실행 계획 3단계 시각화
+- `DataPanel.tsx` — 스키마·샘플 데이터 브라우저
+- `SchemaDiagram.tsx` — React Flow 기반 ERD
+- `components/index/` — Index 챕터 전용 서브 컴포넌트들
+
 ### 데이터 스키마 (`src/data/`)
 
 - `hrSchema.ts` — HR 스키마 7개 테이블 + 샘플 데이터
@@ -100,6 +124,24 @@ Oracle CBO를 모방한 순수 TypeScript 구현:
 `GLOSSARY` 배열이 전체 용어 목록의 단일 진실 공급원. `getTermsForSection(sectionId)` 는 `sectionIds` 배열에 해당 섹션 ID가 포함된 용어를 필터링한다. `sortTerms()` 는 알파벳 순으로 정렬.
 
 `GlossaryPanel`은 우측 고정 사이드 패널. `GlossaryBody`는 `key={sectionId}`로 마운트되어 섹션 변경 시 검색·확장 상태가 리셋된다. 용어 추가 시 `glossary.ts`의 `GLOSSARY`에만 항목을 추가하고 `sectionIds`에 해당 섹션 ID를 나열하면 패널에 자동 반영된다.
+
+### 챕터 내 이중 언어 문자열 패턴
+
+모든 챕터 페이지는 컴포넌트 최상단에 `T` 객체로 ko/en 문자열을 인라인 정의한다:
+
+```ts
+const T = {
+  ko: { title: '...', desc: '...' },
+  en: { title: '...', desc: '...' },
+}
+// 사용: const t = T[lang]  →  t.title
+```
+
+번역이 필요한 UI 문자열은 모두 이 패턴으로 관리하며, 별도 i18n 라이브러리 없음.
+
+### 복잡한 챕터의 서브 컴포넌트 분리
+
+콘텐츠가 많은 챕터(Index 등)는 섹션별 서브 컴포넌트를 `src/components/<챕터명>/`에 분리한다. 예: `src/components/index/` — `BTreeSection.tsx`, `BitmapSection.tsx`, `CompositeSection.tsx`, `IndexTypesOverview.tsx`. 챕터 페이지(`IndexChapterPage.tsx`)가 이를 import해 조합한다.
 
 ### 챕터 공통 UI (`src/book/chapters/shared.tsx`)
 

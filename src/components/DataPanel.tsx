@@ -17,6 +17,13 @@ function TableSelectPrompt() {
   )
 }
 
+function ColumnKeyBadge({ isPrimaryKey, isForeignKey }: { isPrimaryKey?: boolean; isForeignKey?: boolean }) {
+  if (isPrimaryKey && isForeignKey) return <Badge variant="outline" className="h-4 border-purple-300 px-1 text-[8px] text-purple-700">PK/FK</Badge>
+  if (isPrimaryKey) return <Badge variant="outline" className="h-4 border-amber-300 px-1 text-[8px] text-amber-700">PK</Badge>
+  if (isForeignKey) return <Badge variant="outline" className="h-4 border-blue-300 px-1 text-[8px] text-blue-700">FK</Badge>
+  return null
+}
+
 interface DataPanelProps {
   open: boolean
   onToggle: () => void
@@ -24,7 +31,7 @@ interface DataPanelProps {
 
 type ViewMode = 'schema' | 'table'
 
-function SchemaView({ schema }: { schema: Schema }) {
+export function SchemaView({ schema }: { schema: Schema }) {
   return (
     <div className="space-y-2.5 p-3">
       {schema.tables.map((table) => (
@@ -43,13 +50,7 @@ function SchemaView({ schema }: { schema: Schema }) {
             {table.columns.map((col) => (
               <div key={col.name} className="flex items-center gap-2 border-b px-3 py-[4px] last:border-b-0">
                 <span className="w-9 shrink-0 font-mono text-[9px] font-bold">
-                  {col.isPrimaryKey && col.isForeignKey ? (
-                    <Badge variant="outline" className="h-4 border-purple-300 px-1 text-[8px] text-purple-700">PK/FK</Badge>
-                  ) : col.isPrimaryKey ? (
-                    <Badge variant="outline" className="h-4 border-amber-300 px-1 text-[8px] text-amber-700">PK</Badge>
-                  ) : col.isForeignKey ? (
-                    <Badge variant="outline" className="h-4 border-blue-300 px-1 text-[8px] text-blue-700">FK</Badge>
-                  ) : null}
+                  <ColumnKeyBadge isPrimaryKey={col.isPrimaryKey} isForeignKey={col.isForeignKey} />
                 </span>
                 <span className="flex-1 font-mono text-[11px] text-foreground">{col.name}</span>
                 <span className="font-mono text-[10px] text-muted-foreground">{col.type}</span>
@@ -78,7 +79,7 @@ function SchemaView({ schema }: { schema: Schema }) {
   )
 }
 
-function TableView({ table }: { table: SchemaTable }) {
+export function TableView({ table }: { table: SchemaTable }) {
   return (
     <div className="flex h-full flex-col">
       {/* Header */}

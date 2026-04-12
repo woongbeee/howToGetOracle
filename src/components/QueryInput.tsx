@@ -16,11 +16,30 @@ const RESULT_CLS: Record<StepSummary['result'], { dot: string; badge: string; se
   info: { dot: 'bg-amber-500',  badge: 'border-amber-200 text-amber-700',  selected: 'bg-amber-50 border-amber-200' },
 }
 
+// ── SQL Syntax Highlighter ─────────────────────────────────────────────────
+
+const SQL_KEYWORDS = /\b(SELECT|FROM|WHERE|JOIN|LEFT|RIGHT|INNER|OUTER|FULL|CROSS|ON|AND|OR|NOT|IN|EXISTS|BETWEEN|LIKE|IS|NULL|AS|DISTINCT|ORDER|BY|GROUP|HAVING|LIMIT|OFFSET|INSERT|INTO|VALUES|UPDATE|SET|DELETE|CREATE|TABLE|INDEX|DROP|ALTER|ADD|COLUMN|PRIMARY|KEY|FOREIGN|REFERENCES|UNIQUE|DEFAULT|CONSTRAINT|VIEW|UNION|ALL|CASE|WHEN|THEN|ELSE|END|WITH|ASC|DESC|COUNT|SUM|AVG|MIN|MAX|COALESCE|NVL|DECODE|ROWNUM|ROWID)\b/gi
+const SQL_NUMBERS  = /\b\d+(\.\d+)?\b/g
+
+function highlightSQL(text: string): string {
+  const escaped = text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+
+  return escaped.split(/('[^']*')/g).map((part, i) => {
+    if (i % 2 === 1) return `<span class="text-emerald-500">${part}</span>`
+    return part
+      .replace(SQL_NUMBERS,  (m) => `<span class="text-amber-500">${m}</span>`)
+      .replace(SQL_KEYWORDS, (m) => `<span class="text-blue-500 font-bold">${m.toUpperCase()}</span>`)
+  }).join('')
+}
+
 // ── Live log ───────────────────────────────────────────────────────────────
 
 export function LiveLog() {
   const stepLog = useSimulationStore((s) => s.stepLog)
-  const lang = useSimulationStore((s) => s.lang)
+  const lang    = useSimulationStore((s) => s.lang)
   const endRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -80,7 +99,6 @@ function SummaryItem({
         isSelected ? c.selected : isCurrent ? 'border-border bg-muted/40' : 'border-transparent hover:border-border hover:bg-muted/40'
       )}
     >
-      {/* Step number */}
       <div className="flex shrink-0 flex-col items-center">
         <div
           className={cn(
@@ -91,14 +109,12 @@ function SummaryItem({
           {index + 1}
         </div>
       </div>
-
-      {/* Content */}
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5">
-          <span className={cn('min-w-0 flex-1 truncate font-mono text-[11px] font-bold text-foreground')}>
+          <span className="min-w-0 flex-1 truncate font-mono text-[11px] font-bold text-foreground">
             {summary.label}
           </span>
-          <Badge variant="outline" className={cn('shrink-0 h-4 font-mono text-[8px] font-bold uppercase', c.badge)}>
+          <Badge variant="outline" className={cn('h-4 shrink-0 font-mono text-[8px] font-bold uppercase', c.badge)}>
             {summary.result}
           </Badge>
         </div>
@@ -116,14 +132,13 @@ function SummaryItem({
   )
 }
 
-
 export function SummaryTimeline({ selectedStep, onSelect }: {
   selectedStep: SimulationStep | null
   onSelect: (step: SimulationStep | null) => void
 }) {
   const stepSummary = useSimulationStore((s) => s.stepSummary)
   const currentStep = useSimulationStore((s) => s.currentStep)
-  const lang = useSimulationStore((s) => s.lang)
+  const lang        = useSimulationStore((s) => s.lang)
 
   return (
     <div className="flex h-full flex-col">
@@ -159,42 +174,23 @@ export function SummaryTimeline({ selectedStep, onSelect }: {
   )
 }
 
-// ── SQL Syntax Highlighter ─────────────────────────────────────────────────
-
-const SQL_KEYWORDS = /\b(SELECT|FROM|WHERE|JOIN|LEFT|RIGHT|INNER|OUTER|FULL|CROSS|ON|AND|OR|NOT|IN|EXISTS|BETWEEN|LIKE|IS|NULL|AS|DISTINCT|ORDER|BY|GROUP|HAVING|LIMIT|OFFSET|INSERT|INTO|VALUES|UPDATE|SET|DELETE|CREATE|TABLE|INDEX|DROP|ALTER|ADD|COLUMN|PRIMARY|KEY|FOREIGN|REFERENCES|UNIQUE|DEFAULT|CONSTRAINT|VIEW|UNION|ALL|CASE|WHEN|THEN|ELSE|END|WITH|ASC|DESC|COUNT|SUM|AVG|MIN|MAX|COALESCE|NVL|DECODE|ROWNUM|ROWID)\b/gi
-
-const SQL_NUMBERS = /\b\d+(\.\d+)?\b/g
-
-function highlightSQL(text: string): string {
-  const escaped = text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-
-  // Split by string literals first to protect their contents from keyword matching
-  return escaped.split(/('[^']*')/g).map((part, i) => {
-    if (i % 2 === 1) {
-      return `<span class="text-emerald-500">${part}</span>`
-    }
-    return part
-      .replace(SQL_NUMBERS, (m) => `<span class="text-amber-500">${m}</span>`)
-      .replace(SQL_KEYWORDS, (m) => `<span class="text-blue-500 font-bold">${m.toUpperCase()}</span>`)
-  }).join('')
-}
-
 // ── Main Component ─────────────────────────────────────────────────────────
 
 export function QueryInput() {
   const [input, setInput] = useState('')
-  const { startSimulation, resetSimulation, isRunning, setHighlightedStep, flushBuffers } =
-    useSimulationStore()
-  const lang = useSimulationStore((s) => s.lang)
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const startSimulation   = useSimulationStore((s) => s.startSimulation)
+  const resetSimulation   = useSimulationStore((s) => s.resetSimulation)
+  const isRunning         = useSimulationStore((s) => s.isRunning)
+  const setHighlightedStep = useSimulationStore((s) => s.setHighlightedStep)
+  const flushBuffers      = useSimulationStore((s) => s.flushBuffers)
+  const lang              = useSimulationStore((s) => s.lang)
+
+  const textareaRef  = useRef<HTMLTextAreaElement>(null)
   const highlightRef = useRef<HTMLDivElement>(null)
 
   const syncScroll = () => {
     if (textareaRef.current && highlightRef.current) {
-      highlightRef.current.scrollTop = textareaRef.current.scrollTop
+      highlightRef.current.scrollTop  = textareaRef.current.scrollTop
       highlightRef.current.scrollLeft = textareaRef.current.scrollLeft
     }
   }
@@ -211,8 +207,13 @@ export function QueryInput() {
     if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) handleRun()
   }
 
+  const handleReset = () => {
+    resetSimulation()
+    setHighlightedStep(null)
+  }
+
   return (
-    <div className="flex flex-col gap-2 bg-card p-3">
+    <div className="flex h-full flex-col gap-2 overflow-y-auto bg-card p-3">
 
       {/* Sample queries */}
       <div className="flex flex-wrap gap-1">
@@ -233,7 +234,6 @@ export function QueryInput() {
           <span className="absolute left-3 top-2.5 z-10 font-mono text-sm font-bold text-orange-500">
             SQL&gt;
           </span>
-          {/* Highlight layer — sits behind the transparent textarea */}
           <div
             ref={highlightRef}
             aria-hidden="true"
@@ -253,11 +253,7 @@ export function QueryInput() {
           />
         </div>
 
-        <Button
-          onClick={handleRun}
-          disabled={!input.trim() || isRunning}
-          className="self-end"
-        >
+        <Button onClick={handleRun} disabled={!input.trim() || isRunning} className="self-end">
           {isRunning ? (
             <motion.span animate={{ opacity: [1, 0.4, 1] }} transition={{ repeat: Infinity, duration: 1 }}>
               {lang === 'ko' ? '실행 중…' : 'Running…'}
@@ -267,7 +263,7 @@ export function QueryInput() {
 
         <Button
           variant="outline"
-          onClick={() => flushBuffers()}
+          onClick={flushBuffers}
           disabled={isRunning}
           title={lang === 'ko'
             ? 'Buffer Cache의 Dirty Buffer를 DBWn이 Data File로 씁니다 (Checkpoint)'
@@ -279,7 +275,7 @@ export function QueryInput() {
 
         <Button
           variant="ghost"
-          onClick={() => { resetSimulation(); setHighlightedStep(null) }}
+          onClick={handleReset}
           disabled={isRunning}
           className="self-end font-mono text-sm"
         >

@@ -1,12 +1,11 @@
+import { useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useSimulationStore, STEP_PROCESS_LABEL } from '@/store/simulationStore'
 import type { Lang } from '@/store/simulationStore'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 
-function useIsActive(id: string) {
-  return useSimulationStore((s) => s.activeComponents.has(id))
-}
+// ── Color maps (module-level constants, never recreated) ───────────────────
 
 type Accent = 'blue' | 'orange' | 'amber' | 'neutral' | 'indigo' | 'teal' | 'slate'
 
@@ -20,7 +19,6 @@ const ACCENT: Record<Accent, { border: string; bg: string; text: string; ring: s
   neutral: { border: 'border-border',      bg: 'bg-card',        text: 'text-foreground',  ring: '' },
 }
 
-// Idle (non-active) tints per accent — subtle background tint always visible
 const IDLE_TINT: Record<Accent, string> = {
   blue:    'border-blue-200/80 bg-blue-50/60',
   indigo:  'border-indigo-200/80 bg-indigo-50/60',
@@ -30,6 +28,27 @@ const IDLE_TINT: Record<Accent, string> = {
   slate:   'border-slate-200/80 bg-slate-50/60',
   neutral: 'border-border bg-card',
 }
+
+const PROCESS_COLOR = {
+  amber:  { idle: 'border-amber-200/80 bg-amber-50/60',   active: 'border-amber-500 bg-amber-100 ring-amber-300', text: 'text-amber-800',  dot: 'text-amber-500' },
+  orange: { idle: 'border-orange-200/80 bg-orange-50/60', active: 'border-orange-500 bg-orange-100 ring-orange-300', text: 'text-orange-800', dot: 'text-orange-500' },
+  teal:   { idle: 'border-teal-200/80 bg-teal-50/60',     active: 'border-teal-500 bg-teal-100 ring-teal-300',     text: 'text-teal-800',   dot: 'text-teal-500' },
+  indigo: { idle: 'border-indigo-200/80 bg-indigo-50/60', active: 'border-indigo-500 bg-indigo-100 ring-indigo-300', text: 'text-indigo-800', dot: 'text-indigo-500' },
+} as const
+
+const BLOCK_STATE_CLS: Record<string, string> = {
+  cached:   'bg-blue-100 text-blue-800 border-blue-300',
+  hit:      'bg-blue-300 text-blue-900 border-blue-600 font-bold',
+  scanning: 'bg-amber-100 text-amber-800 border-amber-400',
+  free:     'bg-muted text-muted-foreground border-border',
+  loading:  'bg-orange-100 text-orange-800 border-orange-400',
+}
+
+function useIsActive(id: string) {
+  return useSimulationStore((s) => s.activeComponents.has(id))
+}
+
+// ── Shared primitives ──────────────────────────────────────────────────────
 
 interface BlockProps {
   id: string
@@ -75,17 +94,10 @@ function Block({ id, label, sublabel, description, accent, className = '', compa
 }
 
 function ProcessBadge({ id, label, description, color = 'amber', compact = false }: {
-  id: string; label: string; description: string; color?: 'amber' | 'orange' | 'teal' | 'indigo'; compact?: boolean
+  id: string; label: string; description: string; color?: keyof typeof PROCESS_COLOR; compact?: boolean
 }) {
   const active = useIsActive(id)
-
-  const colorMap = {
-    amber:  { idle: 'border-amber-200/80 bg-amber-50/60',   active: 'border-amber-500 bg-amber-100 ring-amber-300', text: 'text-amber-800',  dot: 'text-amber-500' },
-    orange: { idle: 'border-orange-200/80 bg-orange-50/60', active: 'border-orange-500 bg-orange-100 ring-orange-300', text: 'text-orange-800', dot: 'text-orange-500' },
-    teal:   { idle: 'border-teal-200/80 bg-teal-50/60',     active: 'border-teal-500 bg-teal-100 ring-teal-300',     text: 'text-teal-800',   dot: 'text-teal-500' },
-    indigo: { idle: 'border-indigo-200/80 bg-indigo-50/60', active: 'border-indigo-500 bg-indigo-100 ring-indigo-300', text: 'text-indigo-800', dot: 'text-indigo-500' },
-  }
-  const c = colorMap[color]
+  const c = PROCESS_COLOR[color]
 
   return (
     <motion.div
@@ -143,16 +155,16 @@ function SectionLabel({ children, color = 'default' }: { children: React.ReactNo
 // ── Library Cache ──────────────────────────────────────────────────────────
 
 function LibraryCacheBlock({ compact = false }: { compact?: boolean }) {
-  const active = useIsActive('library-cache')
-  const currentStep = useSimulationStore((s) => s.currentStep)
+  const currentStep   = useSimulationStore((s) => s.currentStep)
   const cachedQueries = useSimulationStore((s) => s.cachedQueries)
-  const query = useSimulationStore((s) => s.query)
-  const lang = useSimulationStore((s) => s.lang)
+  const query         = useSimulationStore((s) => s.query)
+  const lang          = useSimulationStore((s) => s.lang)
+  const active = useIsActive('library-cache')
 
   const isSearching = currentStep === 'library-cache-check'
-  const isHit = currentStep === 'library-cache-hit'
-  const isMiss = currentStep === 'library-cache-miss'
-  const showList = active || isSearching || isHit || isMiss
+  const isHit       = currentStep === 'library-cache-hit'
+  const isMiss      = currentStep === 'library-cache-miss'
+  const showList    = active || isSearching || isHit || isMiss
   const normalizedQuery = query.trim().toUpperCase()
 
   return (
@@ -170,9 +182,11 @@ function LibraryCacheBlock({ compact = false }: { compact?: boolean }) {
       <div className={cn('text-xs font-semibold', active ? 'text-indigo-800' : 'text-foreground')}>
         Library Cache
       </div>
-      {!compact && <div className="mt-1 text-[10px] leading-snug text-muted-foreground">
-        {lang === 'ko' ? '파싱된 SQL·실행 계획 캐싱. Soft Parse 활성화' : 'Caches parsed SQL & execution plans. Enables Soft Parse'}
-      </div>}
+      {!compact && (
+        <div className="mt-1 text-[10px] leading-snug text-muted-foreground">
+          {lang === 'ko' ? '파싱된 SQL·실행 계획 캐싱. Soft Parse 활성화' : 'Caches parsed SQL & execution plans. Enables Soft Parse'}
+        </div>
+      )}
 
       <AnimatePresence>
         {showList && (
@@ -190,14 +204,12 @@ function LibraryCacheBlock({ compact = false }: { compact?: boolean }) {
             <div className="space-y-0.5 p-1.5">
               {cachedQueries.map((cq, i) => {
                 const isMatch = cq.trim().toUpperCase() === normalizedQuery
-                const isScanning = isSearching
-
                 return (
                   <motion.div
                     key={cq}
                     initial={{ opacity: 0, x: -4 }}
-                    animate={{ opacity: 1, x: 0, background: isMatch && (isHit || isScanning) ? '#e0e7ff' : 'transparent' }}
-                    transition={{ delay: isScanning ? i * 0.18 : 0, duration: 0.35 }}
+                    animate={{ opacity: 1, x: 0, background: isMatch && (isHit || isSearching) ? '#e0e7ff' : 'transparent' }}
+                    transition={{ delay: isSearching ? i * 0.18 : 0, duration: 0.35 }}
                     className="flex items-center gap-1.5 rounded px-1.5 py-0.5"
                   >
                     <span className={cn('shrink-0 font-mono text-[8px] font-bold', isMatch ? 'text-indigo-600' : 'text-muted-foreground')}>
@@ -240,32 +252,24 @@ function LibraryCacheBlock({ compact = false }: { compact?: boolean }) {
 // ── Buffer Cache ──────────────────────────────────────────────────────────
 
 function BufferCacheBlock({ compact = false }: { compact?: boolean }) {
-  const active = useIsActive('buffer-cache')
   const currentStep = useSimulationStore((s) => s.currentStep)
-  const lang = useSimulationStore((s) => s.lang)
+  const lang        = useSimulationStore((s) => s.lang)
+  const active = useIsActive('buffer-cache')
 
   const isChecking = currentStep === 'buffer-cache-check'
-  const isHit = currentStep === 'buffer-cache-hit'
-  const isMiss = currentStep === 'buffer-cache-miss'
-  const isDiskIo = currentStep === 'disk-io'
+  const isHit      = currentStep === 'buffer-cache-hit'
+  const isMiss     = currentStep === 'buffer-cache-miss'
+  const isDiskIo   = currentStep === 'disk-io'
   const showBlocks = active || isChecking || isHit || isMiss || isDiskIo
 
-  const blocks = [
+  const blocks = useMemo(() => [
     { id: 'b1', label: 'EMP#1',  state: 'cached' },
     { id: 'b2', label: 'DEPT#2', state: 'cached' },
     { id: 'b3', label: 'EMP#3',  state: isHit ? 'hit' : isChecking ? 'scanning' : 'cached' },
     { id: 'b4', label: 'FREE',   state: isDiskIo ? 'loading' : 'free' },
     { id: 'b5', label: 'JOB#1',  state: 'cached' },
     { id: 'b6', label: 'FREE',   state: isDiskIo ? 'loading' : 'free' },
-  ]
-
-  const blockCls: Record<string, string> = {
-    cached:   'bg-blue-100 text-blue-800 border-blue-300',
-    hit:      'bg-blue-300 text-blue-900 border-blue-600 font-bold',
-    scanning: 'bg-amber-100 text-amber-800 border-amber-400',
-    free:     'bg-muted text-muted-foreground border-border',
-    loading:  'bg-orange-100 text-orange-800 border-orange-400',
-  }
+  ], [isHit, isChecking, isDiskIo])
 
   return (
     <motion.div
@@ -282,9 +286,11 @@ function BufferCacheBlock({ compact = false }: { compact?: boolean }) {
       <div className={cn('text-xs font-semibold', active ? 'text-blue-800' : 'text-foreground')}>
         Database Buffer Cache
       </div>
-      {!compact && <div className="mt-1 text-[10px] leading-snug text-muted-foreground">
-        {lang === 'ko' ? '디스크 블록 메모리 캐시. LRU 관리' : 'In-memory disk block cache. LRU managed'}
-      </div>}
+      {!compact && (
+        <div className="mt-1 text-[10px] leading-snug text-muted-foreground">
+          {lang === 'ko' ? '디스크 블록 메모리 캐시. LRU 관리' : 'In-memory disk block cache. LRU managed'}
+        </div>
+      )}
 
       <AnimatePresence>
         {showBlocks && (
@@ -302,7 +308,7 @@ function BufferCacheBlock({ compact = false }: { compact?: boolean }) {
                 transition={{ delay: isChecking ? i * 0.1 : 0 }}
                 className={cn(
                   'rounded border px-1 py-0.5 text-center font-mono text-[8px] font-bold',
-                  blockCls[blk.state]
+                  BLOCK_STATE_CLS[blk.state]
                 )}
               >
                 {blk.label}
@@ -325,22 +331,23 @@ function BufferCacheBlock({ compact = false }: { compact?: boolean }) {
 // ── Main Diagram ──────────────────────────────────────────────────────────
 
 export function OracleDiagram({ compact = false }: { compact?: boolean }) {
-  const currentStep = useSimulationStore((s) => s.currentStep)
+  const currentStep    = useSimulationStore((s) => s.currentStep)
   const highlightedStep = useSimulationStore((s) => s.highlightedStep)
-  const lang = useSimulationStore((s) => s.lang)
-  const displayStep = highlightedStep ?? currentStep
-  const stepLabel = STEP_PROCESS_LABEL[lang][displayStep]
-  const D = DIAGRAM_TEXT[lang]
+  const lang           = useSimulationStore((s) => s.lang)
 
-  const gap = compact ? 'gap-1.5' : 'gap-3'
-  const pad = compact ? 'p-2' : 'p-4'
-  const innerPad = compact ? 'p-1.5' : 'p-3'
+  const displayStep = highlightedStep ?? currentStep
+  const stepLabel   = STEP_PROCESS_LABEL[lang][displayStep]
+  const D           = DIAGRAM_TEXT[lang]
+
+  const gap      = compact ? 'gap-1.5' : 'gap-3'
+  const pad      = compact ? 'p-2'     : 'p-4'
+  const innerPad = compact ? 'p-1.5'   : 'p-3'
   const innerPadSm = compact ? 'p-1.5' : 'p-2.5'
 
   return (
-    <div className={cn('flex h-full flex-col overflow-y-auto', gap, pad)}>
+    <div className={cn('flex h-full flex-col', gap, pad)}>
       {/* Instance header */}
-      <div className="flex items-center gap-3">
+      <div className="flex shrink-0 items-center gap-3">
         <div className="flex items-center gap-2 rounded-lg border border-blue-300 bg-blue-50 px-3 py-1.5">
           <span className="h-2 w-2 rounded-full bg-blue-500" />
           <span className="font-mono text-xs font-bold text-blue-800">Oracle Database Instance</span>
@@ -366,17 +373,17 @@ export function OracleDiagram({ compact = false }: { compact?: boolean }) {
       </div>
 
       {/* Server Process + PGA */}
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid shrink-0 grid-cols-2 gap-2">
         <Block id="server-process" label="Server Process" description={D.serverProcess} accent="teal" compact={compact} />
         <Block id="pga" label="PGA" sublabel="Program Global Area" description={D.pga} accent="teal" compact={compact} />
       </div>
 
       {/* SGA */}
-      <div className={cn('rounded-xl border-2 border-blue-300 bg-blue-50/50 shadow-sm', innerPad)}>
+      <div className={cn('flex min-h-0 flex-1 flex-col rounded-xl border-2 border-blue-300 bg-blue-50/50 shadow-sm', innerPad)}>
         <SectionLabel color="blue">SGA — System Global Area</SectionLabel>
 
         {/* Shared Pool */}
-        <div className={cn('mb-2 rounded-lg border-2 border-indigo-200 bg-indigo-50/70', innerPadSm)}>
+        <div className={cn('mb-2 shrink-0 rounded-lg border-2 border-indigo-200 bg-indigo-50/70', innerPadSm)}>
           <SectionLabel color="indigo">Shared Pool</SectionLabel>
           <div className="grid grid-cols-2 gap-2">
             <LibraryCacheBlock compact={compact} />
@@ -385,7 +392,7 @@ export function OracleDiagram({ compact = false }: { compact?: boolean }) {
         </div>
 
         {/* Buffer Cache + Redo + Undo */}
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid flex-1 grid-cols-3 gap-2">
           <BufferCacheBlock compact={compact} />
           <Block id="redo-buffer" label="Redo Log Buffer" description={D.redoBuffer} accent="orange" compact={compact} />
           <Block id="undo" label="Undo Segment" description={D.undo} accent="amber" compact={compact} />
@@ -393,19 +400,19 @@ export function OracleDiagram({ compact = false }: { compact?: boolean }) {
       </div>
 
       {/* Background Processes */}
-      <div className={cn('rounded-xl border-2 border-amber-200 bg-amber-50/40 shadow-sm', innerPad)}>
+      <div className={cn('shrink-0 rounded-xl border-2 border-amber-200 bg-amber-50/40 shadow-sm', innerPad)}>
         <SectionLabel color="amber">Background Processes</SectionLabel>
         <div className="grid grid-cols-5 gap-2">
           <ProcessBadge id="dbwr" label="DBWn" description={D.dbwr} color="orange" compact={compact} />
           <ProcessBadge id="lgwr" label="LGWR" description={D.lgwr} color="orange" compact={compact} />
-          <ProcessBadge id="ckpt" label="CKPT" description={D.ckpt} color="amber" compact={compact} />
-          <ProcessBadge id="smon" label="SMON" description={D.smon} color="amber" compact={compact} />
-          <ProcessBadge id="pmon" label="PMON" description={D.pmon} color="teal" compact={compact} />
+          <ProcessBadge id="ckpt" label="CKPT" description={D.ckpt} color="amber"  compact={compact} />
+          <ProcessBadge id="smon" label="SMON" description={D.smon} color="amber"  compact={compact} />
+          <ProcessBadge id="pmon" label="PMON" description={D.pmon} color="teal"   compact={compact} />
         </div>
       </div>
 
       {/* Disk */}
-      <div className={cn('rounded-xl border-2 border-slate-300 bg-slate-50/60 shadow-sm', innerPad)}>
+      <div className={cn('shrink-0 rounded-xl border-2 border-slate-300 bg-slate-50/60 shadow-sm', innerPad)}>
         <SectionLabel color="slate">Disk Storage</SectionLabel>
         <div className="grid grid-cols-4 gap-2">
           <Block id="disk"          label="Data Files"       description={D.dataFiles}   accent="slate" compact={compact} />
@@ -417,6 +424,8 @@ export function OracleDiagram({ compact = false }: { compact?: boolean }) {
     </div>
   )
 }
+
+// ── Diagram text strings ───────────────────────────────────────────────────
 
 const DIAGRAM_TEXT: Record<Lang, Record<string, string>> = {
   ko: {

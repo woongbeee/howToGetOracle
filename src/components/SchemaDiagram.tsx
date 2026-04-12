@@ -1,17 +1,15 @@
 import { useMemo, useState } from 'react'
+import type { Node, Edge, NodeProps } from '@xyflow/react'
 import {
   ReactFlow,
   Background,
   Controls,
   MiniMap,
-  type Node,
-  type Edge,
   Handle,
   Position,
   BackgroundVariant,
   useNodesState,
   useEdgesState,
-  type NodeProps,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 import { SCHEMAS } from '@/data/index'
@@ -188,9 +186,21 @@ function getLayout(
 
 // ─── SchemaDiagramView ────────────────────────────────────────────────────
 
-export function SchemaDiagramView() {
-  const [schemaName, setSchemaName] = useState(SCHEMAS[0].name)
-  const schema = SCHEMAS.find((s) => s.name === schemaName) ?? SCHEMAS[0]
+interface SchemaDiagramViewProps {
+  lockedSchema?: string
+  onSchemaChange?: (schema: typeof SCHEMAS[0]) => void
+}
+
+export function SchemaDiagramView({ lockedSchema, onSchemaChange }: SchemaDiagramViewProps = {}) {
+  const [schemaName, setSchemaName] = useState(lockedSchema ?? SCHEMAS[0].name)
+  const effectiveName = lockedSchema ?? schemaName
+  const schema = SCHEMAS.find((s) => s.name === effectiveName) ?? SCHEMAS[0]
+
+  const handleSchemaChange = (name: string) => {
+    setSchemaName(name)
+    const s = SCHEMAS.find((s) => s.name === name)
+    if (s && onSchemaChange) onSchemaChange(s)
+  }
 
   const initialNodes: Node[] = useMemo(() => {
     const positions = getLayout(schema.tables, schema.name)
@@ -237,27 +247,29 @@ export function SchemaDiagramView() {
         <span className="font-mono text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
           Schema ERD
         </span>
-        <div className="flex gap-1">
-          {SCHEMAS.map((s) => {
-            const active = schema.name === s.name
-            return (
-              <button
-                key={s.name}
-                onClick={() => setSchemaName(s.name)}
-                className="rounded px-3 py-1 font-mono text-xs font-medium transition-all"
-                style={
-                  active
-                    ? { background: s.color === 'blue' ? 'rgba(4,31,155,0.5)' : 'rgba(4,80,60,0.5)',
-                        color: s.color === 'blue' ? '#6596F3' : '#34d399',
-                        border: `1px solid ${s.color === 'blue' ? '#0474D4' : '#059669'}` }
-                    : { color: 'var(--text-muted)', border: '1px solid transparent' }
-                }
-              >
-                {s.name} — {s.label}
-              </button>
-            )
-          })}
-        </div>
+        {!lockedSchema && (
+          <div className="flex gap-1">
+            {SCHEMAS.map((s) => {
+              const active = schema.name === s.name
+              return (
+                <button
+                  key={s.name}
+                  onClick={() => handleSchemaChange(s.name)}
+                  className="rounded px-3 py-1 font-mono text-xs font-medium transition-all"
+                  style={
+                    active
+                      ? { background: s.color === 'blue' ? 'rgba(4,31,155,0.5)' : 'rgba(4,80,60,0.5)',
+                          color: s.color === 'blue' ? '#6596F3' : '#34d399',
+                          border: `1px solid ${s.color === 'blue' ? '#0474D4' : '#059669'}` }
+                      : { color: 'var(--text-muted)', border: '1px solid transparent' }
+                  }
+                >
+                  {s.name} — {s.label}
+                </button>
+              )
+            })}
+          </div>
+        )}
         <div className="ml-auto flex items-center gap-3 font-mono text-[10px]" style={{ color: 'var(--text-muted)' }}>
           <span>{schema.tables.length} tables</span>
           <span>{initialEdges.length} FK relations</span>
