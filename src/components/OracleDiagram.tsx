@@ -38,10 +38,11 @@ interface BlockProps {
   description: string
   accent: Accent
   className?: string
+  compact?: boolean
   children?: React.ReactNode
 }
 
-function Block({ id, label, sublabel, description, accent, className = '', children }: BlockProps) {
+function Block({ id, label, sublabel, description, accent, className = '', compact = false, children }: BlockProps) {
   const active = useIsActive(id)
   const c = ACCENT[accent]
   const idle = IDLE_TINT[accent]
@@ -51,7 +52,8 @@ function Block({ id, label, sublabel, description, accent, className = '', child
       animate={active ? { scale: [1, 1.03, 1] } : { scale: 1 }}
       transition={{ duration: 0.4, repeat: active ? Infinity : 0, repeatDelay: 0.3 }}
       className={cn(
-        'relative flex flex-col rounded-lg border-2 p-2.5 transition-all duration-200',
+        'relative flex flex-col rounded-lg border-2 transition-all duration-200',
+        compact ? 'p-1.5' : 'p-2.5',
         active ? [c.border, c.bg, 'ring-2', c.ring, 'shadow-md'] : idle,
         className
       )}
@@ -66,14 +68,14 @@ function Block({ id, label, sublabel, description, accent, className = '', child
           </div>
         )}
       </div>
-      <div className="mt-1 text-[10px] leading-snug text-muted-foreground">{description}</div>
-      {children && <div className="mt-2">{children}</div>}
+      {!compact && <div className="mt-1 text-[10px] leading-snug text-muted-foreground">{description}</div>}
+      {children && <div className={compact ? 'mt-1' : 'mt-2'}>{children}</div>}
     </motion.div>
   )
 }
 
-function ProcessBadge({ id, label, description, color = 'amber' }: {
-  id: string; label: string; description: string; color?: 'amber' | 'orange' | 'teal' | 'indigo'
+function ProcessBadge({ id, label, description, color = 'amber', compact = false }: {
+  id: string; label: string; description: string; color?: 'amber' | 'orange' | 'teal' | 'indigo'; compact?: boolean
 }) {
   const active = useIsActive(id)
 
@@ -90,7 +92,8 @@ function ProcessBadge({ id, label, description, color = 'amber' }: {
       animate={active ? { y: [0, -3, 0], scale: [1, 1.06, 1] } : { y: 0, scale: 1 }}
       transition={{ duration: 0.45, repeat: active ? Infinity : 0, repeatDelay: 0.2 }}
       className={cn(
-        'flex flex-col items-center rounded-lg border-2 px-2 py-2 transition-all duration-200',
+        'flex flex-col items-center rounded-lg border-2 transition-all duration-200',
+        compact ? 'px-1.5 py-1.5' : 'px-2 py-2',
         active ? [c.active, 'ring-2 shadow-md'] : c.idle
       )}
       title={description}
@@ -139,7 +142,7 @@ function SectionLabel({ children, color = 'default' }: { children: React.ReactNo
 
 // ── Library Cache ──────────────────────────────────────────────────────────
 
-function LibraryCacheBlock() {
+function LibraryCacheBlock({ compact = false }: { compact?: boolean }) {
   const active = useIsActive('library-cache')
   const currentStep = useSimulationStore((s) => s.currentStep)
   const cachedQueries = useSimulationStore((s) => s.cachedQueries)
@@ -157,7 +160,8 @@ function LibraryCacheBlock() {
       animate={active ? { scale: [1, 1.03, 1] } : { scale: 1 }}
       transition={{ duration: 0.4, repeat: active ? Infinity : 0, repeatDelay: 0.3 }}
       className={cn(
-        'relative flex flex-col rounded-lg border-2 p-2.5 transition-all duration-200',
+        'relative flex flex-col rounded-lg border-2 transition-all duration-200',
+        compact ? 'p-1.5' : 'p-2.5',
         active
           ? 'border-indigo-500 bg-indigo-100 ring-2 ring-indigo-300 shadow-md'
           : 'border-indigo-200/80 bg-indigo-50/60'
@@ -166,9 +170,9 @@ function LibraryCacheBlock() {
       <div className={cn('text-xs font-semibold', active ? 'text-indigo-800' : 'text-foreground')}>
         Library Cache
       </div>
-      <div className="mt-1 text-[10px] leading-snug text-muted-foreground">
+      {!compact && <div className="mt-1 text-[10px] leading-snug text-muted-foreground">
         {lang === 'ko' ? '파싱된 SQL·실행 계획 캐싱. Soft Parse 활성화' : 'Caches parsed SQL & execution plans. Enables Soft Parse'}
-      </div>
+      </div>}
 
       <AnimatePresence>
         {showList && (
@@ -235,7 +239,7 @@ function LibraryCacheBlock() {
 
 // ── Buffer Cache ──────────────────────────────────────────────────────────
 
-function BufferCacheBlock() {
+function BufferCacheBlock({ compact = false }: { compact?: boolean }) {
   const active = useIsActive('buffer-cache')
   const currentStep = useSimulationStore((s) => s.currentStep)
   const lang = useSimulationStore((s) => s.lang)
@@ -268,7 +272,8 @@ function BufferCacheBlock() {
       animate={active ? { scale: [1, 1.03, 1] } : { scale: 1 }}
       transition={{ duration: 0.4, repeat: active ? Infinity : 0, repeatDelay: 0.3 }}
       className={cn(
-        'relative flex flex-col rounded-lg border-2 p-2.5 transition-all duration-200',
+        'relative flex flex-col rounded-lg border-2 transition-all duration-200',
+        compact ? 'p-1.5' : 'p-2.5',
         active
           ? 'border-blue-500 bg-blue-100 ring-2 ring-blue-300 shadow-md'
           : 'border-blue-200/80 bg-blue-50/60'
@@ -277,9 +282,9 @@ function BufferCacheBlock() {
       <div className={cn('text-xs font-semibold', active ? 'text-blue-800' : 'text-foreground')}>
         Database Buffer Cache
       </div>
-      <div className="mt-1 text-[10px] leading-snug text-muted-foreground">
+      {!compact && <div className="mt-1 text-[10px] leading-snug text-muted-foreground">
         {lang === 'ko' ? '디스크 블록 메모리 캐시. LRU 관리' : 'In-memory disk block cache. LRU managed'}
-      </div>
+      </div>}
 
       <AnimatePresence>
         {showBlocks && (
@@ -319,7 +324,7 @@ function BufferCacheBlock() {
 
 // ── Main Diagram ──────────────────────────────────────────────────────────
 
-export function OracleDiagram() {
+export function OracleDiagram({ compact = false }: { compact?: boolean }) {
   const currentStep = useSimulationStore((s) => s.currentStep)
   const highlightedStep = useSimulationStore((s) => s.highlightedStep)
   const lang = useSimulationStore((s) => s.lang)
@@ -327,8 +332,13 @@ export function OracleDiagram() {
   const stepLabel = STEP_PROCESS_LABEL[lang][displayStep]
   const D = DIAGRAM_TEXT[lang]
 
+  const gap = compact ? 'gap-1.5' : 'gap-3'
+  const pad = compact ? 'p-2' : 'p-4'
+  const innerPad = compact ? 'p-1.5' : 'p-3'
+  const innerPadSm = compact ? 'p-1.5' : 'p-2.5'
+
   return (
-    <div className="flex h-full flex-col gap-3 overflow-y-auto p-4">
+    <div className={cn('flex h-full flex-col overflow-y-auto', gap, pad)}>
       {/* Instance header */}
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-2 rounded-lg border border-blue-300 bg-blue-50 px-3 py-1.5">
@@ -357,51 +367,51 @@ export function OracleDiagram() {
 
       {/* Server Process + PGA */}
       <div className="grid grid-cols-2 gap-2">
-        <Block id="server-process" label="Server Process" description={D.serverProcess} accent="teal" />
-        <Block id="pga" label="PGA" sublabel="Program Global Area" description={D.pga} accent="teal" />
+        <Block id="server-process" label="Server Process" description={D.serverProcess} accent="teal" compact={compact} />
+        <Block id="pga" label="PGA" sublabel="Program Global Area" description={D.pga} accent="teal" compact={compact} />
       </div>
 
       {/* SGA */}
-      <div className="rounded-xl border-2 border-blue-300 bg-blue-50/50 p-3 shadow-sm">
+      <div className={cn('rounded-xl border-2 border-blue-300 bg-blue-50/50 shadow-sm', innerPad)}>
         <SectionLabel color="blue">SGA — System Global Area</SectionLabel>
 
         {/* Shared Pool */}
-        <div className="mb-3 rounded-lg border-2 border-indigo-200 bg-indigo-50/70 p-2.5">
+        <div className={cn('mb-2 rounded-lg border-2 border-indigo-200 bg-indigo-50/70', innerPadSm)}>
           <SectionLabel color="indigo">Shared Pool</SectionLabel>
           <div className="grid grid-cols-2 gap-2">
-            <LibraryCacheBlock />
-            <Block id="dict-cache" label="Data Dictionary Cache" description={D.dictCache} accent="indigo" />
+            <LibraryCacheBlock compact={compact} />
+            <Block id="dict-cache" label="Data Dictionary Cache" description={D.dictCache} accent="indigo" compact={compact} />
           </div>
         </div>
 
         {/* Buffer Cache + Redo + Undo */}
         <div className="grid grid-cols-3 gap-2">
-          <BufferCacheBlock />
-          <Block id="redo-buffer" label="Redo Log Buffer" description={D.redoBuffer} accent="orange" />
-          <Block id="undo" label="Undo Segment" description={D.undo} accent="amber" />
+          <BufferCacheBlock compact={compact} />
+          <Block id="redo-buffer" label="Redo Log Buffer" description={D.redoBuffer} accent="orange" compact={compact} />
+          <Block id="undo" label="Undo Segment" description={D.undo} accent="amber" compact={compact} />
         </div>
       </div>
 
       {/* Background Processes */}
-      <div className="rounded-xl border-2 border-amber-200 bg-amber-50/40 p-3 shadow-sm">
+      <div className={cn('rounded-xl border-2 border-amber-200 bg-amber-50/40 shadow-sm', innerPad)}>
         <SectionLabel color="amber">Background Processes</SectionLabel>
         <div className="grid grid-cols-5 gap-2">
-          <ProcessBadge id="dbwr" label="DBWn" description={D.dbwr} color="orange" />
-          <ProcessBadge id="lgwr" label="LGWR" description={D.lgwr} color="orange" />
-          <ProcessBadge id="ckpt" label="CKPT" description={D.ckpt} color="amber" />
-          <ProcessBadge id="smon" label="SMON" description={D.smon} color="amber" />
-          <ProcessBadge id="pmon" label="PMON" description={D.pmon} color="teal" />
+          <ProcessBadge id="dbwr" label="DBWn" description={D.dbwr} color="orange" compact={compact} />
+          <ProcessBadge id="lgwr" label="LGWR" description={D.lgwr} color="orange" compact={compact} />
+          <ProcessBadge id="ckpt" label="CKPT" description={D.ckpt} color="amber" compact={compact} />
+          <ProcessBadge id="smon" label="SMON" description={D.smon} color="amber" compact={compact} />
+          <ProcessBadge id="pmon" label="PMON" description={D.pmon} color="teal" compact={compact} />
         </div>
       </div>
 
       {/* Disk */}
-      <div className="rounded-xl border-2 border-slate-300 bg-slate-50/60 p-3 shadow-sm">
+      <div className={cn('rounded-xl border-2 border-slate-300 bg-slate-50/60 shadow-sm', innerPad)}>
         <SectionLabel color="slate">Disk Storage</SectionLabel>
         <div className="grid grid-cols-4 gap-2">
-          <Block id="disk"          label="Data Files"       description={D.dataFiles}   accent="slate" />
-          <Block id="redo-log-file" label="Online Redo Logs" description={D.redoLogs}    accent="slate" />
-          <Block id="control-file"  label="Control File"     description={D.controlFile} accent="slate" />
-          <Block id="archive-log"   label="Archive Logs"     description={D.archiveLogs} accent="slate" />
+          <Block id="disk"          label="Data Files"       description={D.dataFiles}   accent="slate" compact={compact} />
+          <Block id="redo-log-file" label="Online Redo Logs" description={D.redoLogs}    accent="slate" compact={compact} />
+          <Block id="control-file"  label="Control File"     description={D.controlFile} accent="slate" compact={compact} />
+          <Block id="archive-log"   label="Archive Logs"     description={D.archiveLogs} accent="slate" compact={compact} />
         </div>
       </div>
     </div>

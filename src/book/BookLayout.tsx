@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { memo, useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useSimulationStore } from '@/store/simulationStore'
 import { TableOfContents } from './TableOfContents'
 import { BookContent } from './BookContent'
+import { GlossaryPanel } from './GlossaryPanel'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 
@@ -26,11 +27,15 @@ const T: Record<'ko' | 'en', { title: string; subtitle: string; langToggle: stri
 export function BookLayout({ onHome }: Props) {
   const lang = useSimulationStore((s) => s.lang)
   const setLang = useSimulationStore((s) => s.setLang)
-  const isRunning = useSimulationStore((s) => s.isRunning)
   const t = T[lang]
 
   const [tocOpen, setTocOpen] = useState(true)
+  const [glossaryOpen, setGlossaryOpen] = useState(false)
   const [activeSectionId, setActiveSectionId] = useState('internals-overview')
+
+  const toggleToc = useCallback(() => setTocOpen((v) => !v), [])
+  const toggleGlossary = useCallback(() => setGlossaryOpen((v) => !v), [])
+  const toggleLang = useCallback(() => setLang(lang === 'ko' ? 'en' : 'ko'), [lang, setLang])
 
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-background text-foreground">
@@ -56,7 +61,7 @@ export function BookLayout({ onHome }: Props) {
 
         {/* TOC toggle */}
         <button
-          onClick={() => setTocOpen((v) => !v)}
+          onClick={toggleToc}
           className={cn(
             'flex items-center gap-1.5 rounded-md px-2 py-1 font-mono text-xs transition-colors',
             tocOpen
@@ -76,22 +81,12 @@ export function BookLayout({ onHome }: Props) {
 
         <div className="ml-auto flex items-center gap-2">
           <button
-            onClick={() => setLang(lang === 'ko' ? 'en' : 'ko')}
+            onClick={toggleLang}
             className="flex items-center gap-1 rounded-full border bg-muted px-2.5 py-0.5 font-mono text-[10px] font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
           >
             🌐 {t.langToggle}
           </button>
-          {isRunning ? (
-            <Badge variant="outline" className="font-mono text-[10px]">
-              <span className="mr-1.5 inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-orange-400" />
-              RUNNING
-            </Badge>
-          ) : (
-            <Badge variant="outline" className="font-mono text-[10px] text-muted-foreground">
-              <span className="mr-1.5 inline-block h-1.5 w-1.5 rounded-full bg-green-400" />
-              READY
-            </Badge>
-          )}
+          <SimulationBadge />
         </div>
       </header>
 
@@ -125,10 +120,33 @@ export function BookLayout({ onHome }: Props) {
             onNavigate={setActiveSectionId}
           />
         </main>
+
+        {/* Glossary Panel */}
+        <GlossaryPanel
+          sectionId={activeSectionId}
+          open={glossaryOpen}
+          onToggle={toggleGlossary}
+        />
       </div>
     </div>
   )
 }
+
+// Isolated: only re-renders on isRunning changes, not on lang/section changes
+const SimulationBadge = memo(function SimulationBadge() {
+  const isRunning = useSimulationStore((s) => s.isRunning)
+  return isRunning ? (
+    <Badge variant="outline" className="font-mono text-[10px]">
+      <span className="mr-1.5 inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-orange-400" />
+      RUNNING
+    </Badge>
+  ) : (
+    <Badge variant="outline" className="font-mono text-[10px] text-muted-foreground">
+      <span className="mr-1.5 inline-block h-1.5 w-1.5 rounded-full bg-green-400" />
+      READY
+    </Badge>
+  )
+})
 
 function TocIcon({ open }: { open: boolean }) {
   return (

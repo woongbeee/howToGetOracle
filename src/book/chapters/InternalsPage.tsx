@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useSimulationStore, type Lang } from '@/store/simulationStore'
 import {
   ChapterTitle, SectionTitle, SubTitle, Prose,
@@ -11,7 +11,7 @@ import type { InstanceComponentId } from './OracleInstanceMap'
 
 // ─── Inline Internals Simulator ─────────────────────────────────────────────
 import { OracleDiagram } from '@/components/OracleDiagram'
-import { QueryInput } from '@/components/QueryInput'
+import { QueryInput, LiveLog, SummaryTimeline } from '@/components/QueryInput'
 import { DataPanel } from '@/components/DataPanel'
 import { OptimizerPanel } from '@/components/OptimizerPanel'
 import { Button } from '@/components/ui/button'
@@ -458,14 +458,18 @@ function InternalsSimulatorSection({ lang, t }: { lang: Lang; t: typeof T['ko'] 
   const [dataPanelOpen, setDataPanelOpen] = useState(false)
   const [optimizerOpen, setOptimizerOpen] = useState(false)
   const optimizerResult = useSimulationStore((s) => s.optimizerResult)
+  const isComplete = useSimulationStore((s) => s.isComplete)
+  const { highlightedStep, setHighlightedStep } = useSimulationStore()
 
   return (
     <div className="flex h-full flex-col overflow-hidden">
       {/* Section header */}
-      <div className="shrink-0 border-b bg-muted/30 px-6 py-4">
-        <h2 className="text-lg font-bold">{t.simTitle}</h2>
-        <p className="mt-1 text-xs text-muted-foreground">{t.simDesc}</p>
-        <div className="mt-3 flex items-center gap-2">
+      <div className="shrink-0 border-b bg-muted/30 px-4 py-2.5 flex items-center gap-3">
+        <div className="min-w-0 flex-1">
+          <h2 className="text-sm font-bold leading-none">{t.simTitle}</h2>
+          <p className="mt-0.5 text-[11px] text-muted-foreground">{t.simDesc}</p>
+        </div>
+        <div className="flex shrink-0 items-center gap-1.5">
           <Button
             variant={optimizerOpen ? 'outline' : 'ghost'}
             size="sm"
@@ -483,7 +487,7 @@ function InternalsSimulatorSection({ lang, t }: { lang: Lang; t: typeof T['ko'] 
             onClick={() => setDataPanelOpen((v) => !v)}
             className="font-mono text-xs"
           >
-            ⬡ {lang === 'ko' ? '데이터 패널' : 'Data Panel'}
+            ⬡ {lang === 'ko' ? '데이터' : 'Data'}
           </Button>
         </div>
       </div>
@@ -492,14 +496,41 @@ function InternalsSimulatorSection({ lang, t }: { lang: Lang; t: typeof T['ko'] 
       <div className="flex min-h-0 flex-1 overflow-hidden">
         <DataPanel open={dataPanelOpen} onToggle={() => setDataPanelOpen((v) => !v)} />
 
+        {/* Left: Execution log / summary panel */}
+        <div className="flex w-56 shrink-0 flex-col overflow-hidden border-r bg-card">
+          <div className="shrink-0 border-b bg-muted/40 px-3 py-1.5">
+            <span className="font-mono text-[9px] font-bold uppercase tracking-widest text-muted-foreground">
+              {isComplete
+                ? (lang === 'ko' ? '처리 요약' : 'Execution Summary')
+                : (lang === 'ko' ? '실시간 로그' : 'Live Log')}
+            </span>
+          </div>
+          <div className="min-h-0 flex-1 overflow-y-auto px-3 py-2">
+            <AnimatePresence mode="wait">
+              {isComplete ? (
+                <motion.div key="summary" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="h-full">
+                  <SummaryTimeline selectedStep={highlightedStep} onSelect={setHighlightedStep} />
+                </motion.div>
+              ) : (
+                <motion.div key="live" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="h-full">
+                  <LiveLog />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
+
+        {/* Center: OracleDiagram at 70% scale */}
         <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
           <div className="min-h-0 flex-1 overflow-hidden">
             <div className="flex h-full min-h-0 overflow-hidden">
+              {/* Diagram — compact mode: smaller padding/gaps, no description text */}
               <div className="min-h-0 flex-1 overflow-hidden">
-                <OracleDiagram />
+                <OracleDiagram compact />
               </div>
+
               {optimizerOpen && (
-                <div className="flex min-h-0 w-[380px] shrink-0 flex-col overflow-hidden border-l bg-card">
+                <div className="flex min-h-0 w-[320px] shrink-0 flex-col overflow-hidden border-l bg-card">
                   <div className="flex shrink-0 items-center gap-2 border-b bg-muted/50 px-3 py-2">
                     <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                       CBO Optimizer

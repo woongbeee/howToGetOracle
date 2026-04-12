@@ -1,3 +1,4 @@
+import { memo, useMemo } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useSimulationStore } from '@/store/simulationStore'
 import { getAdjacentSections, getSectionById } from './bookStructure'
@@ -29,10 +30,10 @@ const COLOR_MAP: Record<string, { text: string; border: string; bg: string; dot:
   teal:   { text: 'text-teal-600',   border: 'border-teal-200',   bg: 'bg-teal-50',   dot: 'bg-teal-400' },
 }
 
-export function BookContent({ sectionId, onNavigate }: Props) {
+export const BookContent = memo(function BookContent({ sectionId, onNavigate }: Props) {
   const lang = useSimulationStore((s) => s.lang)
-  const info = getSectionById(sectionId)
-  const adjacent = getAdjacentSections(sectionId)
+  const info = useMemo(() => getSectionById(sectionId), [sectionId])
+  const adjacent = useMemo(() => getAdjacentSections(sectionId), [sectionId])
 
   if (!info) return null
 
@@ -110,7 +111,7 @@ export function BookContent({ sectionId, onNavigate }: Props) {
       </div>
     </div>
   )
-}
+})
 
 // Route each sectionId to the right chapter page component
 function SectionRouter({ sectionId }: { sectionId: string }) {

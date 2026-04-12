@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { useSimulationStore } from '@/store/simulationStore'
 import type { StepSummary, SimulationStep } from '@/store/simulationStore'
 import { SAMPLE_QUERIES } from '@/data/index'
@@ -18,7 +18,7 @@ const RESULT_CLS: Record<StepSummary['result'], { dot: string; badge: string; se
 
 // ── Live log ───────────────────────────────────────────────────────────────
 
-function LiveLog() {
+export function LiveLog() {
   const stepLog = useSimulationStore((s) => s.stepLog)
   const lang = useSimulationStore((s) => s.lang)
   const endRef = useRef<HTMLDivElement>(null)
@@ -76,7 +76,7 @@ function SummaryItem({
       transition={{ delay: index * 0.04 }}
       onClick={onClick}
       className={cn(
-        'group flex w-full items-start gap-2 rounded-lg border px-2.5 py-1.5 text-left transition-all',
+        'flex w-full items-start gap-2 rounded-lg border px-2 py-1.5 text-left transition-all',
         isSelected ? c.selected : isCurrent ? 'border-border bg-muted/40' : 'border-transparent hover:border-border hover:bg-muted/40'
       )}
     >
@@ -95,10 +95,10 @@ function SummaryItem({
       {/* Content */}
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5">
-          <span className={cn('font-mono text-[11px] font-bold', isSelected ? 'text-foreground' : 'text-foreground')}>
+          <span className={cn('min-w-0 flex-1 truncate font-mono text-[11px] font-bold text-foreground')}>
             {summary.label}
           </span>
-          <Badge variant="outline" className={cn('h-4 font-mono text-[8px] font-bold uppercase', c.badge)}>
+          <Badge variant="outline" className={cn('shrink-0 h-4 font-mono text-[8px] font-bold uppercase', c.badge)}>
             {summary.result}
           </Badge>
         </div>
@@ -112,24 +112,12 @@ function SummaryItem({
           </motion.p>
         )}
       </div>
-
-      <PinHint isSelected={isSelected} />
     </motion.button>
   )
 }
 
-function PinHint({ isSelected }: { isSelected: boolean }) {
-  const lang = useSimulationStore((s) => s.lang)
-  return (
-    <span className="shrink-0 self-center font-mono text-[9px] text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100">
-      {isSelected
-        ? (lang === 'ko' ? '핀 해제 ✕' : 'Unpin ✕')
-        : (lang === 'ko' ? '클릭하여 하이라이트' : 'Click to highlight')}
-    </span>
-  )
-}
 
-function SummaryTimeline({ selectedStep, onSelect }: {
+export function SummaryTimeline({ selectedStep, onSelect }: {
   selectedStep: SimulationStep | null
   onSelect: (step: SimulationStep | null) => void
 }) {
@@ -198,7 +186,7 @@ function highlightSQL(text: string): string {
 
 export function QueryInput() {
   const [input, setInput] = useState('')
-  const { startSimulation, resetSimulation, isRunning, isComplete, setHighlightedStep, highlightedStep, flushBuffers } =
+  const { startSimulation, resetSimulation, isRunning, setHighlightedStep, flushBuffers } =
     useSimulationStore()
   const lang = useSimulationStore((s) => s.lang)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -225,21 +213,6 @@ export function QueryInput() {
 
   return (
     <div className="flex flex-col gap-2 bg-card p-3">
-
-      {/* Log / Summary */}
-      <div className="max-h-48 overflow-y-auto rounded-lg border bg-muted/30 px-3 py-2">
-        <AnimatePresence mode="wait">
-          {isComplete ? (
-            <motion.div key="summary" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="h-full">
-              <SummaryTimeline selectedStep={highlightedStep} onSelect={setHighlightedStep} />
-            </motion.div>
-          ) : (
-            <motion.div key="live" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="h-full">
-              <LiveLog />
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
 
       {/* Sample queries */}
       <div className="flex flex-wrap gap-1">
