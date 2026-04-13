@@ -45,6 +45,8 @@ interface Props {
 
 `bookStructure.ts`의 `BOOK_CHAPTERS`가 단일 진실 공급원(TOC 데이터). 새 섹션 추가 시 여기만 수정하면 TOC·breadcrumb·Prev/Next가 자동 반영된다.
 
+앱 첫 진입 시 활성 섹션은 `internals-storage` (Chapter 1 첫 섹션, `BookLayout.tsx`의 `useState` 초기값).
+
 현재 `SectionRouter` 접두사 → 컴포넌트 매핑:
 | 접두사 | 컴포넌트 | 파일 |
 |--------|----------|------|
@@ -63,6 +65,7 @@ interface Props {
 1. `BOOK_CHAPTERS`에 챕터 항목 추가 (`color`는 `BookContent.tsx`의 `COLOR_MAP` 키 중 하나여야 함: `blue|violet|emerald|orange|cyan|rose|amber|teal`)
 2. 챕터 페이지 컴포넌트 생성 (`src/book/chapters/`)
 3. `BookContent.tsx`의 `SectionRouter`에 접두사 분기 추가
+4. 시뮬레이터 섹션(전체 높이 레이아웃이 필요한 섹션)은 `BookContent.tsx`의 `FULLSCREEN_SECTIONS` Set에 해당 섹션 ID를 추가해야 함. 그렇지 않으면 스크롤 래퍼로 감싸져 레이아웃이 깨짐
 
 ### 시뮬레이션 데이터 흐름
 
@@ -112,10 +115,12 @@ Internals 시뮬레이터를 구성하는 핵심 컴포넌트들:
 
 ### 데이터 스키마 (`src/data/`)
 
+- `types.ts` — 공유 TypeScript 인터페이스: `SchemaTable`, `Schema`, `ColumnDef`, `ForeignKey`, `RowData`. `hrSchema`·`coSchema`·`SchemaDiagram` 등이 이 타입을 공통으로 사용
 - `hrSchema.ts` — HR 스키마 7개 테이블 + 샘플 데이터
 - `coSchema.ts` — CO(Customer Orders) 스키마 5개 테이블 + 샘플 데이터
 - `largeDataGenerator.ts` — IndexPage용 대용량 가상 데이터 생성기 (Mulberry32 PRNG, 시드 기반). 모듈 import 시 1회 생성 후 캐시됨
 - `index.ts` — 배럴 파일. `SCHEMAS`, `SAMPLE_QUERIES`, 두 스키마, `largeDataGenerator`를 re-export
+- `dataset.ts` — 레거시 심플 `DATASET` 배열 (`Table[]` 타입, `types.ts`와 무관). 현재는 직접 참조 드물고 `hrSchema`/`coSchema`가 주 데이터 소스임
 
 ### 용어 사전 (`src/data/glossary.ts`, `src/book/GlossaryPanel.tsx`)
 
@@ -142,6 +147,10 @@ const T = {
 ### 복잡한 챕터의 서브 컴포넌트 분리
 
 콘텐츠가 많은 챕터(Index 등)는 섹션별 서브 컴포넌트를 `src/components/<챕터명>/`에 분리한다. 예: `src/components/index/` — `BTreeSection.tsx`, `BitmapSection.tsx`, `CompositeSection.tsx`, `IndexTypesOverview.tsx`. 챕터 페이지(`IndexChapterPage.tsx`)가 이를 import해 조합한다.
+
+#### Index 챕터 우측 패널 (`HRSchemaPanel`)
+
+`IndexChapterPage.tsx`의 `IndexLayout`은 좌측 스크롤 영역 + 우측 고정 `HRSchemaPanel`로 구성된다. `HRSchemaPanel`은 **스키마 탭**(HR 전체 7개 테이블 구조)과 **데이터 탭**(테이블 선택 버튼 + 해당 테이블 행 데이터)을 제공한다. `DataPanel.tsx`의 `SchemaView`·`TableView`를 재사용하며, `HR_SCHEMA` 배열 전체를 데이터 소스로 사용한다. `index-simulator` 섹션만 `IndexLayout` 외부(`PageContainer`)로 렌더링된다.
 
 ### 챕터 공통 UI (`src/book/chapters/shared.tsx`)
 

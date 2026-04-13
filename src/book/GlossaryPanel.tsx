@@ -143,17 +143,17 @@ function GlossaryBody({ sectionId }: { sectionId: string }) {
     setExpandedTerm((prev) => (prev === termName ? null : termName))
   }, [])
 
-  const handleModeChange = useCallback((m: 'all' | 'page') => {
+  const handleModeChange = (m: 'all' | 'page') => {
     setMode(m)
     setExpandedTerm(null)
-  }, [])
+  }
 
-  const handleQueryChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleQueryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setQuery(e.target.value)
     setExpandedTerm(null)
-  }, [])
+  }
 
-  const handleQueryClear = useCallback(() => setQuery(''), [])
+  const handleQueryClear = () => setQuery('')
 
   return (
     <div className="flex h-full w-[300px] flex-col">
@@ -264,11 +264,9 @@ const TermRow = memo(function TermRow({
   onToggle: (termName: string) => void
 }) {
   const lang = useSimulationStore((s) => s.lang)
-  const handleClick = useCallback(() => onToggle(term.term), [onToggle, term.term])
-
   return (
     <button
-      onClick={handleClick}
+      onClick={() => onToggle(term.term)}
       className={cn(
         'w-full rounded-md px-3 py-2 text-left transition-colors',
         expanded ? 'bg-muted' : 'hover:bg-muted/60'

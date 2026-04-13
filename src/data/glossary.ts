@@ -71,10 +71,10 @@ export const GLOSSARY: GlossaryTerm[] = [
   {
     term: 'Block',
     definition: {
-      ko: 'Oracle I/O의 최소 단위(기본 8KB). 데이터 파일은 블록 단위로 읽고 씀. Buffer Cache도 블록 단위로 관리.',
-      en: 'The minimum I/O unit in Oracle (default 8KB). Data files are read and written in blocks; Buffer Cache is also managed per block.',
+      ko: 'Oracle I/O의 최소 단위(기본 8KB). 데이터 파일은 블록 단위로 읽고 씀. Block Header(기본 정보·트랜잭션 슬롯), Data Header(Table/Row Directory), Free Space, Row Data로 구성. Buffer Cache도 블록 단위로 관리.',
+      en: 'The minimum I/O unit in Oracle (default 8KB). Data files are read and written in blocks. A block contains a Block Header (metadata + transaction slots), Data Header (Table/Row Directory), Free Space, and Row Data. Buffer Cache is also managed per block.',
     },
-    sectionIds: ['internals-overview', 'internals-sga'],
+    sectionIds: ['internals-storage', 'internals-overview', 'internals-sga'],
   },
   {
     term: 'Buffer Cache',
@@ -147,10 +147,10 @@ export const GLOSSARY: GlossaryTerm[] = [
   {
     term: 'Data File',
     definition: {
-      ko: '실제 테이블·인덱스 데이터를 저장하는 물리적 파일(.dbf). 테이블스페이스에 속하며 블록 단위로 구성.',
-      en: 'Physical file (.dbf) storing actual table and index data. Belongs to a tablespace and is organized into blocks.',
+      ko: '실제 테이블·인덱스 데이터를 저장하는 물리적 파일(.dbf). 테이블스페이스에 속하며 블록 단위로 구성. 하나의 테이블스페이스에 여러 데이터 파일을 추가해 공간을 확장할 수 있음.',
+      en: 'Physical file (.dbf) storing actual table and index data. Belongs to a tablespace and is organized into blocks. Multiple data files can be added to a tablespace to expand its capacity.',
     },
-    sectionIds: ['internals-overview'],
+    sectionIds: ['internals-storage', 'internals-overview'],
   },
   {
     term: 'DBWn',
@@ -205,10 +205,10 @@ export const GLOSSARY: GlossaryTerm[] = [
   {
     term: 'Extent',
     definition: {
-      ko: '연속된 블록들의 묶음. 테이블스페이스에서 세그먼트가 공간을 할당받는 단위.',
-      en: 'A set of contiguous blocks. The unit of space allocation for segments within a tablespace.',
+      ko: '논리적으로 연속된 블록들의 묶음. 세그먼트가 공간이 부족해지면 Extent 단위로 추가 할당받음. 연속된 블록 배치로 Sequential I/O 성능을 높임.',
+      en: 'A set of logically contiguous blocks. When a segment runs out of space, another Extent is allocated. Contiguous block placement improves sequential I/O performance.',
     },
-    sectionIds: ['internals-overview', 'partition-overview'],
+    sectionIds: ['internals-storage', 'internals-overview', 'partition-overview'],
   },
 
   // ── F ──────────────────────────────────────────────────────────────────────
@@ -248,6 +248,14 @@ export const GLOSSARY: GlossaryTerm[] = [
   },
 
   // ── I ──────────────────────────────────────────────────────────────────────
+  {
+    term: 'INITRANS',
+    definition: {
+      ko: '블록 생성 시 기본으로 예약하는 트랜잭션 슬롯 수(기본값 1~2). 동시에 여러 트랜잭션이 같은 블록을 수정할 때 슬롯이 하나씩 사용됨. MAXTRANS까지 동적으로 늘어날 수 있음.',
+      en: 'The number of transaction slots pre-allocated in a block at creation time (default 1–2). One slot is consumed per concurrent transaction modifying the block. Can grow dynamically up to MAXTRANS.',
+    },
+    sectionIds: ['internals-storage'],
+  },
   {
     term: 'Index Fast Full Scan',
     definition: {
@@ -319,6 +327,14 @@ export const GLOSSARY: GlossaryTerm[] = [
 
   // ── M ──────────────────────────────────────────────────────────────────────
   {
+    term: 'MAXTRANS',
+    definition: {
+      ko: '하나의 블록에서 동시에 허용하는 최대 트랜잭션 슬롯 수. 이 한도에 도달하면 추가 트랜잭션은 슬롯이 비워질 때까지 대기해야 함.',
+      en: 'The maximum number of concurrent transaction slots allowed in a single block. Transactions wait for a free slot when this limit is reached.',
+    },
+    sectionIds: ['internals-storage'],
+  },
+  {
     term: 'MMON',
     definition: {
       ko: 'Manageability Monitor. AWR 스냅샷 수집, 알림(Alerts), 자가 진단(ADDM) 등 관리 작업을 담당하는 백그라운드 프로세스.',
@@ -379,6 +395,22 @@ export const GLOSSARY: GlossaryTerm[] = [
       en: 'Program Global Area. Non-shared memory allocated to each server process. Contains Sort Area, Hash Area, Private SQL Area, etc.',
     },
     sectionIds: ['internals-pga', 'internals-overview'],
+  },
+  {
+    term: 'PCTFREE',
+    definition: {
+      ko: '블록 내 UPDATE를 대비해 비워두는 여유 공간 비율(기본 10%). INSERT는 남은 공간이 PCTFREE 이하가 되면 해당 블록에 더 이상 행을 삽입하지 않음.',
+      en: 'The percentage of block space reserved for future UPDATE row growth (default 10%). INSERT stops adding rows to a block when free space drops to this threshold.',
+    },
+    sectionIds: ['internals-storage'],
+  },
+  {
+    term: 'PCTUSED',
+    definition: {
+      ko: '블록의 사용 공간이 이 비율 이하로 떨어지면 해당 블록을 Freelist에 다시 등록해 INSERT가 가능하도록 함(기본 40%). DELETE 후 블록 재사용 시점을 결정.',
+      en: 'When a block\'s used space falls below this percentage (default 40%), the block is re-added to the Freelist and becomes eligible for INSERT again. Determines when a block is reused after DELETE.',
+    },
+    sectionIds: ['internals-storage'],
   },
   {
     term: 'PMON',
@@ -456,7 +488,15 @@ export const GLOSSARY: GlossaryTerm[] = [
       ko: 'System Change Number. Oracle이 변경 이벤트마다 단조 증가시키는 내부 타임스탬프. 데이터 일관성과 복구의 기준점.',
       en: 'System Change Number. A monotonically increasing internal timestamp incremented at every change event. The basis for data consistency and recovery.',
     },
-    sectionIds: ['internals-processes', 'internals-overview'],
+    sectionIds: ['internals-storage', 'internals-processes', 'internals-overview'],
+  },
+  {
+    term: 'Segment',
+    definition: {
+      ko: '하나의 데이터베이스 오브젝트(테이블·인덱스 등)가 사용하는 Extent들의 집합. 테이블 하나는 하나의 Segment에 대응(파티션 테이블은 파티션당 하나). Table·Index·Undo·Temp Segment로 구분.',
+      en: 'The set of Extents used by a single database object (table, index, etc.). One table maps to one Segment (partitioned tables have one per partition). Classified as Table, Index, Undo, or Temp Segment.',
+    },
+    sectionIds: ['internals-storage'],
   },
   {
     term: 'Selectivity',
@@ -538,7 +578,7 @@ export const GLOSSARY: GlossaryTerm[] = [
       ko: '하나 이상의 데이터 파일로 구성되는 논리적 저장 단위. 테이블·인덱스 등 세그먼트가 테이블스페이스에 속함.',
       en: 'A logical storage unit consisting of one or more data files. Tables, indexes, and other segments belong to a tablespace.',
     },
-    sectionIds: ['internals-overview', 'partition-overview'],
+    sectionIds: ['internals-storage', 'internals-overview', 'partition-overview'],
   },
   {
     term: 'Temp Segment',

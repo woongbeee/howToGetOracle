@@ -1,4 +1,4 @@
-import { memo, useState, useCallback } from 'react'
+import { memo, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useSimulationStore } from '@/store/simulationStore'
 import { TableOfContents } from './TableOfContents'
@@ -31,11 +31,11 @@ export function BookLayout({ onHome }: Props) {
 
   const [tocOpen, setTocOpen] = useState(true)
   const [glossaryOpen, setGlossaryOpen] = useState(false)
-  const [activeSectionId, setActiveSectionId] = useState('internals-overview')
+  const [activeSectionId, setActiveSectionId] = useState('internals-storage')
 
-  const toggleToc = useCallback(() => setTocOpen((v) => !v), [])
-  const toggleGlossary = useCallback(() => setGlossaryOpen((v) => !v), [])
-  const toggleLang = useCallback(() => setLang(lang === 'ko' ? 'en' : 'ko'), [lang, setLang])
+  const toggleToc = () => setTocOpen((v) => !v)
+  const toggleGlossary = () => setGlossaryOpen((v) => !v)
+  const toggleLang = () => setLang(lang === 'ko' ? 'en' : 'ko')
 
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-background text-foreground">

@@ -27,6 +27,10 @@ export const BOOK_CHAPTERS: BookChapter[] = [
     title: { ko: '오라클 내부 구조와 프로세스', en: 'Oracle Internals & Processes' },
     sections: [
       {
+        id: 'internals-storage',
+        title: { ko: '데이터 저장 구조', en: 'Data Storage Structure' },
+      },
+      {
         id: 'internals-overview',
         title: { ko: '아키텍처 개요', en: 'Architecture Overview' },
       },
