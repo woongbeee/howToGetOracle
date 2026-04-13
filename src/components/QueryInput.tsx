@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from 'react'
 import { motion } from 'framer-motion'
+import { useInternalsStore } from '@/store/internalsStore'
+import type { StepSummary, SimulationStep } from '@/store/internalsStore'
 import { useSimulationStore } from '@/store/simulationStore'
-import type { StepSummary, SimulationStep } from '@/store/simulationStore'
 import { SAMPLE_QUERIES } from '@/data/index'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -38,7 +39,7 @@ function highlightSQL(text: string): string {
 // ── Live log ───────────────────────────────────────────────────────────────
 
 export function LiveLog() {
-  const stepLog = useSimulationStore((s) => s.stepLog)
+  const stepLog = useInternalsStore((s) => s.stepLog)
   const lang    = useSimulationStore((s) => s.lang)
   const endRef = useRef<HTMLDivElement>(null)
 
@@ -136,8 +137,8 @@ export function SummaryTimeline({ selectedStep, onSelect }: {
   selectedStep: SimulationStep | null
   onSelect: (step: SimulationStep | null) => void
 }) {
-  const stepSummary = useSimulationStore((s) => s.stepSummary)
-  const currentStep = useSimulationStore((s) => s.currentStep)
+  const stepSummary = useInternalsStore((s) => s.stepSummary)
+  const currentStep = useInternalsStore((s) => s.currentStep)
   const lang        = useSimulationStore((s) => s.lang)
 
   return (
@@ -178,12 +179,12 @@ export function SummaryTimeline({ selectedStep, onSelect }: {
 
 export function QueryInput() {
   const [input, setInput] = useState('')
-  const startSimulation   = useSimulationStore((s) => s.startSimulation)
-  const resetSimulation   = useSimulationStore((s) => s.resetSimulation)
-  const isRunning         = useSimulationStore((s) => s.isRunning)
-  const setHighlightedStep = useSimulationStore((s) => s.setHighlightedStep)
-  const flushBuffers      = useSimulationStore((s) => s.flushBuffers)
-  const lang              = useSimulationStore((s) => s.lang)
+  const startSimulation    = useInternalsStore((s) => s.startSimulation)
+  const resetSimulation    = useInternalsStore((s) => s.resetSimulation)
+  const isRunning          = useInternalsStore((s) => s.isRunning)
+  const setHighlightedStep = useInternalsStore((s) => s.setHighlightedStep)
+  const flushBuffers       = useInternalsStore((s) => s.flushBuffers)
+  const lang               = useSimulationStore((s) => s.lang)
 
   const textareaRef  = useRef<HTMLTextAreaElement>(null)
   const highlightRef = useRef<HTMLDivElement>(null)

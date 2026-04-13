@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useSimulationStore } from '@/store/simulationStore'
+import { useInternalsStore } from '@/store/internalsStore'
 import type { InstanceComponentId } from './OracleInstanceMap'
 import {
   ChapterTitle, SectionTitle, SubTitle, Prose,
@@ -1013,11 +1014,11 @@ function ProcessesSection() {
 type SimTab = 'simulator' | 'erd'
 
 function InternalsSimulatorSection() {
-  const optimizerResult   = useSimulationStore((s) => s.optimizerResult)
-  const isComplete        = useSimulationStore((s) => s.isComplete)
-  const highlightedStep   = useSimulationStore((s) => s.highlightedStep)
-  const setHighlightedStep = useSimulationStore((s) => s.setHighlightedStep)
-  const lang              = useSimulationStore((s) => s.lang)
+  const optimizerResult    = useInternalsStore((s) => s.optimizerResult)
+  const isComplete         = useInternalsStore((s) => s.isComplete)
+  const highlightedStep    = useInternalsStore((s) => s.highlightedStep)
+  const setHighlightedStep = useInternalsStore((s) => s.setHighlightedStep)
+  const lang               = useSimulationStore((s) => s.lang)
   const t = T[lang]
   const [activeTab, setActiveTab] = useState<SimTab>('simulator')
 

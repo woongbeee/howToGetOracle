@@ -1,6 +1,7 @@
 import { memo, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useSimulationStore } from '@/store/simulationStore'
+import { useInternalsStore } from '@/store/internalsStore'
 import { TableOfContents } from './TableOfContents'
 import { BookContent } from './BookContent'
 import { GlossaryPanel } from './GlossaryPanel'
@@ -134,7 +135,7 @@ export function BookLayout({ onHome }: Props) {
 
 // Isolated: only re-renders on isRunning changes, not on lang/section changes
 const SimulationBadge = memo(function SimulationBadge() {
-  const isRunning = useSimulationStore((s) => s.isRunning)
+  const isRunning = useInternalsStore((s) => s.isRunning)
   return isRunning ? (
     <Badge variant="outline" className="font-mono text-[10px]">
       <span className="mr-1.5 inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-orange-400" />

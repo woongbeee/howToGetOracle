@@ -1,7 +1,8 @@
 import { useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useSimulationStore, STEP_PROCESS_LABEL } from '@/store/simulationStore'
+import { useInternalsStore, STEP_PROCESS_LABEL } from '@/store/internalsStore'
 import type { Lang } from '@/store/simulationStore'
+import { useSimulationStore } from '@/store/simulationStore'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 
@@ -45,7 +46,7 @@ const BLOCK_STATE_CLS: Record<string, string> = {
 }
 
 function useIsActive(id: string) {
-  return useSimulationStore((s) => s.activeComponents.has(id))
+  return useInternalsStore((s) => s.activeComponents.has(id))
 }
 
 // ── Shared primitives ──────────────────────────────────────────────────────
@@ -155,9 +156,9 @@ function SectionLabel({ children, color = 'default' }: { children: React.ReactNo
 // ── Library Cache ──────────────────────────────────────────────────────────
 
 function LibraryCacheBlock({ compact = false }: { compact?: boolean }) {
-  const currentStep   = useSimulationStore((s) => s.currentStep)
-  const cachedQueries = useSimulationStore((s) => s.cachedQueries)
-  const query         = useSimulationStore((s) => s.query)
+  const currentStep   = useInternalsStore((s) => s.currentStep)
+  const cachedQueries = useInternalsStore((s) => s.cachedQueries)
+  const query         = useInternalsStore((s) => s.query)
   const lang          = useSimulationStore((s) => s.lang)
   const active = useIsActive('library-cache')
 
@@ -252,7 +253,7 @@ function LibraryCacheBlock({ compact = false }: { compact?: boolean }) {
 // ── Buffer Cache ──────────────────────────────────────────────────────────
 
 function BufferCacheBlock({ compact = false }: { compact?: boolean }) {
-  const currentStep = useSimulationStore((s) => s.currentStep)
+  const currentStep = useInternalsStore((s) => s.currentStep)
   const lang        = useSimulationStore((s) => s.lang)
   const active = useIsActive('buffer-cache')
 
@@ -331,9 +332,9 @@ function BufferCacheBlock({ compact = false }: { compact?: boolean }) {
 // ── Main Diagram ──────────────────────────────────────────────────────────
 
 export function OracleDiagram({ compact = false }: { compact?: boolean }) {
-  const currentStep    = useSimulationStore((s) => s.currentStep)
-  const highlightedStep = useSimulationStore((s) => s.highlightedStep)
-  const lang           = useSimulationStore((s) => s.lang)
+  const currentStep     = useInternalsStore((s) => s.currentStep)
+  const highlightedStep = useInternalsStore((s) => s.highlightedStep)
+  const lang            = useSimulationStore((s) => s.lang)
 
   const displayStep = highlightedStep ?? currentStep
   const stepLabel   = STEP_PROCESS_LABEL[lang][displayStep]
