@@ -5,14 +5,15 @@ import { getAdjacentSections, getSectionById } from './bookStructure'
 import { cn } from '@/lib/utils'
 
 // Chapter pages
-import { InternalsPage } from './chapters/InternalsPage'
-import { IndexChapterPage } from './chapters/IndexChapterPage'
-import { JoinPage } from './chapters/JoinPage'
-import { OptimizerChapterPage } from './chapters/OptimizerChapterPage'
-import { QueryTransformPage } from './chapters/QueryTransformPage'
-import { SortPage } from './chapters/SortPage'
-import { PartitionPage } from './chapters/PartitionPage'
-import { ParallelPage } from './chapters/ParallelPage'
+import { SqlBasicsPage } from './chapters/sql-basics'
+import { InternalsPage } from './chapters/internals'
+import { IndexChapterPage } from './chapters/index-chapter'
+import { JoinPage } from './chapters/join'
+import { OptimizerChapterPage } from './chapters/optimizer'
+import { QueryTransformPage } from './chapters/query-transform'
+import { SortPage } from './chapters/sort'
+import { PartitionPage } from './chapters/partition'
+import { ParallelPage } from './chapters/parallel'
 
 interface Props {
   sectionId: string
@@ -125,6 +126,7 @@ export const BookContent = memo(function BookContent({ sectionId, onNavigate }: 
 
 // Route each sectionId to the right chapter page component
 function SectionRouter({ sectionId }: { sectionId: string }) {
+  if (sectionId.startsWith('sql-basics-'))  return <SqlBasicsPage sectionId={sectionId} />
   if (sectionId.startsWith('internals-')) return <InternalsPage sectionId={sectionId} />
   if (sectionId.startsWith('index-'))     return <IndexChapterPage sectionId={sectionId} />
   if (sectionId.startsWith('join-'))      return <JoinPage sectionId={sectionId} />

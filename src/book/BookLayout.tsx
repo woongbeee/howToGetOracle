@@ -32,7 +32,7 @@ export function BookLayout({ onHome }: Props) {
 
   const [tocOpen, setTocOpen] = useState(true)
   const [glossaryOpen, setGlossaryOpen] = useState(false)
-  const [activeSectionId, setActiveSectionId] = useState('internals-storage')
+  const [activeSectionId, setActiveSectionId] = useState('sql-basics-syntax')
 
   const toggleToc = () => setTocOpen((v) => !v)
   const toggleGlossary = () => setGlossaryOpen((v) => !v)

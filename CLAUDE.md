@@ -4,9 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 프로젝트 개요
 
-사용자와 상호작용하는 Dynamic Oracle 교육서. 좌측 사이드바 목차(TOC)에서 8개 챕터를 탐색하고, 각 섹션에서 개념 설명 + 인터랙티브 애니메이션 + 챕터별 시뮬레이터를 통해 Oracle 내부를 학습한다.
+사용자와 상호작용하는 Dynamic Oracle 교육서. 좌측 사이드바 목차(TOC)에서 9개 챕터를 탐색하고, 각 섹션에서 개념 설명 + 인터랙티브 애니메이션 + 챕터별 시뮬레이터를 통해 Oracle 내부를 학습한다.
 
-**8개 챕터:** 오라클 내부 구조·프로세스 → 인덱스 → 조인 → 옵티마이저 → 쿼리 변환 → 소트 튜닝 → 파티셔닝 → 병렬 처리
+**9개 챕터:** SQL 기본 문법 → 오라클 내부 구조·프로세스 → 인덱스 → 조인 → 옵티마이저 → 쿼리 변환 → 소트 튜닝 → 파티셔닝 → 병렬 처리
 
 ## 명령어
 
@@ -45,11 +45,12 @@ interface Props {
 
 `bookStructure.ts`의 `BOOK_CHAPTERS`가 단일 진실 공급원(TOC 데이터). 새 섹션 추가 시 여기만 수정하면 TOC·breadcrumb·Prev/Next가 자동 반영된다.
 
-앱 첫 진입 시 활성 섹션은 `internals-storage` (Chapter 1 첫 섹션, `BookLayout.tsx`의 `useState` 초기값).
+앱 첫 진입 시 활성 섹션은 `sql-basics-syntax` (Chapter 1 첫 섹션, `BookLayout.tsx`의 `useState` 초기값).
 
 현재 `SectionRouter` 접두사 → 컴포넌트 매핑:
 | 접두사 | 컴포넌트 | 파일 |
 |--------|----------|------|
+| `sql-basics-` | `SqlBasicsPage` | `src/book/chapters/SqlBasicsPage.tsx` |
 | `internals-` | `InternalsPage` | `src/book/chapters/InternalsPage.tsx` |
 | `index-` | `IndexChapterPage` | `src/book/chapters/IndexChapterPage.tsx` |
 | `join-` | `JoinPage` | `src/book/chapters/JoinPage.tsx` |
@@ -65,7 +66,7 @@ interface Props {
 1. `BOOK_CHAPTERS`에 챕터 항목 추가 (`color`는 `BookContent.tsx`의 `COLOR_MAP` 키 중 하나여야 함: `blue|violet|emerald|orange|cyan|rose|amber|teal`)
 2. 챕터 페이지 컴포넌트 생성 (`src/book/chapters/`)
 3. `BookContent.tsx`의 `SectionRouter`에 접두사 분기 추가
-4. 시뮬레이터 섹션(전체 높이 레이아웃이 필요한 섹션)은 `BookContent.tsx`의 `FULLSCREEN_SECTIONS` Set에 해당 섹션 ID를 추가해야 함. 그렇지 않으면 스크롤 래퍼로 감싸져 레이아웃이 깨짐
+4. 시뮬레이터 섹션(전체 높이 레이아웃이 필요한 섹션)은 `BookContent.tsx`의 `FULLSCREEN_SECTIONS` Set에 해당 섹션 ID를 추가해야 함. 그렇지 않으면 스크롤 래퍼로 감싸져 레이아웃이 깨짐 (현재: `internals-simulator`만 등록됨)
 
 ### 시뮬레이션 데이터 흐름
 
@@ -117,9 +118,9 @@ Internals 시뮬레이터를 구성하는 핵심 컴포넌트들:
 - `OracleDiagram.tsx` — 인스턴스 블록 다이어그램 (activeComponents에 따라 하이라이트)
 - `QueryInput.tsx` — SQL 입력창 + `LiveLog` / `SummaryTimeline` named export
 - `OptimizerPanel.tsx` — CBO 실행 계획 3단계 시각화
-- `DataPanel.tsx` — 스키마·샘플 데이터 브라우저
+- `DataPanel.tsx` — 스키마·샘플 데이터 브라우저 (`SchemaView`, `TableView` named export)
 - `SchemaDiagram.tsx` — React Flow 기반 ERD
-- `components/index/` — Index 챕터 전용 서브 컴포넌트들
+- `components/index/` — Index 챕터 전용 서브 컴포넌트들 (`BTreeSection`, `BitmapSection`, `CompositeSection`, `IndexTypesOverview`). `IndexPage.tsx`는 현재 미사용(dead code)
 
 ### 데이터 스키마 (`src/data/`)
 
@@ -155,6 +156,14 @@ const T = {
 ### 복잡한 챕터의 서브 컴포넌트 분리
 
 콘텐츠가 많은 챕터(Index 등)는 섹션별 서브 컴포넌트를 `src/components/<챕터명>/`에 분리한다. 예: `src/components/index/` — `BTreeSection.tsx`, `BitmapSection.tsx`, `CompositeSection.tsx`, `IndexTypesOverview.tsx`. 챕터 페이지(`IndexChapterPage.tsx`)가 이를 import해 조합한다.
+
+모든 챕터는 `src/book/chapters/<챕터명>/index.tsx` 서브디렉토리 구조를 사용한다. `BookContent.tsx`는 각 챕터 폴더의 `index.tsx`를 import한다.
+
+콘텐츠가 많은 챕터는 섹션별 파일로 추가 분리된다:
+- `sql-basics/` — `SyntaxSection.tsx`, `ClausesSection.tsx`, `JoinSection.tsx`, `FunctionsSection.tsx`, `ExecutionSection.tsx` + 공유 헬퍼(`shared.ts`, `SqlHighlight.tsx`, `EmpRow.tsx`, `MiniSimulator.tsx`)
+- `internals/` — `StorageSection.tsx`, `OverviewSection.tsx`, `SgaSection.tsx`, `PgaSection.tsx`, `ProcessesSection.tsx`, `SimulatorSection.tsx`, `OracleInstanceMap.tsx` + `shared.tsx`(TwoColLayout, MapPanel, TourPanel)
+
+나머지 챕터(join, optimizer, sort, partition, parallel, query-transform, index-chapter)는 `index.tsx` 단일 파일로 구성된다.
 
 #### Index 챕터 우측 패널 (`HRSchemaPanel`)
 

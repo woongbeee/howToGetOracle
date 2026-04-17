@@ -20,8 +20,37 @@ export interface BookChapter {
 
 export const BOOK_CHAPTERS: BookChapter[] = [
   {
-    id: 'internals',
+    id: 'sql-basics',
     num: 1,
+    icon: '📋',
+    color: 'emerald',
+    title: { ko: 'SQL 기본 문법', en: 'SQL Basics' },
+    sections: [
+      {
+        id: 'sql-basics-syntax',
+        title: { ko: '기본 문법 — SELECT / FROM / WHERE', en: 'Core Syntax — SELECT / FROM / WHERE' },
+      },
+      {
+        id: 'sql-basics-clauses',
+        title: { ko: 'ORDER BY / GROUP BY / HAVING', en: 'ORDER BY / GROUP BY / HAVING' },
+      },
+      {
+        id: 'sql-basics-join',
+        title: { ko: 'JOIN — 테이블 결합', en: 'JOIN — Combining Tables' },
+      },
+      {
+        id: 'sql-basics-functions',
+        title: { ko: 'Oracle 주요 함수', en: 'Oracle Key Functions' },
+      },
+      {
+        id: 'sql-basics-execution',
+        title: { ko: 'SQL 실행 순서 시뮬레이터', en: 'SQL Execution Order Simulator' },
+      },
+    ],
+  },
+  {
+    id: 'internals',
+    num: 2,
     icon: '⚙',
     color: 'blue',
     title: { ko: '오라클 내부 구조와 프로세스', en: 'Oracle Internals & Processes' },
@@ -56,7 +85,7 @@ export const BOOK_CHAPTERS: BookChapter[] = [
   },
   {
     id: 'index',
-    num: 2,
+    num: 3,
     icon: '🔍',
     color: 'violet',
     title: { ko: '인덱스 원리와 활용, 스캔 방식', en: 'Index Internals & Scan Methods' },
@@ -87,7 +116,7 @@ export const BOOK_CHAPTERS: BookChapter[] = [
   },
   {
     id: 'join',
-    num: 3,
+    num: 4,
     icon: '🔗',
     color: 'emerald',
     title: { ko: '조인 원리와 활용', en: 'Join Principles & Usage' },
@@ -118,7 +147,7 @@ export const BOOK_CHAPTERS: BookChapter[] = [
   },
   {
     id: 'optimizer',
-    num: 4,
+    num: 5,
     icon: '⚡',
     color: 'orange',
     title: { ko: '옵티마이저 원리', en: 'Optimizer Principles' },
@@ -149,7 +178,7 @@ export const BOOK_CHAPTERS: BookChapter[] = [
   },
   {
     id: 'query-transform',
-    num: 5,
+    num: 6,
     icon: '🔄',
     color: 'cyan',
     title: { ko: '쿼리 변환', en: 'Query Transformation' },
@@ -180,7 +209,7 @@ export const BOOK_CHAPTERS: BookChapter[] = [
   },
   {
     id: 'sort',
-    num: 6,
+    num: 7,
     icon: '↕',
     color: 'rose',
     title: { ko: '소트 튜닝', en: 'Sort Tuning' },
@@ -207,7 +236,7 @@ export const BOOK_CHAPTERS: BookChapter[] = [
   },
   {
     id: 'partition',
-    num: 7,
+    num: 8,
     icon: '▦',
     color: 'amber',
     title: { ko: '파티셔닝', en: 'Partitioning' },
@@ -234,7 +263,7 @@ export const BOOK_CHAPTERS: BookChapter[] = [
   },
   {
     id: 'parallel',
-    num: 8,
+    num: 9,
     icon: '⫴',
     color: 'teal',
     title: { ko: '병렬 처리', en: 'Parallel Processing' },
