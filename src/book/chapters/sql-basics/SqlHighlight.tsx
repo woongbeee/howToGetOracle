@@ -11,7 +11,8 @@ export function SqlHighlight({ sql, activeClause }: { sql: string; activeClause?
     'WHEN', 'THEN', 'ELSE', 'END',
     'ASC', 'DESC',
     'COUNT', 'SUM', 'AVG', 'MAX', 'MIN',
-    'MONTHS_BETWEEN', 'ADD_MONTHS', 'TO_DATE', 'TO_CHAR', 'TRUNC', 'SYSDATE',
+    'MONTHS_BETWEEN', 'ADD_MONTHS', 'TO_DATE', 'TO_CHAR', 'TRUNC', 'SYSTIMESTAMP', 'SYSDATE',
+    'SYS_EXTRACT_UTC', 'FROM_TZ', 'AT TIME ZONE', 'INTERVAL', 'CAST',
     'NVL2', 'NVL', 'DECODE',
     'AND', 'OR', 'LIKE', 'IN', 'IS', 'NULL', 'NOT', 'BETWEEN',
   ]

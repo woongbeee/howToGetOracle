@@ -158,7 +158,8 @@ const T = {
 콘텐츠가 많은 챕터(Index 등)는 섹션별 서브 컴포넌트를 `src/components/<챕터명>/`에 분리한다. 예: `src/components/index/` — `BTreeSection.tsx`, `BitmapSection.tsx`, `CompositeSection.tsx`, `IndexTypesOverview.tsx`. 챕터 페이지(`IndexChapterPage.tsx`)가 이를 import해 조합한다.
 
 콘텐츠가 많은 챕터는 섹션별 파일로 추가 분리된다:
-- `sql-basics/` — `SyntaxSection.tsx`, `ClausesSection.tsx`, `JoinSection.tsx`, `FunctionsSection.tsx`, `ExecutionSection.tsx` + 공유 헬퍼(`shared.ts`, `SqlHighlight.tsx`, `EmpRow.tsx`, `MiniSimulator.tsx`)
+- `sql-basics/` — `SyntaxSection.tsx`, `ClausesSection.tsx`, `JoinSection.tsx`, `NullSection.tsx`, `DateSection.tsx`, `WindowFuncSection.tsx`, `FunctionsSection.tsx`, `ExecutionSection.tsx` + 공유 헬퍼(`shared.ts`, `SqlHighlight.tsx`, `EmpRow.tsx`, `MiniSimulator.tsx`)
+  - `NullSection`, `DateSection`, `WindowFuncSection`은 `T` 객체를 export하지 않고 `lang` prop만 받아 컴포넌트 내부에서 직접 이중 언어 문자열을 정의한다. `SyntaxSection`·`ClausesSection`·`JoinSection`·`ExecutionSection`은 `T` 객체를 named export한다.
 - `internals/` — `StorageSection.tsx`, `OverviewSection.tsx`, `SgaSection.tsx`, `PgaSection.tsx`, `ProcessesSection.tsx`, `SimulatorSection.tsx`, `OracleInstanceMap.tsx` + `shared.tsx`(TwoColLayout, MapPanel, TourPanel)
 
 나머지 챕터(join, optimizer, sort, partition, parallel, query-transform, index-chapter)는 `index.tsx` 단일 파일로 구성된다.

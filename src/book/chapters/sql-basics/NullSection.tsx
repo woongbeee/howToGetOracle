@@ -7,8 +7,6 @@ import { SqlHighlight } from './SqlHighlight'
 // ── Types ──────────────────────────────────────────────────────────────────
 
 interface ResultTable {
-  sourceHeaders: string[]
-  sourceRows: (string | null)[][]
   resultHeaders: string[]
   resultRows: (string | null)[][]
 }
@@ -17,7 +15,7 @@ interface FuncItem {
   name: string
   signature: string
   desc: { ko: string; en: string }
-example: string
+  example: string
   tables: ResultTable
   note?: { ko: string; en: string }
 }
@@ -48,8 +46,6 @@ const FUNC_ITEMS: FuncItem[] = [
     example:
       "SELECT first_name, salary,\n       CASE\n         WHEN salary >= 8000 THEN 'Senior'\n         WHEN salary >= 5000 THEN 'Mid'\n         ELSE 'Junior'\n       END AS grade\nFROM   employees",
     tables: {
-      sourceHeaders: ['first_name', 'salary'],
-      sourceRows: EMP_ROWS.map((r) => [r[1], r[3]]),
       resultHeaders: ['first_name', 'salary', 'grade'],
       resultRows: EMP_ROWS.map((r) => {
         const sal = Number(r[3])
@@ -72,14 +68,12 @@ const FUNC_ITEMS: FuncItem[] = [
     example:
       "SELECT first_name, dept_id,\n       DECODE(dept_id,\n              10, 'Engineering',\n              20, 'Analytics',\n              30, 'Support',\n              'Other') AS dept_label\nFROM   employees",
     tables: {
-      sourceHeaders: ['first_name', 'dept_id'],
-      sourceRows: EMP_ROWS.map((r) => [r[1], r[2]]),
       resultHeaders: ['first_name', 'dept_id', 'dept_label'],
       resultRows: EMP_ROWS.map((r) => {
         const label =
           r[2] === '10' ? 'Engineering' :
           r[2] === '20' ? 'Analytics'   :
-          r[2] === '30' ? 'Support'      : 'Other'
+          r[2] === '30' ? 'Support'     : 'Other'
         return [r[1], r[2], label]
       }),
     },
@@ -98,8 +92,6 @@ const FUNC_ITEMS: FuncItem[] = [
     example:
       'SELECT first_name,\n       manager_id,\n       NVL(manager_id, 0) AS mgr\nFROM   employees',
     tables: {
-      sourceHeaders: ['first_name', 'manager_id'],
-      sourceRows: EMP_ROWS.map((r) => [r[1], r[4]]),
       resultHeaders: ['first_name', 'manager_id', 'mgr'],
       resultRows: EMP_ROWS.map((r) => [r[1], r[4], r[4] === 'null' ? '0' : r[4]]),
     },
@@ -118,8 +110,6 @@ const FUNC_ITEMS: FuncItem[] = [
     example:
       "SELECT first_name,\n       manager_id,\n       NVL2(manager_id, 'Member', 'Leader') AS role\nFROM   employees",
     tables: {
-      sourceHeaders: ['first_name', 'manager_id'],
-      sourceRows: EMP_ROWS.map((r) => [r[1], r[4]]),
       resultHeaders: ['first_name', 'manager_id', 'role'],
       resultRows: EMP_ROWS.map((r) => [r[1], r[4], r[4] === 'null' ? 'Leader' : 'Member']),
     },
@@ -130,11 +120,11 @@ const FUNC_ITEMS: FuncItem[] = [
   },
 ]
 
-const ITEM_COLOR: Record<string, { bg: string; border: string; text: string; active: string; code: string; result: string }> = {
-  'CASE WHEN': { bg: 'bg-blue-50',   border: 'border-blue-200',   text: 'text-blue-800',   active: 'bg-blue-100 text-blue-700',    code: 'bg-blue-50/60 border-blue-100',    result: 'bg-blue-50 border-blue-200 text-blue-900'   },
-  'DECODE':    { bg: 'bg-violet-50', border: 'border-violet-200', text: 'text-violet-800', active: 'bg-violet-100 text-violet-700', code: 'bg-violet-50/60 border-violet-100', result: 'bg-violet-50 border-violet-200 text-violet-900' },
-  'NVL':       { bg: 'bg-orange-50', border: 'border-orange-200', text: 'text-orange-800', active: 'bg-orange-100 text-orange-700', code: 'bg-orange-50/60 border-orange-100', result: 'bg-orange-50 border-orange-200 text-orange-900' },
-  'NVL2':      { bg: 'bg-amber-50',  border: 'border-amber-200',  text: 'text-amber-800',  active: 'bg-amber-100 text-amber-700',   code: 'bg-amber-50/60 border-amber-100',   result: 'bg-amber-50 border-amber-200 text-amber-900'  },
+const ITEM_COLOR: Record<string, { bg: string; border: string; text: string; active: string; code: string }> = {
+  'CASE WHEN': { bg: 'bg-blue-50',   border: 'border-blue-200',   text: 'text-blue-800',   active: 'bg-blue-100 text-blue-700',    code: 'bg-blue-50 border-blue-100'    },
+  'DECODE':    { bg: 'bg-violet-50', border: 'border-violet-200', text: 'text-violet-800', active: 'bg-violet-100 text-violet-700', code: 'bg-violet-50 border-violet-100' },
+  'NVL':       { bg: 'bg-orange-50', border: 'border-orange-200', text: 'text-orange-800', active: 'bg-orange-100 text-orange-700', code: 'bg-orange-50 border-orange-100' },
+  'NVL2':      { bg: 'bg-amber-50',  border: 'border-amber-200',  text: 'text-amber-800',  active: 'bg-amber-100 text-amber-700',   code: 'bg-amber-50 border-amber-100'  },
 }
 
 // ── MiniTable ───────────────────────────────────────────────────────────────
@@ -175,9 +165,9 @@ function MiniTable({ headers, rows, highlightLast }: {
                     key={ci}
                     className={cn(
                       'px-2.5 py-1 font-mono text-[11px]',
-                      isNull       ? 'italic text-muted-foreground/40' :
-                      isHighlight  ? 'font-bold text-emerald-700'      :
-                                     'text-foreground/80',
+                      isNull      ? 'italic text-muted-foreground/40' :
+                      isHighlight ? 'font-bold text-emerald-700'      :
+                                    'text-foreground/80',
                     )}
                   >
                     {isNull ? 'NULL' : cell}
@@ -192,9 +182,27 @@ function MiniTable({ headers, rows, highlightLast }: {
   )
 }
 
-// ── FunctionsSection ────────────────────────────────────────────────────────
+const T = {
+  ko: {
+    chapterTitle: 'NULL 을 다루는 법',
+    chapterSubtitle: 'NULL 처리와 조건 분기에 자주 쓰이는 CASE WHEN, DECODE, NVL, NVL2를 알아봅니다.',
+    categoryLabel: '조건 / NULL 처리 함수',
+    exampleQuery: '예시 쿼리',
+    result: '실행 결과',
+  },
+  en: {
+    chapterTitle: 'NULL 을 다루는 법',
+    chapterSubtitle: 'Learn CASE WHEN, DECODE, NVL, and NVL2 — the most-used functions for conditional logic and NULL handling in SQL.',
+    categoryLabel: 'Conditional / NULL Functions',
+    exampleQuery: 'Example Query',
+    result: 'Result',
+  },
+}
 
-export function FunctionsSection({ lang }: { lang: 'ko' | 'en' }) {
+// ── NullSection ─────────────────────────────────────────────────────────────
+
+export function NullSection({ lang }: { lang: 'ko' | 'en' }) {
+  const t = T[lang]
   const [openItem, setOpenItem] = useState<string>(FUNC_ITEMS[0].name)
   const item = FUNC_ITEMS.find((f) => f.name === openItem)!
   const s = ITEM_COLOR[item.name]
@@ -204,12 +212,8 @@ export function FunctionsSection({ lang }: { lang: 'ko' | 'en' }) {
       <ChapterTitle
         icon="📋"
         num={1}
-        title={lang === 'ko' ? 'Oracle 주요 함수' : 'Oracle Key Functions'}
-        subtitle={
-          lang === 'ko'
-            ? 'SQL에서 조건 분기와 NULL 처리에 자주 쓰이는 CASE WHEN, DECODE, NVL, NVL2를 알아봅니다.'
-            : 'Learn CASE WHEN, DECODE, NVL, and NVL2 — the most-used functions for conditional logic and NULL handling in SQL.'
-        }
+        title={t.chapterTitle}
+        subtitle={t.chapterSubtitle}
       />
 
       <div className="grid grid-cols-[160px_1fr] items-start gap-4">
@@ -246,7 +250,7 @@ export function FunctionsSection({ lang }: { lang: 'ko' | 'en' }) {
             {/* 헤더 */}
             <div className={cn('rounded-xl border px-4 py-3', s.bg, s.border, s.text)}>
               <div className="mb-1 font-mono text-[10px] font-bold uppercase tracking-wider opacity-60">
-                {lang === 'ko' ? '조건 / NULL 처리 함수' : 'Conditional / NULL Functions'}
+                {t.categoryLabel}
               </div>
               <div className="font-mono text-xl font-black">{item.name}</div>
               <div className={cn('mt-1.5 inline-block rounded border px-2 py-0.5 font-mono text-[11px]', s.active)}>
@@ -262,7 +266,7 @@ export function FunctionsSection({ lang }: { lang: 'ko' | 'en' }) {
             {/* 예시 쿼리 */}
             <div>
               <p className="mb-1.5 font-mono text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-                {lang === 'ko' ? '예시 쿼리' : 'Example Query'}
+                {t.exampleQuery}
               </p>
               <div className={cn('rounded-xl border px-4 py-3', s.code)}>
                 <SqlHighlight sql={item.example} />
@@ -272,7 +276,7 @@ export function FunctionsSection({ lang }: { lang: 'ko' | 'en' }) {
             {/* 실행 결과 */}
             <div>
               <p className="mb-2 font-mono text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-                {lang === 'ko' ? '실행 결과' : 'Result'}
+                {t.result}
               </p>
               <MiniTable
                 headers={item.tables.resultHeaders}
@@ -296,3 +300,5 @@ export function FunctionsSection({ lang }: { lang: 'ko' | 'en' }) {
     </PageContainer>
   )
 }
+
+export { T as NullT }

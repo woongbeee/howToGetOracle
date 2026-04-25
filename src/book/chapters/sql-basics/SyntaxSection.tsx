@@ -8,7 +8,7 @@ import { ClickableSyntaxRow, SyntaxRow } from './MiniSimulator'
 
 const T = {
   ko: {
-    chapterTitle: 'SQL 기본 문법',
+    chapterTitle: '기본 문법 — SELECT / FROM / WHERE',
     chapterSubtitle:
       'SQL은 관계형 데이터 베이스를 다루는 표준 언어입니다. 데이터를 조회·수정·삭제하는 가장 기본적인 명령어인 SELECT, FROM, WHERE, UPDATE, DELETE 를 알아봅니다.',
     clauseTitle: '핵심 절(Clause) 정리',
@@ -93,7 +93,7 @@ const T = {
       '전체 삭제라면 TRUNCATE TABLE이 훨씬 빠릅니다.',
   },
   en: {
-    chapterTitle: 'SQL Basics',
+    chapterTitle: 'Core Syntax — SELECT / FROM / WHERE',
     chapterSubtitle:
       'SQL is the standard language for relational databases. Learn the most fundamental commands for querying, modifying, and deleting data — SELECT, FROM, WHERE, UPDATE, and DELETE.',
     clauseTitle: 'Key Clause Reference',

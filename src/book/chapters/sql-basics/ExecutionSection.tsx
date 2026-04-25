@@ -14,7 +14,7 @@ import { EmpRow } from './EmpRow'
 
 const T = {
   ko: {
-    chapterTitle: 'SQL 기본 문법',
+    chapterTitle: 'SQL 실행 순서 시뮬레이터',
     chapterSubtitle: 'SELECT, FROM, WHERE, UPDATE, DELETE의 핵심 문법과 실행 순서를 인터랙티브 시뮬레이션으로 학습합니다.',
     simSectionTitle: 'SQL 실행 순서 시뮬레이터',
     simIntro:
@@ -30,7 +30,7 @@ const T = {
     deletedRows: (n: number) => `${n}개 행이 삭제됩니다.`,
   },
   en: {
-    chapterTitle: 'SQL Basics',
+    chapterTitle: 'SQL Execution Order Simulator',
     chapterSubtitle: 'Learn SELECT, FROM, WHERE, UPDATE, and DELETE through interactive simulations with step-by-step execution visualization.',
     simSectionTitle: 'SQL Execution Order Simulator',
     simIntro:

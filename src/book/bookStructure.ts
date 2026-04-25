@@ -28,23 +28,40 @@ export const BOOK_CHAPTERS: BookChapter[] = [
     sections: [
       {
         id: 'sql-basics-syntax',
-        title: { ko: '기본 문법 — SELECT / FROM / WHERE', en: 'Core Syntax — SELECT / FROM / WHERE' },
+        title: {
+          ko: '기본 문법 — SELECT / FROM / WHERE',
+          en: 'Core Syntax — SELECT / FROM / WHERE',
+        },
       },
       {
         id: 'sql-basics-clauses',
-        title: { ko: 'ORDER BY / GROUP BY / HAVING', en: 'ORDER BY / GROUP BY / HAVING' },
+        title: {
+          ko: 'ORDER BY / GROUP BY / HAVING',
+          en: 'ORDER BY / GROUP BY / HAVING',
+        },
       },
       {
         id: 'sql-basics-join',
         title: { ko: 'JOIN — 테이블 결합', en: 'JOIN — Combining Tables' },
       },
       {
-        id: 'sql-basics-functions',
-        title: { ko: 'Oracle 주요 함수', en: 'Oracle Key Functions' },
+        id: 'sql-basics-null',
+        title: { ko: 'NULL 을 다루는 법', en: 'Oracle Key Functions' },
+      },
+      {
+        id: 'sql-basics-date',
+        title: { ko: '날짜와 시간을 다루는 법', en: 'Date & Time Functions' },
+      },
+      {
+        id: 'sql-basics-windowFunc',
+        title: { ko: '윈도우 함수', en: 'Oracle Window function' },
       },
       {
         id: 'sql-basics-execution',
-        title: { ko: 'SQL 실행 순서 시뮬레이터', en: 'SQL Execution Order Simulator' },
+        title: {
+          ko: 'SQL 실행 순서 시뮬레이터',
+          en: 'SQL Execution Order Simulator',
+        },
       },
     ],
   },
@@ -53,7 +70,10 @@ export const BOOK_CHAPTERS: BookChapter[] = [
     num: 2,
     icon: '⚙',
     color: 'blue',
-    title: { ko: '오라클 내부 구조와 프로세스', en: 'Oracle Internals & Processes' },
+    title: {
+      ko: '오라클 내부 구조와 프로세스',
+      en: 'Oracle Internals & Processes',
+    },
     sections: [
       {
         id: 'internals-storage',
@@ -65,11 +85,17 @@ export const BOOK_CHAPTERS: BookChapter[] = [
       },
       {
         id: 'internals-sga',
-        title: { ko: 'SGA — System Global Area', en: 'SGA — System Global Area' },
+        title: {
+          ko: 'SGA — System Global Area',
+          en: 'SGA — System Global Area',
+        },
       },
       {
         id: 'internals-pga',
-        title: { ko: 'PGA — Program Global Area', en: 'PGA — Program Global Area' },
+        title: {
+          ko: 'PGA — Program Global Area',
+          en: 'PGA — Program Global Area',
+        },
       },
       {
         id: 'internals-processes',
@@ -79,7 +105,10 @@ export const BOOK_CHAPTERS: BookChapter[] = [
         id: 'internals-simulator',
         title: { ko: 'Internals Simulator', en: 'Internals Simulator' },
         hasSimulator: true,
-        simulatorLabel: { ko: 'Internals 시뮬레이터 실행', en: 'Launch Internals Simulator' },
+        simulatorLabel: {
+          ko: 'Internals 시뮬레이터 실행',
+          en: 'Launch Internals Simulator',
+        },
       },
     ],
   },
@@ -88,7 +117,10 @@ export const BOOK_CHAPTERS: BookChapter[] = [
     num: 3,
     icon: '🔍',
     color: 'violet',
-    title: { ko: '인덱스 원리와 활용, 스캔 방식', en: 'Index Internals & Scan Methods' },
+    title: {
+      ko: '인덱스 원리와 활용, 스캔 방식',
+      en: 'Index Internals & Scan Methods',
+    },
     sections: [
       {
         id: 'index-overview',
@@ -110,7 +142,10 @@ export const BOOK_CHAPTERS: BookChapter[] = [
         id: 'index-simulator',
         title: { ko: 'Index Simulator', en: 'Index Simulator' },
         hasSimulator: true,
-        simulatorLabel: { ko: 'Index 시뮬레이터 실행', en: 'Launch Index Simulator' },
+        simulatorLabel: {
+          ko: 'Index 시뮬레이터 실행',
+          en: 'Launch Index Simulator',
+        },
       },
     ],
   },
@@ -141,7 +176,10 @@ export const BOOK_CHAPTERS: BookChapter[] = [
         id: 'join-simulator',
         title: { ko: 'Join Simulator', en: 'Join Simulator' },
         hasSimulator: true,
-        simulatorLabel: { ko: 'Join 시뮬레이터 실행', en: 'Launch Join Simulator' },
+        simulatorLabel: {
+          ko: 'Join 시뮬레이터 실행',
+          en: 'Launch Join Simulator',
+        },
       },
     ],
   },
@@ -172,7 +210,10 @@ export const BOOK_CHAPTERS: BookChapter[] = [
         id: 'optimizer-simulator',
         title: { ko: 'Optimizer Simulator', en: 'Optimizer Simulator' },
         hasSimulator: true,
-        simulatorLabel: { ko: 'Optimizer 시뮬레이터 실행', en: 'Launch Optimizer Simulator' },
+        simulatorLabel: {
+          ko: 'Optimizer 시뮬레이터 실행',
+          en: 'Launch Optimizer Simulator',
+        },
       },
     ],
   },
@@ -201,9 +242,15 @@ export const BOOK_CHAPTERS: BookChapter[] = [
       },
       {
         id: 'qt-simulator',
-        title: { ko: 'Query Transform Simulator', en: 'Query Transform Simulator' },
+        title: {
+          ko: 'Query Transform Simulator',
+          en: 'Query Transform Simulator',
+        },
         hasSimulator: true,
-        simulatorLabel: { ko: '쿼리 변환 시뮬레이터 실행', en: 'Launch Query Transform Simulator' },
+        simulatorLabel: {
+          ko: '쿼리 변환 시뮬레이터 실행',
+          en: 'Launch Query Transform Simulator',
+        },
       },
     ],
   },
@@ -220,7 +267,10 @@ export const BOOK_CHAPTERS: BookChapter[] = [
       },
       {
         id: 'sort-memory',
-        title: { ko: 'Sort Area와 Temp 세그먼트', en: 'Sort Area & Temp Segment' },
+        title: {
+          ko: 'Sort Area와 Temp 세그먼트',
+          en: 'Sort Area & Temp Segment',
+        },
       },
       {
         id: 'sort-avoid',
@@ -230,7 +280,10 @@ export const BOOK_CHAPTERS: BookChapter[] = [
         id: 'sort-simulator',
         title: { ko: 'Sort Simulator', en: 'Sort Simulator' },
         hasSimulator: true,
-        simulatorLabel: { ko: 'Sort 시뮬레이터 실행', en: 'Launch Sort Simulator' },
+        simulatorLabel: {
+          ko: 'Sort 시뮬레이터 실행',
+          en: 'Launch Sort Simulator',
+        },
       },
     ],
   },
@@ -247,7 +300,10 @@ export const BOOK_CHAPTERS: BookChapter[] = [
       },
       {
         id: 'partition-range',
-        title: { ko: 'Range / List / Hash 파티션', en: 'Range / List / Hash Partition' },
+        title: {
+          ko: 'Range / List / Hash 파티션',
+          en: 'Range / List / Hash Partition',
+        },
       },
       {
         id: 'partition-pruning',
@@ -257,7 +313,10 @@ export const BOOK_CHAPTERS: BookChapter[] = [
         id: 'partition-simulator',
         title: { ko: 'Partition Simulator', en: 'Partition Simulator' },
         hasSimulator: true,
-        simulatorLabel: { ko: '파티션 시뮬레이터 실행', en: 'Launch Partition Simulator' },
+        simulatorLabel: {
+          ko: '파티션 시뮬레이터 실행',
+          en: 'Launch Partition Simulator',
+        },
       },
     ],
   },
@@ -284,7 +343,10 @@ export const BOOK_CHAPTERS: BookChapter[] = [
         id: 'parallel-simulator',
         title: { ko: 'Parallel Simulator', en: 'Parallel Simulator' },
         hasSimulator: true,
-        simulatorLabel: { ko: '병렬 처리 시뮬레이터 실행', en: 'Launch Parallel Simulator' },
+        simulatorLabel: {
+          ko: '병렬 처리 시뮬레이터 실행',
+          en: 'Launch Parallel Simulator',
+        },
       },
     ],
   },

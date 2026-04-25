@@ -7,7 +7,7 @@ import { ClickableSyntaxRow, SyntaxRow } from './MiniSimulator'
 
 const T = {
   ko: {
-    chapterTitle: 'SQL 기본 문법',
+    chapterTitle: 'ORDER BY / GROUP BY / HAVING',
     clausesSectionSubtitle: '데이터 조회 결과를 정렬하고, 특정 컬럼값을 기준으로 범주화하고(Grouping), 범주화 된 데이터를 필터링하는 방법을 알아봅니다.',
     orderByTitle: 'ORDER BY — 결과 정렬',
     orderByDesc: 'SELECT 결과를 하나 이상의 컬럼 기준으로 정렬합니다. ASC(오름차순, 기본값)와 DESC(내림차순)를 지정할 수 있습니다. ORDER BY는 SQL을 실행할 때, 가장 마지막에 처리됩니다.',
@@ -27,13 +27,13 @@ const T = {
       ['SUM(col)', '그룹 내 col 합계'],
       ['MAX(col) / MIN(col)', '그룹 내 col 최댓값 / 최솟값'],
     ],
-    groupByAliasTip: 'AS로 컬럼에 별명(Alias)을 붙일 수 있습니다. 집계 함수 결과처럼 컬럼명이 길어질 때 유용합니다. AS는 생략 가능합니다.\nSELECT AVG(salary) AS avg_sal  →  결과 컬럼명이 avg_sal 로 표시됩니다.',
+    groupByAliasTip: 'AS로 컬럼에 별명(Alias)을 붙일 수 있습니다. 컬럼명이 길 때 유용합니다. AS 키워드를 생략하고 별명만 쓸 수도 있습니다.\nSELECT AVG(salary) avg_sal  →  결과 컬럼명이 avg_sal 로 표시됩니다.',
     havingTitle: 'HAVING — 그룹 조건 필터',
     havingDesc: 'WHERE는 개별 행을 필터링하지만, HAVING은 GROUP BY로 만들어진 그룹을 필터링합니다. 집계 함수 결과에 조건을 걸 때 사용합니다.',
     havingTip: 'WHERE는 집계 전(개별 행), HAVING은 집계 후(그룹) 필터입니다. 가능하면 WHERE로 먼저 행을 줄인 뒤 GROUP BY를 실행하는 것이 성능에 유리합니다.',
   },
   en: {
-    chapterTitle: 'SQL Basics',
+    chapterTitle: 'ORDER BY / GROUP BY / HAVING',
     clausesSectionSubtitle: 'Learn how to sort query results, group rows by column values, and filter grouped data.',
     orderByTitle: 'ORDER BY — Sorting Results',
     orderByDesc: 'Sorts the SELECT result by one or more columns. ASC (ascending, default) or DESC (descending) can be specified. ORDER BY is processed last when SQL is executed.',
