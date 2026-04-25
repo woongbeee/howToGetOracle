@@ -48,17 +48,17 @@ interface Props {
 앱 첫 진입 시 활성 섹션은 `sql-basics-syntax` (Chapter 1 첫 섹션, `BookLayout.tsx`의 `useState` 초기값).
 
 현재 `SectionRouter` 접두사 → 컴포넌트 매핑:
-| 접두사 | 컴포넌트 | 파일 |
-|--------|----------|------|
-| `sql-basics-` | `SqlBasicsPage` | `src/book/chapters/SqlBasicsPage.tsx` |
-| `internals-` | `InternalsPage` | `src/book/chapters/InternalsPage.tsx` |
-| `index-` | `IndexChapterPage` | `src/book/chapters/IndexChapterPage.tsx` |
-| `join-` | `JoinPage` | `src/book/chapters/JoinPage.tsx` |
-| `optimizer-` | `OptimizerChapterPage` | `src/book/chapters/OptimizerChapterPage.tsx` |
-| `qt-` | `QueryTransformPage` | `src/book/chapters/QueryTransformPage.tsx` |
-| `sort-` | `SortPage` | `src/book/chapters/SortPage.tsx` |
-| `partition-` | `PartitionPage` | `src/book/chapters/PartitionPage.tsx` |
-| `parallel-` | `ParallelPage` | `src/book/chapters/ParallelPage.tsx` |
+| 접두사 | 컴포넌트 | 진입점 |
+|--------|----------|--------|
+| `sql-basics-` | `SqlBasicsPage` | `src/book/chapters/sql-basics/index.tsx` |
+| `internals-` | `InternalsPage` | `src/book/chapters/internals/index.tsx` |
+| `index-` | `IndexChapterPage` | `src/book/chapters/index-chapter/index.tsx` |
+| `join-` | `JoinPage` | `src/book/chapters/join/index.tsx` |
+| `optimizer-` | `OptimizerChapterPage` | `src/book/chapters/optimizer/index.tsx` |
+| `qt-` | `QueryTransformPage` | `src/book/chapters/query-transform/index.tsx` |
+| `sort-` | `SortPage` | `src/book/chapters/sort/index.tsx` |
+| `partition-` | `PartitionPage` | `src/book/chapters/partition/index.tsx` |
+| `parallel-` | `ParallelPage` | `src/book/chapters/parallel/index.tsx` |
 
 각 챕터 페이지는 `sectionId`를 받아 내부적으로 `if/switch`로 섹션별 콘텐츠를 분기한다.
 
@@ -156,8 +156,6 @@ const T = {
 ### 복잡한 챕터의 서브 컴포넌트 분리
 
 콘텐츠가 많은 챕터(Index 등)는 섹션별 서브 컴포넌트를 `src/components/<챕터명>/`에 분리한다. 예: `src/components/index/` — `BTreeSection.tsx`, `BitmapSection.tsx`, `CompositeSection.tsx`, `IndexTypesOverview.tsx`. 챕터 페이지(`IndexChapterPage.tsx`)가 이를 import해 조합한다.
-
-모든 챕터는 `src/book/chapters/<챕터명>/index.tsx` 서브디렉토리 구조를 사용한다. `BookContent.tsx`는 각 챕터 폴더의 `index.tsx`를 import한다.
 
 콘텐츠가 많은 챕터는 섹션별 파일로 추가 분리된다:
 - `sql-basics/` — `SyntaxSection.tsx`, `ClausesSection.tsx`, `JoinSection.tsx`, `FunctionsSection.tsx`, `ExecutionSection.tsx` + 공유 헬퍼(`shared.ts`, `SqlHighlight.tsx`, `EmpRow.tsx`, `MiniSimulator.tsx`)

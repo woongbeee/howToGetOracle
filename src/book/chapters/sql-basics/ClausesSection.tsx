@@ -67,7 +67,12 @@ export function ClausesSection({ lang, t }: { lang: 'ko' | 'en'; t: typeof T['ko
 
   return (
     <PageContainer className="max-w-6xl">
-      <ChapterTitle icon="📋" num={1} title={t.chapterTitle} subtitle={t.clausesSectionSubtitle} />
+      <ChapterTitle
+        icon="📋"
+        num={1}
+        title={t.chapterTitle}
+        subtitle={t.clausesSectionSubtitle}
+      />
       <SectionTitle>{t.clausesSectionTitle}</SectionTitle>
 
       {/* ── ORDER BY ── */}
@@ -110,7 +115,7 @@ export function ClausesSection({ lang, t }: { lang: 'ko' | 'en'; t: typeof T['ko
           <>
             <SectionTitle>{t.havingTitle}</SectionTitle>
             <Prose>{t.havingDesc}</Prose>
-            <InfoBox color="blue" icon="💡" title="TIP">
+            <InfoBox color="blue" icon="💡" title="더 알아보기">
               {t.havingTip}
             </InfoBox>
           </>

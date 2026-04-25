@@ -329,12 +329,34 @@ export const CLAUSE_DEMOS: ClauseDemo[] = [
     sql: 'SELECT *\nFROM   employees',
     type: 'SELECT',
     label: { ko: '전체 조회', en: 'Select all' },
+    variants: [
+      {
+        op: 'SELECT *',
+        sql: 'SELECT *\nFROM   employees',
+        type: 'SELECT',
+        desc: {
+          ko: 'employees 테이블에 저장된 모든 행 조회',
+          en: 'All data from the table employees',
+        },
+      },
+    ],
   },
   {
     sectionKey: 'select',
     sql: 'SELECT emp_id, first_name, dept_id, salary\nFROM   employees\nWHERE  dept_id = 10',
     type: 'SELECT',
     label: { ko: 'SELECT 예시', en: 'SELECT example' },
+    variants: [
+      {
+        op: 'SELECT emp_id, first_name, dept_id, salary',
+        sql: 'SELECT emp_id, first_name, dept_id, salary\nFROM   employees\nWHERE  dept_id = 10',
+        type: 'SELECT',
+        desc: {
+          ko: 'employees 테이블에서 dept_id = 10인 데이터의 emp_id, first_name, dept_id, salary 값',
+          en: 'emp_id, first_name, dept_id, salary data which dept_id = 10 from table employees',
+        },
+      },
+    ],
   },
   {
     sectionKey: 'distinct',
@@ -346,75 +368,126 @@ export const CLAUSE_DEMOS: ClauseDemo[] = [
         op: 'DISTINCT dept_id',
         sql: 'SELECT DISTINCT dept_id\nFROM   employees',
         type: 'SELECT',
-        desc: { ko: 'dept_id의 중복을 제거한 고유 부서 목록', en: 'Unique department list with duplicates removed' },
+        desc: {
+          ko: 'dept_id의 중복을 제거한 고유 부서 목록',
+          en: 'Unique department list with duplicates removed',
+        },
       },
       {
-        op: 'DISTINCT job_title',
-        sql: 'SELECT DISTINCT job_title\nFROM   employees',
+        op: 'DISTINCT job_title, dept_id',
+        sql: 'SELECT DISTINCT job_title, dept_id\nFROM   employees',
         type: 'SELECT',
-        desc: { ko: 'job_title의 중복을 제거한 고유 직책 목록', en: 'Unique job title list with duplicates removed' },
+        desc: {
+          ko: 'job_title + dept_id 조합이 동일한 행을 중복으로 처리합니다.',
+          en: 'Rows with the same job_title + dept_id combination are treated as duplicates.',
+        },
+      },
+      {
+        op: 'DISTINCT dept_id, job_title',
+        sql: 'SELECT DISTINCT dept_id, job_title\nFROM   employees',
+        type: 'SELECT',
+        desc: {
+          ko: 'dept_id + job_title 조합이 동일한 행을 중복으로 처리합니다. 예를 들어 dept_id=10, job_title=\'Engineer\'인 행이 2개라면 1개만 반환됩니다.',
+          en: 'Rows with the same dept_id + job_title combination are treated as duplicates. For example, if two rows have dept_id=10 and job_title=\'Engineer\', only one is returned.',
+        },
       },
     ],
   },
   {
     sectionKey: 'where',
-    sql: "SELECT *\nFROM   employees\nWHERE  salary >= 7000",
+    sql: 'SELECT *\nFROM   employees\nWHERE  salary >= 7000',
     type: 'SELECT',
     label: { ko: 'WHERE 연산자', en: 'WHERE operators' },
     variants: [
       {
         op: '=',
-        sql: "SELECT *\nFROM   employees\nWHERE  dept_id = 10",
+        sql: 'SELECT *\nFROM   employees\nWHERE  dept_id = 10',
         type: 'SELECT',
-        desc: { ko: 'dept_id가 정확히 10인 행', en: 'Rows where dept_id equals 10' },
+        desc: {
+          ko: 'dept_id가 10인 행',
+          en: 'Rows where dept_id equals 10',
+        },
       },
       {
         op: '!= / <>',
-        sql: "SELECT *\nFROM   employees\nWHERE  dept_id != 10",
+        sql: 'SELECT *\nFROM   employees\nWHERE  dept_id != 10',
         type: 'SELECT',
-        desc: { ko: 'dept_id가 10이 아닌 행', en: 'Rows where dept_id is not 10' },
+        desc: {
+          ko: 'dept_id가 10이 아닌 행',
+          en: 'Rows where dept_id is not 10',
+        },
       },
       {
         op: '>= / <=',
-        sql: "SELECT *\nFROM   employees\nWHERE  salary >= 7000",
+        sql: 'SELECT *\nFROM   employees\nWHERE  salary >= 7000',
         type: 'SELECT',
-        desc: { ko: '급여가 7000 이상인 행', en: 'Rows where salary is at least 7000' },
+        desc: {
+          ko: 'salary가 7000 이상인 행',
+          en: 'Rows where salary is at least 7000',
+        },
       },
       {
         op: 'BETWEEN',
-        sql: "SELECT *\nFROM   employees\nWHERE  salary BETWEEN 5000 AND 7500",
+        sql: 'SELECT *\nFROM   employees\nWHERE  salary BETWEEN 5000 AND 7500',
         type: 'SELECT',
-        desc: { ko: '급여가 5000~7500 범위인 행', en: 'Rows where salary is between 5000 and 7500' },
+        desc: {
+          ko: 'salary가 5000보다 크고 7500보다 작은 행, 5000 <= salary AND salary <= 7500',
+          en: 'Rows where salary is between 5000 and 7500, 5000 <= salary AND salary <= 7500',
+        },
+      },
+      {
+        op: 'NOT BETWEEN',
+        sql: 'SELECT *\nFROM   employees\nWHERE  salary NOT BETWEEN 5000 AND 7500',
+        type: 'SELECT',
+        desc: {
+          ko: 'salary가 5000 미만이거나 7500 초과인 행, BETWEEN의 반대 범위를 선택합니다.',
+          en: 'Rows where salary is less than 5000 or greater than 7500 — the inverse of BETWEEN.',
+        },
       },
       {
         op: 'LIKE',
         sql: "SELECT *\nFROM   employees\nWHERE  last_name LIKE 'K%'",
         type: 'SELECT',
-        desc: { ko: "성(last_name)이 'K'로 시작하는 행", en: "Rows where last_name starts with 'K'" },
+        desc: {
+          ko: "last_name이 'K'로 시작하는 행",
+          en: "Rows where last_name starts with 'K'",
+        },
       },
       {
         op: 'IN',
-        sql: "SELECT *\nFROM   employees\nWHERE  dept_id IN (10, 20)",
+        sql: 'SELECT *\nFROM   employees\nWHERE  dept_id IN (10, 20)',
         type: 'SELECT',
-        desc: { ko: 'dept_id가 10 또는 20인 행', en: 'Rows where dept_id is 10 or 20' },
+        desc: {
+          ko: 'dept_id가 10이거나 20인 행',
+          en: 'Rows where dept_id is 10 or 20',
+        },
       },
       {
         op: 'IS NULL',
-        sql: "SELECT *\nFROM   employees\nWHERE  manager_id IS NULL",
+        sql: 'SELECT *\nFROM   employees\nWHERE  manager_id IS NULL',
         type: 'SELECT',
-        desc: { ko: 'manager_id가 NULL인 행 (최상위 관리자)', en: 'Rows where manager_id is NULL (top-level managers)' },
+        desc: {
+          ko: 'manager_id가 NULL인 행 (최상위 관리자)',
+          en: 'Rows where manager_id is NULL (top-level managers)',
+        },
       },
       {
         op: 'AND',
-        sql: "SELECT *\nFROM   employees\nWHERE  dept_id = 20\n  AND  salary >= 5500",
+        sql: 'SELECT *\nFROM   employees\nWHERE  dept_id = 20\n  AND  salary >= 5500',
         type: 'SELECT',
-        desc: { ko: '부서 20이면서 급여 5500 이상인 행', en: 'Rows in dept 20 AND salary at least 5500' },
+        desc: {
+          ko: 'dept_id가 20이면서 salary가 5500 이상인 행',
+          en: 'Rows in dept_id is 20 AND salary at least 5500',
+        },
       },
       {
         op: 'OR',
-        sql: "SELECT *\nFROM   employees\nWHERE  dept_id = 10\n  OR   dept_id = 30",
+        sql: 'SELECT *\nFROM   employees\nWHERE  dept_id = 10\n  OR   dept_id = 30',
         type: 'SELECT',
-        desc: { ko: '부서 10 또는 부서 30인 행', en: 'Rows in dept 10 OR dept 30' },
+        desc: {
+          ko: 'dept_id가 10 이거나 30인 행',
+          en: 'Rows in dept_id is 10 OR 30',
+        },
       },
     ],
   },
@@ -423,12 +496,34 @@ export const CLAUSE_DEMOS: ClauseDemo[] = [
     sql: 'UPDATE employees\nSET    salary = salary * 1.10\nWHERE  dept_id = 10',
     type: 'UPDATE',
     label: { ko: 'UPDATE 예시', en: 'UPDATE example' },
+    variants: [
+      {
+        op: 'UPDATE employees',
+        sql: 'UPDATE employees\nSET    salary = salary * 1.10\nWHERE  dept_id = 10',
+        type: 'UPDATE',
+        desc: {
+          ko: 'dept_id가 10인 행의 salary 값에 1.10을 곱해서 저장',
+          en: 'Update salary to the product of salary * 1.10 where dept_id is 10',
+        },
+      },
+    ],
   },
   {
     sectionKey: 'delete',
     sql: 'DELETE FROM employees\nWHERE  salary < 4500',
     type: 'DELETE',
     label: { ko: 'DELETE 예시', en: 'DELETE example' },
+    variants: [
+      {
+        op: 'DELETE FROM employees',
+        sql: 'DELETE FROM employees\nWHERE  salary < 4500',
+        type: 'DELETE',
+        desc: {
+          ko: 'salary가 4500보다 작은 행을 삭제합니다.',
+          en: 'Delete the rows where salary is less than 4500.',
+        },
+      },
+    ],
   },
   {
     sectionKey: 'orderby',
@@ -452,13 +547,19 @@ export const CLAUSE_DEMOS: ClauseDemo[] = [
         op: 'dept_id, salary',
         sql: 'SELECT emp_id, first_name, dept_id, salary\nFROM   employees\nORDER BY dept_id ASC, salary DESC',
         type: 'SELECT',
-        desc: { ko: '부서 오름차순 → 같은 부서 내 급여 내림차순', en: 'Dept ascending, then salary descending within dept' },
+        desc: {
+          ko: '부서 오름차순 → 같은 부서 내 급여 내림차순',
+          en: 'Dept ascending, then salary descending within dept',
+        },
       },
       {
         op: 'ORDER BY 2',
         sql: 'SELECT emp_id, first_name, dept_id, salary\nFROM   employees\nORDER BY 2',
         type: 'SELECT',
-        desc: { ko: 'SELECT의 두 번째 컬럼(first_name) 기준 오름차순 정렬', en: 'Sort by the 2nd SELECT column (first_name) ascending' },
+        desc: {
+          ko: 'SELECT의 두 번째 컬럼(first_name) 기준 오름차순 정렬',
+          en: 'Sort by the 2nd SELECT column (first_name) ascending',
+        },
       },
     ],
   },
@@ -490,7 +591,10 @@ export const CLAUSE_DEMOS: ClauseDemo[] = [
         op: 'MAX / MIN',
         sql: 'SELECT dept_id, MAX(salary) AS max_sal, MIN(salary) AS min_sal\nFROM   employees\nGROUP BY dept_id',
         type: 'GROUPBY' as unknown as 'SELECT',
-        desc: { ko: '부서별 최고·최저 급여', en: 'Max and min salary per department' },
+        desc: {
+          ko: '부서별 최고·최저 급여',
+          en: 'Max and min salary per department',
+        },
       },
     ],
   },
@@ -504,19 +608,28 @@ export const CLAUSE_DEMOS: ClauseDemo[] = [
         op: 'COUNT >= 3',
         sql: 'SELECT dept_id, COUNT(*) AS cnt\nFROM   employees\nGROUP BY dept_id\nHAVING COUNT(*) >= 3',
         type: 'GROUPBY' as unknown as 'SELECT',
-        desc: { ko: '직원이 3명 이상인 부서만', en: 'Only departments with 3 or more employees' },
+        desc: {
+          ko: '직원이 3명 이상인 부서만',
+          en: 'Only departments with 3 or more employees',
+        },
       },
       {
         op: 'AVG >= 6000',
         sql: 'SELECT dept_id, AVG(salary) AS avg_sal\nFROM   employees\nGROUP BY dept_id\nHAVING AVG(salary) >= 6000',
         type: 'GROUPBY' as unknown as 'SELECT',
-        desc: { ko: '평균 급여가 6000 이상인 부서만', en: 'Only departments with avg salary ≥ 6000' },
+        desc: {
+          ko: '평균 급여가 6000 이상인 부서만',
+          en: 'Only departments with avg salary ≥ 6000',
+        },
       },
       {
         op: 'SUM >= 15000',
         sql: 'SELECT dept_id, SUM(salary) AS total_sal\nFROM   employees\nGROUP BY dept_id\nHAVING SUM(salary) >= 15000',
         type: 'GROUPBY' as unknown as 'SELECT',
-        desc: { ko: '급여 합계가 15000 이상인 부서만', en: 'Only departments with total salary ≥ 15000' },
+        desc: {
+          ko: '급여 합계가 15000 이상인 부서만',
+          en: 'Only departments with total salary ≥ 15000',
+        },
       },
     ],
   },
@@ -583,6 +696,9 @@ export function filterRows(rows: Employee[], expr: string): Employee[] {
 
 export function evalCond(r: Employee, expr: string): boolean {
   const trimmed = expr.trim()
+
+  const notBetween = trimmed.match(/salary\s+NOT\s+BETWEEN\s+(\d+)\s+AND\s+(\d+)/i)
+  if (notBetween) return r.salary < parseInt(notBetween[1]) || r.salary > parseInt(notBetween[2])
 
   const between = trimmed.match(/salary\s+BETWEEN\s+(\d+)\s+AND\s+(\d+)/i)
   if (between) return r.salary >= parseInt(between[1]) && r.salary <= parseInt(between[2])
