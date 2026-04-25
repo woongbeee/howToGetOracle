@@ -8,10 +8,9 @@ import { ClickableSyntaxRow, SyntaxRow } from './MiniSimulator'
 const T = {
   ko: {
     chapterTitle: 'SQL 기본 문법',
-    clausesSectionTitle: 'ORDER BY / GROUP BY / HAVING',
-    clausesSectionSubtitle: '결과를 정렬하고, 그룹으로 집계하고, 그룹 조건을 필터링하는 세 가지 절을 학습합니다.',
+    clausesSectionSubtitle: '데이터 조회 결과를 정렬하고, 특정 컬럼값을 기준으로 범주화하고(Grouping), 범주화 된 데이터를 필터링하는 방법을 알아봅니다.',
     orderByTitle: 'ORDER BY — 결과 정렬',
-    orderByDesc: 'SELECT 결과를 하나 이상의 컬럼 기준으로 정렬합니다. ASC(오름차순, 기본값)와 DESC(내림차순)를 지정할 수 있습니다. ORDER BY는 SQL 실행 순서에서 가장 마지막에 처리됩니다.',
+    orderByDesc: 'SELECT 결과를 하나 이상의 컬럼 기준으로 정렬합니다. ASC(오름차순, 기본값)와 DESC(내림차순)를 지정할 수 있습니다. ORDER BY는 SQL을 실행할 때, 가장 마지막에 처리됩니다.',
     orderByOps: [
       ['구문', '설명'],
       ['ORDER BY col', 'col 기준 오름차순 정렬 (ASC 기본)'],
@@ -20,24 +19,24 @@ const T = {
       ['ORDER BY 2', 'SELECT의 두 번째 컬럼 기준 정렬'],
     ],
     groupByTitle: 'GROUP BY — 그룹 집계',
-    groupByDesc: '같은 값을 가진 행들을 하나의 그룹으로 묶고, COUNT·SUM·AVG·MAX·MIN 같은 집계 함수를 적용합니다. GROUP BY에 없는 컬럼은 SELECT에서 집계 함수 없이 사용할 수 없습니다.',
+    groupByDesc: '같은 값을 가진 행들을 하나의 그룹으로 묶고, COUNT·SUM·AVG·MAX·MIN 같은 집계 함수를 적용합니다. GROUP BY에 쓰이지 않은 컬럼을 SELECT 절에서 쓸 때는 반드시 집계 함수와 함께 써야 합니다.',
     groupByOps: [
-      ['함수', '설명'],
+      ['집계 함수', '설명'],
       ['COUNT(*)', '그룹 내 행 수'],
       ['AVG(col)', '그룹 내 col 평균'],
       ['SUM(col)', '그룹 내 col 합계'],
       ['MAX(col) / MIN(col)', '그룹 내 col 최댓값 / 최솟값'],
     ],
+    groupByAliasTip: 'AS로 컬럼에 별명(Alias)을 붙일 수 있습니다. 집계 함수 결과처럼 컬럼명이 길어질 때 유용합니다. AS는 생략 가능합니다.\nSELECT AVG(salary) AS avg_sal  →  결과 컬럼명이 avg_sal 로 표시됩니다.',
     havingTitle: 'HAVING — 그룹 조건 필터',
     havingDesc: 'WHERE는 개별 행을 필터링하지만, HAVING은 GROUP BY로 만들어진 그룹을 필터링합니다. 집계 함수 결과에 조건을 걸 때 사용합니다.',
     havingTip: 'WHERE는 집계 전(개별 행), HAVING은 집계 후(그룹) 필터입니다. 가능하면 WHERE로 먼저 행을 줄인 뒤 GROUP BY를 실행하는 것이 성능에 유리합니다.',
   },
   en: {
     chapterTitle: 'SQL Basics',
-    clausesSectionTitle: 'ORDER BY / GROUP BY / HAVING',
-    clausesSectionSubtitle: 'Sort results, aggregate into groups, and filter groups with these three essential clauses.',
+    clausesSectionSubtitle: 'Learn how to sort query results, group rows by column values, and filter grouped data.',
     orderByTitle: 'ORDER BY — Sorting Results',
-    orderByDesc: 'Sorts the SELECT result by one or more columns. ASC (ascending, default) or DESC (descending) can be specified. ORDER BY is the last clause processed in SQL execution order.',
+    orderByDesc: 'Sorts the SELECT result by one or more columns. ASC (ascending, default) or DESC (descending) can be specified. ORDER BY is processed last when SQL is executed.',
     orderByOps: [
       ['Syntax', 'Description'],
       ['ORDER BY col', 'Sort by col ascending (ASC default)'],
@@ -46,7 +45,7 @@ const T = {
       ['ORDER BY 2', 'Sort by the 2nd column in SELECT'],
     ],
     groupByTitle: 'GROUP BY — Grouping & Aggregation',
-    groupByDesc: 'Groups rows with the same value into a single group and applies aggregate functions like COUNT, SUM, AVG, MAX, and MIN. Columns not in GROUP BY must be wrapped in an aggregate function in SELECT.',
+    groupByDesc: 'Group rows with the same value into a single group and applies aggregate functions like COUNT, SUM, AVG, MAX, and MIN. Columns not listed in GROUP BY must always be used with an aggregate function in the SELECT clause.',
     groupByOps: [
       ['Function', 'Description'],
       ['COUNT(*)', 'Number of rows in the group'],
@@ -54,6 +53,7 @@ const T = {
       ['SUM(col)', 'Sum of col in the group'],
       ['MAX(col) / MIN(col)', 'Max / min value of col in the group'],
     ],
+    groupByAliasTip: 'Use AS to assign an alias to a column. This is especially useful for aggregate function results with long names. AS is optional.\nSELECT AVG(salary) AS avg_sal  →  the result column is displayed as avg_sal.',
     havingTitle: 'HAVING — Filtering Groups',
     havingDesc: 'WHERE filters individual rows, but HAVING filters the groups created by GROUP BY. Use it when you need to apply conditions on aggregate function results.',
     havingTip: 'WHERE filters before aggregation (individual rows); HAVING filters after (groups). For best performance, reduce rows with WHERE first, then aggregate.',
@@ -73,7 +73,6 @@ export function ClausesSection({ lang, t }: { lang: 'ko' | 'en'; t: typeof T['ko
         title={t.chapterTitle}
         subtitle={t.clausesSectionSubtitle}
       />
-      <SectionTitle>{t.clausesSectionTitle}</SectionTitle>
 
       {/* ── ORDER BY ── */}
       <ClickableSyntaxRow
@@ -103,6 +102,11 @@ export function ClausesSection({ lang, t }: { lang: 'ko' | 'en'; t: typeof T['ko
             <Prose>{t.groupByDesc}</Prose>
           </>
         }
+        bottomContent={
+          <InfoBox color="blue" icon="💡" title={lang === 'ko' ? '더 알아보기' : 'Advanced'}>
+            {t.groupByAliasTip}
+          </InfoBox>
+        }
       />
 
       <Divider />
@@ -115,7 +119,7 @@ export function ClausesSection({ lang, t }: { lang: 'ko' | 'en'; t: typeof T['ko
           <>
             <SectionTitle>{t.havingTitle}</SectionTitle>
             <Prose>{t.havingDesc}</Prose>
-            <InfoBox color="blue" icon="💡" title="더 알아보기">
+            <InfoBox color="blue" icon="💡" title={lang === 'ko' ? '더 알아보기' : 'Advanced'}>
               {t.havingTip}
             </InfoBox>
           </>

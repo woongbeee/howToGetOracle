@@ -35,6 +35,9 @@ export interface GroupRow {
   total_sal?: number
   max_sal?: number
   min_sal?: number
+  stddev_sal?: number
+  variance_sal?: number
+  median_sal?: number
 }
 
 export interface ParsedQuery {
@@ -387,8 +390,8 @@ export const CLAUSE_DEMOS: ClauseDemo[] = [
         sql: 'SELECT DISTINCT dept_id, job_title\nFROM   employees',
         type: 'SELECT',
         desc: {
-          ko: 'dept_id + job_title 조합이 동일한 행을 중복으로 처리합니다. 예를 들어 dept_id=10, job_title=\'Engineer\'인 행이 2개라면 1개만 반환됩니다.',
-          en: 'Rows with the same dept_id + job_title combination are treated as duplicates. For example, if two rows have dept_id=10 and job_title=\'Engineer\', only one is returned.',
+          ko: "dept_id + job_title 조합이 동일한 행을 중복으로 처리합니다. 예를 들어 dept_id=10, job_title='Engineer'인 행이 2개라면 1개만 반환됩니다.",
+          en: "Rows with the same dept_id + job_title combination are treated as duplicates. For example, if two rows have dept_id=10 and job_title='Engineer', only one is returned.",
         },
       },
     ],
@@ -527,28 +530,34 @@ export const CLAUSE_DEMOS: ClauseDemo[] = [
   },
   {
     sectionKey: 'orderby',
-    sql: 'SELECT emp_id, first_name, dept_id, salary\nFROM   employees\nORDER BY salary DESC',
+    sql: 'SELECT emp_id, first_name, dept_id, salary\nFROM   employees\nORDER BY salary ASC',
     type: 'SELECT',
     label: { ko: 'ORDER BY 예시', en: 'ORDER BY example' },
     variants: [
       {
+        op: 'salary ASC',
+        sql: 'SELECT emp_id, first_name, dept_id, salary\nFROM   employees\nORDER BY salary',
+        type: 'SELECT',
+        desc: {
+          ko: 'salary 값 기준 오름차순으로 정렬, 컬럼 이름 뒤에 아무것도 적지 않으면 ASC가 기본값',
+          en: 'Sort by salary ascending',
+        },
+      },
+      {
         op: 'salary DESC',
         sql: 'SELECT emp_id, first_name, dept_id, salary\nFROM   employees\nORDER BY salary DESC',
         type: 'SELECT',
-        desc: { ko: '급여 내림차순 정렬', en: 'Sort by salary descending' },
-      },
-      {
-        op: 'salary ASC',
-        sql: 'SELECT emp_id, first_name, dept_id, salary\nFROM   employees\nORDER BY salary ASC',
-        type: 'SELECT',
-        desc: { ko: '급여 오름차순 정렬', en: 'Sort by salary ascending' },
+        desc: {
+          ko: 'salary 값 기준 내림차순으로 정렬',
+          en: 'Sort by salary descending',
+        },
       },
       {
         op: 'dept_id, salary',
         sql: 'SELECT emp_id, first_name, dept_id, salary\nFROM   employees\nORDER BY dept_id ASC, salary DESC',
         type: 'SELECT',
         desc: {
-          ko: '부서 오름차순 → 같은 부서 내 급여 내림차순',
+          ko: 'dept_id 값으로 오름차순 정렬 후 → 같은 dept_id인 행들 내에서 salary 값으로 내림차순 정렬',
           en: 'Dept ascending, then salary descending within dept',
         },
       },
@@ -557,7 +566,7 @@ export const CLAUSE_DEMOS: ClauseDemo[] = [
         sql: 'SELECT emp_id, first_name, dept_id, salary\nFROM   employees\nORDER BY 2',
         type: 'SELECT',
         desc: {
-          ko: 'SELECT의 두 번째 컬럼(first_name) 기준 오름차순 정렬',
+          ko: 'SELECT 절에 적힌 두 번째 컬럼(first_name) 기준 오름차순 정렬',
           en: 'Sort by the 2nd SELECT column (first_name) ascending',
         },
       },
@@ -579,7 +588,7 @@ export const CLAUSE_DEMOS: ClauseDemo[] = [
         op: 'AVG',
         sql: 'SELECT dept_id, AVG(salary) AS avg_sal\nFROM   employees\nGROUP BY dept_id',
         type: 'GROUPBY' as unknown as 'SELECT',
-        desc: { ko: '부서별 평균 급여', en: 'Average salary per department' },
+        desc: { ko: '부서별 평균 급여, GROUP BY에서 쓰이지 않은 컬럼 salary는 SELECT절에서 집계 함수 AVG와 함께 사용', en: 'Average salary per department' },
       },
       {
         op: 'SUM',
@@ -666,11 +675,14 @@ export function sortRows(rows: Employee[], key: keyof Employee, dir: 'ASC' | 'DE
 export function parseGroupCols(selectPart: string): string[] {
   const cols: string[] = ['dept_id']
   const u = selectPart.toUpperCase()
-  if (u.includes('COUNT')) cols.push('cnt')
-  if (u.includes('AVG'))   cols.push('avg_sal')
-  if (u.includes('SUM'))   cols.push('total_sal')
-  if (u.includes('MAX'))   cols.push('max_sal')
-  if (u.includes('MIN'))   cols.push('min_sal')
+  if (u.includes('COUNT'))    cols.push('cnt')
+  if (u.includes('AVG'))      cols.push('avg_sal')
+  if (u.includes('SUM'))      cols.push('total_sal')
+  if (u.includes('MAX'))      cols.push('max_sal')
+  if (u.includes('MIN'))      cols.push('min_sal')
+  if (u.includes('STDDEV'))   cols.push('stddev_sal')
+  if (u.includes('VARIANCE')) cols.push('variance_sal')
+  if (u.includes('MEDIAN'))   cols.push('median_sal')
   return cols
 }
 
@@ -828,14 +840,24 @@ export function parseAndExecute(sql: string, data: Employee[]): ParsedQuery {
       groups.set(r.dept_id, arr)
     }
 
-    let groupRows: GroupRow[] = Array.from(groups.entries()).map(([dept_id, rows]) => ({
-      dept_id,
-      cnt:       rows.length,
-      avg_sal:   Math.round(rows.reduce((s, r) => s + r.salary, 0) / rows.length),
-      total_sal: rows.reduce((s, r) => s + r.salary, 0),
-      max_sal:   Math.max(...rows.map((r) => r.salary)),
-      min_sal:   Math.min(...rows.map((r) => r.salary)),
-    })).sort((a, b) => a.dept_id - b.dept_id)
+    let groupRows: GroupRow[] = Array.from(groups.entries()).map(([dept_id, rows]) => {
+      const avg = rows.reduce((s, r) => s + r.salary, 0) / rows.length
+      const variance = rows.reduce((s, r) => s + (r.salary - avg) ** 2, 0) / rows.length
+      const sorted = rows.map((r) => r.salary).sort((a, b) => a - b)
+      const mid = Math.floor(sorted.length / 2)
+      const median = sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid]
+      return {
+        dept_id,
+        cnt:          rows.length,
+        avg_sal:      Math.round(avg),
+        total_sal:    rows.reduce((s, r) => s + r.salary, 0),
+        max_sal:      Math.max(...rows.map((r) => r.salary)),
+        min_sal:      Math.min(...rows.map((r) => r.salary)),
+        stddev_sal:   Math.round(Math.sqrt(variance)),
+        variance_sal: Math.round(variance),
+        median_sal:   median,
+      }
+    }).sort((a, b) => a.dept_id - b.dept_id)
 
     if (havingMatch) {
       const hExpr = havingMatch[1].trim()
