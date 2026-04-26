@@ -3,7 +3,7 @@ import { motion } from 'framer-motion'
 import { useSimulationStore, type Lang } from '@/store/simulationStore'
 import {
   PageContainer, ChapterTitle, SectionTitle, Prose,
-  InfoBox, Table, ConceptGrid, SimulatorPlaceholder, Divider
+  InfoBox, Table, ConceptGrid, SimulatorPlaceholder, Divider, WipBanner
 } from '../shared'
 import { cn } from '@/lib/utils'
 
@@ -91,6 +91,7 @@ export function ParallelPage({ sectionId }: { sectionId: string }) {
 
   return (
     <PageContainer>
+      <WipBanner />
       {sectionId === 'parallel-overview' && (
         <>
           <ChapterTitle icon="⫴" num={8} title={t.chapterTitle} subtitle={t.chapterSubtitle} />

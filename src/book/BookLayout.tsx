@@ -81,6 +81,10 @@ export function BookLayout({ onHome }: Props) {
         <span className="font-mono text-sm text-muted-foreground">{t.subtitle}</span>
 
         <div className="ml-auto flex items-center gap-2">
+          <span className="hidden font-mono text-[10px] text-muted-foreground/50 sm:inline">
+            last updated {__BUILD_DATE__}
+          </span>
+          <div className="hidden h-3 w-px bg-border sm:block" />
           <button
             onClick={toggleLang}
             className="flex items-center gap-1 rounded-full border bg-muted px-2.5 py-0.5 font-mono text-[10px] font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"

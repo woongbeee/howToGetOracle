@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useSimulationStore } from '@/store/simulationStore'
-import { PageContainer, ChapterTitle, SimulatorPlaceholder } from '../shared'
+import { PageContainer, ChapterTitle, SimulatorPlaceholder, WipBanner } from '../shared'
 import { IndexTypesOverview } from '@/components/index/IndexTypesOverview'
 import { BTreeSection } from '@/components/index/BTreeSection'
 import { BitmapSection } from '@/components/index/BitmapSection'
@@ -103,6 +103,9 @@ function IndexLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex h-full overflow-hidden">
       <div className="min-w-0 flex-1 overflow-y-auto">
+        <div className="px-8 pt-6">
+          <WipBanner />
+        </div>
         {children}
       </div>
       <HRSchemaPanel />

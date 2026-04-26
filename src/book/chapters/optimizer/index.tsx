@@ -1,7 +1,7 @@
 import { useSimulationStore } from '@/store/simulationStore'
 import {
   PageContainer, ChapterTitle, SectionTitle, Prose,
-  InfoBox, Table, ConceptGrid, SimulatorPlaceholder, Divider
+  InfoBox, Table, ConceptGrid, SimulatorPlaceholder, Divider, WipBanner
 } from '../shared'
 
 const T = {
@@ -120,6 +120,7 @@ export function OptimizerChapterPage({ sectionId }: { sectionId: string }) {
 
   return (
     <PageContainer>
+      <WipBanner />
       {sectionId === 'optimizer-overview' && (
         <>
           <ChapterTitle icon="⚡" num={4} title={t.chapterTitle} subtitle={t.chapterSubtitle} />

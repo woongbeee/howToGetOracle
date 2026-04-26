@@ -3,7 +3,7 @@ import { motion } from 'framer-motion'
 import { useSimulationStore, type Lang } from '@/store/simulationStore'
 import {
   PageContainer, ChapterTitle, SectionTitle, Prose,
-  InfoBox, Table, ConceptGrid, SimulatorPlaceholder, Divider
+  InfoBox, Table, ConceptGrid, SimulatorPlaceholder, Divider, WipBanner
 } from '../shared'
 import { cn } from '@/lib/utils'
 
@@ -79,6 +79,7 @@ export function PartitionPage({ sectionId }: { sectionId: string }) {
 
   return (
     <PageContainer>
+      <WipBanner />
       {sectionId === 'partition-overview' && (
         <>
           <ChapterTitle icon="▦" num={7} title={t.chapterTitle} subtitle={t.chapterSubtitle} />

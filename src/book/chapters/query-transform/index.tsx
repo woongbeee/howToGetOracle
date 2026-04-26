@@ -1,7 +1,7 @@
 import { useSimulationStore } from '@/store/simulationStore'
 import {
   PageContainer, ChapterTitle, SectionTitle, Prose,
-  InfoBox, ConceptGrid, SimulatorPlaceholder, Divider
+  InfoBox, ConceptGrid, SimulatorPlaceholder, Divider, WipBanner
 } from '../shared'
 
 const T = {
@@ -132,6 +132,7 @@ export function QueryTransformPage({ sectionId }: { sectionId: string }) {
 
   return (
     <PageContainer>
+      <WipBanner />
       {sectionId === 'qt-overview' && (
         <>
           <ChapterTitle icon="🔄" num={5} title={t.chapterTitle} subtitle={t.chapterSubtitle} />

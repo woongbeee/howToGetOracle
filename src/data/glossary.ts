@@ -74,7 +74,7 @@ export const GLOSSARY: GlossaryTerm[] = [
       ko: 'Oracle I/O의 최소 단위(기본 8KB). 데이터 파일은 블록 단위로 읽고 씀. Block Header(기본 정보·트랜잭션 슬롯), Data Header(Table/Row Directory), Free Space, Row Data로 구성. Buffer Cache도 블록 단위로 관리.',
       en: 'The minimum I/O unit in Oracle (default 8KB). Data files are read and written in blocks. A block contains a Block Header (metadata + transaction slots), Data Header (Table/Row Directory), Free Space, and Row Data. Buffer Cache is also managed per block.',
     },
-    sectionIds: ['internals-storage', 'internals-overview', 'internals-sga'],
+    sectionIds: ['internals-storage', 'internals-sga'],
   },
   {
     term: 'Buffer Cache',
@@ -376,7 +376,7 @@ export const GLOSSARY: GlossaryTerm[] = [
       ko: '모든 DML 변경사항을 순서대로 기록하는 파일. 인스턴스 복구에 사용. LGWR이 기록하며, 꽉 차면 ARCn이 아카이브로 복사.',
       en: 'Files that record all DML changes in order. Used for instance recovery. Written by LGWR; archived by ARCn when full.',
     },
-    sectionIds: ['internals-processes', 'internals-sga'],
+    sectionIds: ['internals-processes'],
   },
 
   // ── P ──────────────────────────────────────────────────────────────────────
@@ -454,7 +454,7 @@ export const GLOSSARY: GlossaryTerm[] = [
       ko: '데이터 변경 이력. 인스턴스 장애 후 복구 시 Redo Log를 재실행(Redo)해 변경사항을 복원하는 데 사용.',
       en: 'The record of data changes. Used during instance recovery to re-apply (redo) changes from Redo Log files.',
     },
-    sectionIds: ['internals-processes', 'internals-sga'],
+    sectionIds: ['internals-processes'],
   },
   {
     term: 'Redo Log Buffer',
@@ -609,25 +609,237 @@ export const GLOSSARY: GlossaryTerm[] = [
     sectionIds: ['qt-view-merging', 'qt-overview'],
   },
 
-  // ── 가 (Korean) ───────────────────────────────────────────────────────────
+  // ── W ──────────────────────────────────────────────────────────────────────
   {
-    term: '가나다순',
+    term: 'Window Function',
     definition: {
-      ko: '한글 사전 정렬 순서. 초성 → 중성 → 종성 순으로 정렬.',
-      en: 'Korean alphabetical order. Sorted by initial consonant → vowel → final consonant.',
+      ko: '현재 행과 연관된 행 집합(윈도우)에 대해 집계·순위·분석 계산을 수행하는 함수. OVER() 절로 파티션·정렬·프레임을 지정. ROW_NUMBER, RANK, LAG, LEAD, SUM 등.',
+      en: 'Functions that perform aggregate, ranking, or analytic calculations over a window of rows related to the current row. Defined via OVER() with PARTITION BY, ORDER BY, and frame clauses. Examples: ROW_NUMBER, RANK, LAG, LEAD, SUM.',
     },
-    sectionIds: [],
+    sectionIds: ['sql-basics-windowFunc'],
+  },
+
+  // ── C (SQL) ────────────────────────────────────────────────────────────────
+  {
+    term: 'CASE WHEN',
+    definition: {
+      ko: 'ANSI 표준 조건 표현식. 조건을 위에서 아래로 순서대로 평가해 처음 TRUE인 THEN 값을 반환. 어떤 조건도 만족하지 않으면 ELSE 값(없으면 NULL) 반환.',
+      en: 'ANSI standard conditional expression. Evaluates conditions top-to-bottom and returns the first THEN value that is TRUE. Returns the ELSE value (or NULL if absent) when no condition matches.',
+    },
+    sectionIds: ['sql-basics-null'],
+  },
+  {
+    term: 'CUBE',
+    definition: {
+      ko: 'GROUP BY 확장 구문. 지정한 컬럼들의 모든 가능한 조합(2^n)에 대한 소계와 총계를 한 번에 생성. ROLLUP보다 더 많은 집계 행을 생성.',
+      en: 'GROUP BY extension that generates subtotals for all possible combinations (2^n) of the specified columns, plus a grand total. Produces more aggregate rows than ROLLUP.',
+    },
+    sectionIds: ['sql-basics-rollup'],
+  },
+
+  // ── D (SQL) ────────────────────────────────────────────────────────────────
+  {
+    term: 'DATE',
+    definition: {
+      ko: 'Oracle의 날짜·시간 데이터 타입. 연·월·일·시·분·초를 저장하며 타임존 정보는 없음. 정수를 더하면 일(day) 단위로 이동. SYSDATE가 현재 시각을 반환.',
+      en: 'Oracle date/time data type storing year, month, day, hour, minute, and second — no timezone. Adding an integer moves by that many days. SYSDATE returns the current date and time.',
+    },
+    sectionIds: ['sql-basics-date'],
+  },
+  {
+    term: 'DECODE',
+    definition: {
+      ko: "Oracle 전용 조건 함수. DECODE(expr, s1, r1, s2, r2, …, default) 형태로 등치(=) 비교만 수행. 범위 조건이 필요하면 CASE WHEN을 사용.",
+      en: 'Oracle-specific conditional function. Uses equality (=) comparisons only: DECODE(expr, s1, r1, s2, r2, …, default). Use CASE WHEN for range conditions.',
+    },
+    sectionIds: ['sql-basics-null'],
+  },
+
+  // ── G (SQL) ────────────────────────────────────────────────────────────────
+  {
+    term: 'GROUP BY',
+    definition: {
+      ko: '같은 컬럼 값을 가진 행들을 그룹으로 묶어 집계 함수(COUNT, SUM, AVG 등)를 적용하는 절. SELECT에 집계 함수가 아닌 컬럼은 반드시 GROUP BY에 포함되어야 함.',
+      en: 'Groups rows with identical column values and applies aggregate functions (COUNT, SUM, AVG, etc.). All non-aggregated columns in SELECT must appear in GROUP BY.',
+    },
+    sectionIds: ['sql-basics-clauses', 'sql-basics-execution', 'sort-overview'],
+  },
+
+  // ── H (SQL) ────────────────────────────────────────────────────────────────
+  {
+    term: 'HAVING',
+    definition: {
+      ko: 'GROUP BY 결과에 조건을 적용하는 절. WHERE는 그룹화 전 행 단위 필터, HAVING은 그룹화 후 집계 결과 필터.',
+      en: 'Applies conditions to GROUP BY results. WHERE filters rows before grouping; HAVING filters aggregate results after grouping.',
+    },
+    sectionIds: ['sql-basics-clauses', 'sql-basics-execution'],
+  },
+
+  // ── M (SQL) ────────────────────────────────────────────────────────────────
+  {
+    term: 'MERGE INTO',
+    definition: {
+      ko: "조건에 따라 INSERT와 UPDATE를 한 번에 처리하는 구문. 'Upsert' 패턴 — 일치하는 행이 있으면 UPDATE, 없으면 INSERT. WHEN NOT MATCHED THEN DELETE도 지원.",
+      en: "Performs INSERT and UPDATE in a single statement based on a condition — the 'upsert' pattern. Updates matched rows, inserts unmatched ones. Also supports WHEN NOT MATCHED THEN DELETE.",
+    },
+    sectionIds: ['sql-basics-merge'],
+  },
+  {
+    term: 'MONTHS_BETWEEN',
+    definition: {
+      ko: '두 날짜 사이의 개월 수를 숫자로 반환하는 함수. date1이 date2보다 늦으면 양수, 이르면 음수 반환. 소수점 포함 가능.',
+      en: 'Returns the number of months between two dates as a number. Positive if date1 is later than date2; negative otherwise. Can include fractional months.',
+    },
+    sectionIds: ['sql-basics-date'],
+  },
+
+  // ── N (SQL) ────────────────────────────────────────────────────────────────
+  {
+    term: 'NULL',
+    definition: {
+      ko: '값이 없음(unknown)을 나타내는 특수 표시. NULL과의 산술·비교 연산 결과는 NULL. IS NULL / IS NOT NULL로 비교. NVL, NVL2, COALESCE로 대체값 지정 가능.',
+      en: 'Special marker indicating an unknown or missing value. Arithmetic and comparisons with NULL return NULL. Use IS NULL / IS NOT NULL for checks. Replace with NVL, NVL2, or COALESCE.',
+    },
+    sectionIds: ['sql-basics-null'],
+  },
+  {
+    term: 'NVL',
+    definition: {
+      ko: 'expr이 NULL이면 replacement를 반환하고, NULL이 아니면 expr을 그대로 반환하는 Oracle 함수. expr과 replacement의 데이터 타입이 같아야 함.',
+      en: 'Oracle function that returns replacement if expr is NULL, otherwise returns expr. Both arguments must have compatible data types.',
+    },
+    sectionIds: ['sql-basics-null'],
+  },
+
+  // ── O (SQL) ────────────────────────────────────────────────────────────────
+  {
+    term: 'ORDER BY',
+    definition: {
+      ko: '쿼리 결과를 지정한 컬럼 기준으로 정렬하는 절. ASC(오름차순, 기본값) 또는 DESC(내림차순). SQL 실행 순서에서 가장 마지막에 적용됨.',
+      en: 'Sorts the query result by specified columns. ASC (ascending, default) or DESC (descending). Applied last in SQL execution order.',
+    },
+    sectionIds: ['sql-basics-clauses', 'sql-basics-execution', 'sort-overview'],
+  },
+
+  // ── P (SQL) ────────────────────────────────────────────────────────────────
+  {
+    term: 'PARTITION BY (Window)',
+    definition: {
+      ko: '윈도우 함수에서 집계 범위를 나누는 기준 컬럼을 지정하는 절. GROUP BY와 달리 행을 실제로 합치지 않고 각 파티션 내에서 함수를 계산.',
+      en: 'Specifies the column(s) that divide rows into partitions for a window function. Unlike GROUP BY, rows are not collapsed — the function is computed within each partition.',
+    },
+    sectionIds: ['sql-basics-windowFunc'],
+  },
+  {
+    term: 'PIVOT',
+    definition: {
+      ko: '행 데이터를 열로 변환하는 Oracle SQL 구문. 집계 함수와 IN 절로 고정 값을 열로 전환. UNPIVOT은 그 반대.',
+      en: 'Oracle SQL syntax that rotates row data into columns. Uses an aggregate function with an IN clause to turn fixed values into column headers. UNPIVOT reverses this.',
+    },
+    sectionIds: ['sql-basics-rollup'],
+  },
+
+  // ── R (SQL) ────────────────────────────────────────────────────────────────
+  {
+    term: 'Range Partition',
+    definition: {
+      ko: '컬럼 값의 범위(예: 날짜 월별)를 기준으로 파티션을 나누는 방식. 시계열 데이터나 날짜 기반 데이터에 가장 많이 사용.',
+      en: 'Partitions a table by ranges of a column value (e.g., monthly date ranges). Most commonly used with time-series or date-based data.',
+    },
+    sectionIds: ['partition-range', 'partition-overview'],
+  },
+  {
+    term: 'RANK / DENSE_RANK',
+    definition: {
+      ko: '순위를 반환하는 윈도우 함수. RANK는 동점 시 다음 순위를 건너뜀(1,1,3), DENSE_RANK는 건너뛰지 않음(1,1,2). ROW_NUMBER는 무조건 고유 번호 부여.',
+      en: 'Window functions returning rank values. RANK skips the next rank on ties (1,1,3); DENSE_RANK does not skip (1,1,2). ROW_NUMBER always assigns unique sequential numbers.',
+    },
+    sectionIds: ['sql-basics-windowFunc'],
+  },
+  {
+    term: 'ROLLUP',
+    definition: {
+      ko: 'GROUP BY 확장 구문. 지정한 컬럼들의 계층적 소계와 총계를 한 번에 생성. n개 컬럼에 대해 n+1개의 집계 레벨을 만듦.',
+      en: 'GROUP BY extension that generates hierarchical subtotals and a grand total. Creates n+1 aggregation levels for n columns.',
+    },
+    sectionIds: ['sql-basics-rollup'],
+  },
+  {
+    term: 'ROW_NUMBER',
+    definition: {
+      ko: '파티션 내 각 행에 고유한 순번을 부여하는 윈도우 함수. ORDER BY 기준으로 1부터 시작. 동점이 있어도 중복 없이 순번 부여.',
+      en: 'Window function that assigns a unique sequential number to each row within a partition, starting at 1. No ties — every row gets a distinct number.',
+    },
+    sectionIds: ['sql-basics-windowFunc'],
+  },
+
+  // ── S (SQL) ────────────────────────────────────────────────────────────────
+  {
+    term: 'SELECT',
+    definition: {
+      ko: 'SQL의 기본 데이터 조회 명령. FROM → WHERE → GROUP BY → HAVING → SELECT → ORDER BY 순으로 논리적으로 실행됨. * 는 전체 컬럼을 의미.',
+      en: 'The fundamental SQL data retrieval command. Logically executed in the order: FROM → WHERE → GROUP BY → HAVING → SELECT → ORDER BY. * means all columns.',
+    },
+    sectionIds: ['sql-basics-syntax', 'sql-basics-execution'],
+  },
+
+  {
+    term: 'Sort Avoidance',
+    definition: {
+      ko: '인덱스의 정렬된 순서를 활용하거나 Hash Aggregate를 사용해 ORDER BY / GROUP BY 소트 연산 자체를 생략하는 튜닝 전략.',
+      en: 'Tuning strategy that eliminates ORDER BY / GROUP BY sort operations by leveraging index order or using Hash Aggregate.',
+    },
+    sectionIds: ['sort-avoid', 'sort-overview'],
+  },
+  {
+    term: 'Subquery',
+    definition: {
+      ko: '다른 SQL 문 안에 중첩된 SELECT 문. 스칼라 서브쿼리(SELECT 절), 인라인 뷰(FROM 절), 중첩 서브쿼리(WHERE 절)로 구분. Subquery Unnesting으로 JOIN으로 변환될 수 있음.',
+      en: 'A SELECT statement nested inside another SQL statement. Classified as scalar subquery (in SELECT), inline view (in FROM), or nested subquery (in WHERE). Can be converted to a JOIN via Subquery Unnesting.',
+    },
+    sectionIds: ['sql-basics-syntax', 'qt-subquery-unnesting'],
+  },
+  {
+    term: 'SYSDATE',
+    definition: {
+      ko: 'DB 서버의 현재 날짜·시간을 DATE 타입으로 반환하는 Oracle 함수. 타임존 정보 없음. 타임존이 필요하면 SYSTIMESTAMP 사용.',
+      en: 'Oracle function returning the current database server date and time as a DATE type. No timezone. Use SYSTIMESTAMP when timezone precision is needed.',
+    },
+    sectionIds: ['sql-basics-date'],
+  },
+
+  // ── T (SQL) ────────────────────────────────────────────────────────────────
+  {
+    term: 'TIMESTAMP',
+    definition: {
+      ko: 'DATE보다 정밀한 날짜·시간 타입. 소수점 이하 초(fractional seconds) 지원. TIMESTAMP WITH TIME ZONE은 타임존 오프셋 포함. SYSTIMESTAMP가 현재 시각을 반환.',
+      en: 'More precise date/time type than DATE. Supports fractional seconds. TIMESTAMP WITH TIME ZONE includes a timezone offset. SYSTIMESTAMP returns the current timestamp.',
+    },
+    sectionIds: ['sql-basics-date'],
+  },
+  {
+    term: 'TO_DATE / TO_CHAR',
+    definition: {
+      ko: "TO_DATE: 문자열을 DATE로 변환(포맷 마스크 필수, 예: 'YYYY-MM-DD'). TO_CHAR: DATE·숫자를 원하는 포맷의 문자열로 변환. 암묵적 변환에 의존하면 NLS 설정에 따라 오류 가능.",
+      en: "TO_DATE: converts a string to a DATE (format mask required, e.g., 'YYYY-MM-DD'). TO_CHAR: converts DATE or numbers to a formatted string. Relying on implicit conversion risks NLS-dependent errors.",
+    },
+    sectionIds: ['sql-basics-date'],
+  },
+
+  // ── W (SQL) ────────────────────────────────────────────────────────────────
+  {
+    term: 'WHERE',
+    definition: {
+      ko: 'FROM 이후 행 단위로 조건을 적용해 결과를 필터링하는 절. GROUP BY 이전에 실행되므로 집계 함수를 사용할 수 없음(집계 조건은 HAVING 사용).',
+      en: 'Filters rows after FROM, before GROUP BY. Cannot use aggregate functions here (use HAVING for aggregate conditions).',
+    },
+    sectionIds: ['sql-basics-syntax', 'sql-basics-execution'],
   },
 ]
 
-/** Return glossary terms relevant to a given sectionId */
+/** Return glossary terms relevant to a given sectionId (exact match only) */
 export function getTermsForSection(sectionId: string): GlossaryTerm[] {
-  const chapterPrefix = sectionId.split('-')[0]
-  return GLOSSARY.filter(
-    (t) =>
-      t.sectionIds.includes(sectionId) ||
-      t.sectionIds.some((id) => id === chapterPrefix || id.startsWith(chapterPrefix + '-'))
-  )
+  return GLOSSARY.filter((t) => t.sectionIds.includes(sectionId))
 }
 
 /** Sort terms: English A-Z first (if starts with latin), then Korean 가나다 */

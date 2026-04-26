@@ -1,6 +1,26 @@
 // Shared UI primitives for book chapter pages
 import type { ReactNode } from 'react'
 import { cn } from '@/lib/utils'
+import { useSimulationStore } from '@/store/simulationStore'
+
+export function WipBanner() {
+  const lang = useSimulationStore((s) => s.lang)
+  return (
+    <div className="mb-6 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50/70 px-4 py-3 dark:border-amber-800/40 dark:bg-amber-950/20">
+      <span className="mt-0.5 text-lg leading-none">🚧</span>
+      <div>
+        <p className="font-mono text-[11px] font-bold text-amber-700 dark:text-amber-400">
+          {lang === 'ko' ? 'Work In Progress' : 'Work In Progress'}
+        </p>
+        <p className="mt-0.5 font-mono text-[11px] leading-relaxed text-amber-600/80 dark:text-amber-500/70">
+          {lang === 'ko'
+            ? '이 챕터는 아직 작성 중이에요. 내용이 불완전하거나 변경될 수 있습니다. 🐣'
+            : "This chapter is still being written. Content may be incomplete or change. 🐣"}
+        </p>
+      </div>
+    </div>
+  )
+}
 
 export function PageContainer({ children, className }: { children: ReactNode; className?: string }) {
   return (

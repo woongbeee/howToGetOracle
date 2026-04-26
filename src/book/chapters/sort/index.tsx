@@ -1,7 +1,7 @@
 import { useSimulationStore } from '@/store/simulationStore'
 import {
   PageContainer, ChapterTitle, SectionTitle, Prose,
-  InfoBox, Table, ConceptGrid, SimulatorPlaceholder
+  InfoBox, Table, ConceptGrid, SimulatorPlaceholder, WipBanner
 } from '../shared'
 
 const T = {
@@ -86,6 +86,7 @@ export function SortPage({ sectionId }: { sectionId: string }) {
 
   return (
     <PageContainer>
+      <WipBanner />
       {sectionId === 'sort-overview' && (
         <>
           <ChapterTitle icon="↕" num={6} title={t.chapterTitle} subtitle={t.chapterSubtitle} />
