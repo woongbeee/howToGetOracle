@@ -1,377 +1,507 @@
-import { useState, useEffect, useRef } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { useState } from 'react'
 import { cn } from '@/lib/utils'
 import {
-  PageContainer, ChapterTitle, SectionTitle, SubTitle,
-  Prose,
+  PageContainer, ChapterTitle, SectionTitle, Prose,
 } from '../shared'
 import {
   EMPLOYEES, EXAMPLE_QUERIES, SELECT_STEPS, UPDATE_STEPS, DELETE_STEPS,
-  STEP_COLOR, parseAndExecute, type ParsedQuery,
+  STEP_COLOR, parseAndExecute, type ParsedQuery, type ExampleQuery,
 } from './shared'
 import { SqlHighlight } from './SqlHighlight'
 import { EmpRow } from './EmpRow'
 
 const T = {
   ko: {
-    chapterTitle: 'SQL 실행 순서 시뮬레이터',
-    chapterSubtitle: 'SELECT, FROM, WHERE, UPDATE, DELETE의 핵심 문법과 실행 순서를 인터랙티브 시뮬레이션으로 학습합니다.',
-    simSectionTitle: 'SQL 실행 순서 시뮬레이터',
-    simIntro:
-      '아래 예제 쿼리를 선택하거나 직접 입력한 후 실행 버튼을 누르면 Oracle이 SQL을 처리하는 논리적 순서를 단계별로 시각화합니다.',
-    runBtn: '실행',
-    resetBtn: '초기화',
-    selectQuery: '쿼리 선택',
-    resultTitle: '결과',
-    stepsTitle: '실행 단계',
-    tablePreviewTitle: '예제 테이블 — EMPLOYEES',
-    rowsMatched: (n: number) => `${n}개 행이 조건에 일치합니다.`,
-    updatedRows: (n: number) => `${n}개 행이 수정됩니다.`,
-    deletedRows: (n: number) => `${n}개 행이 삭제됩니다.`,
+    chapterTitle: 'SQL 실행 순서',
+    chapterSubtitle: 'Oracle이 SQL을 처리하는 논리적 순서를 예제 쿼리별로 확인합니다.',
+    pickQuery: '예제 쿼리를 선택하면 실행 순서가 바로 표시됩니다.',
+    stepsTitle: '실행 순서',
+    tableTitle: 'EMPLOYEES 테이블',
+    resultTitle: '쿼리 결과',
+    groupResultTitle: 'GROUP BY 결과',
+    rowsMatched: (n: number) => `${n}개 행 일치`,
+    updatedRows: (n: number) => `${n}개 행 수정`,
+    deletedRows: (n: number) => `${n}개 행 삭제`,
+    groupRows: (n: number) => `${n}개 그룹`,
+    mergeSourceTitle: '원본 테이블 (SOURCE)',
+    mergeTargetTitle: '대상 테이블 (TARGET)',
+    mergeResultTitle: 'MERGE 결과',
   },
   en: {
-    chapterTitle: 'SQL Execution Order Simulator',
-    chapterSubtitle: 'Learn SELECT, FROM, WHERE, UPDATE, and DELETE through interactive simulations with step-by-step execution visualization.',
-    simSectionTitle: 'SQL Execution Order Simulator',
-    simIntro:
-      'Select an example query below or type your own, then click Run to visualize how Oracle logically processes the SQL step by step.',
-    runBtn: 'Run',
-    resetBtn: 'Reset',
-    selectQuery: 'Select query',
-    resultTitle: 'Result',
-    stepsTitle: 'Execution Steps',
-    tablePreviewTitle: 'Sample Table — EMPLOYEES',
-    rowsMatched: (n: number) => `${n} row${n === 1 ? '' : 's'} match the condition.`,
-    updatedRows: (n: number) => `${n} row${n === 1 ? '' : 's'} will be updated.`,
-    deletedRows: (n: number) => `${n} row${n === 1 ? '' : 's'} will be deleted.`,
+    chapterTitle: 'SQL Execution Order',
+    chapterSubtitle: 'See how Oracle logically processes SQL — step by step — for each example query.',
+    pickQuery: 'Click an example query to instantly see the execution order.',
+    stepsTitle: 'Execution Order',
+    tableTitle: 'EMPLOYEES Table',
+    resultTitle: 'Query Result',
+    groupResultTitle: 'GROUP BY Result',
+    rowsMatched: (n: number) => `${n} row${n === 1 ? '' : 's'} matched`,
+    updatedRows: (n: number) => `${n} row${n === 1 ? '' : 's'} updated`,
+    deletedRows: (n: number) => `${n} row${n === 1 ? '' : 's'} deleted`,
+    groupRows: (n: number) => `${n} group${n === 1 ? '' : 's'}`,
+    mergeSourceTitle: 'Source Table (SOURCE)',
+    mergeTargetTitle: 'Target Table (TARGET)',
+    mergeResultTitle: 'MERGE Result',
   },
 }
 
-export function ExecutionSimulator({ lang, t }: { lang: 'ko' | 'en'; t: typeof T['ko'] }) {
-  const [selectedQueryId, setSelectedQueryId] = useState<string>(EXAMPLE_QUERIES[0].id)
-  const [customSql, setCustomSql] = useState('')
-  const [activeSql, setActiveSql] = useState(EXAMPLE_QUERIES[0].sql)
-  const [isRunning, setIsRunning] = useState(false)
-  const [isComplete, setIsComplete] = useState(false)
-  const [currentStepIdx, setCurrentStepIdx] = useState<number>(-1)
-  const [expandedStep, setExpandedStep] = useState<number | null>(null)
-  const [parsed, setParsed] = useState<ParsedQuery | null>(null)
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+export { T as ExecutionT }
 
-  const steps =
-    parsed?.type === 'UPDATE' ? UPDATE_STEPS :
-    parsed?.type === 'DELETE' ? DELETE_STEPS :
-    SELECT_STEPS
 
-  const activeClause = currentStepIdx >= 0 ? steps[currentStepIdx]?.highlightClause : undefined
+// ── Result table ────────────────────────────────────────────────────────────
 
-  function handleQuerySelect(id: string) {
-    const q = EXAMPLE_QUERIES.find((eq) => eq.id === id)
-    if (!q) return
-    setSelectedQueryId(id)
-    setActiveSql(q.sql)
-    setCustomSql('')
-    reset()
-  }
+function ResultTable({ parsed, t, lang, overrideResult }: {
+  parsed: ParsedQuery
+  t: typeof T['ko']
+  lang: 'ko' | 'en'
+  overrideResult?: ExampleQuery['overrideResult']
+}) {
+  const ALL_COLUMNS = ['emp_id', 'first_name', 'last_name', 'dept_id', 'salary', 'job_title', 'manager_id'] as const
+  type EmpKey = typeof ALL_COLUMNS[number]
 
-  function handleCustomChange(v: string) {
-    setCustomSql(v)
-    setActiveSql(v)
-    setSelectedQueryId('')
-    reset()
-  }
-
-  function reset() {
-    if (timerRef.current) clearTimeout(timerRef.current)
-    setIsRunning(false)
-    setIsComplete(false)
-    setCurrentStepIdx(-1)
-    setExpandedStep(null)
-    setParsed(null)
-  }
-
-  function runSimulation() {
-    if (isRunning) return
-    const result = parseAndExecute(activeSql, EMPLOYEES)
-    setParsed(result)
-    setCurrentStepIdx(-1)
-    setExpandedStep(null)
-    setIsComplete(false)
-    setIsRunning(true)
-
-    const stepList = result.type === 'UPDATE' ? UPDATE_STEPS : result.type === 'DELETE' ? DELETE_STEPS : SELECT_STEPS
-    let idx = 0
-    function advance() {
-      setCurrentStepIdx(idx)
-      idx++
-      if (idx < stepList.length) {
-        timerRef.current = setTimeout(advance, 1800)
-      } else {
-        setIsRunning(false)
-        setIsComplete(true)
-      }
-    }
-    timerRef.current = setTimeout(advance, 600)
-  }
-
-  useEffect(() => () => { if (timerRef.current) clearTimeout(timerRef.current) }, [])
-
-  const ALL_COLUMNS: Array<keyof typeof EMPLOYEES[0]> = ['emp_id', 'first_name', 'last_name', 'dept_id', 'salary', 'job_title', 'manager_id']
-
-  const selectStepIdx = SELECT_STEPS.findIndex((s) => s.id === 'select')
-  const projectionApplied =
-    parsed?.type === 'SELECT' &&
-    parsed.columns.length > 0 &&
-    (isComplete || currentStepIdx > selectStepIdx)
-
-  const tableHeaders = projectionApplied
-    ? (parsed!.columns as Array<keyof typeof EMPLOYEES[0]>)
-    : ALL_COLUMNS
-
-  const visibleColumns = projectionApplied ? parsed!.columns : []
-
-  return (
-    <PageContainer className="max-w-5xl">
-      <ChapterTitle icon="📋" num={1} title={t.chapterTitle} subtitle={t.chapterSubtitle} />
-      <SectionTitle>{t.simSectionTitle}</SectionTitle>
-      <Prose>{t.simIntro}</Prose>
-
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        {/* ── Left: Query editor ── */}
-        <div className="flex flex-col gap-4">
-          <div>
-            <SubTitle>{t.selectQuery}</SubTitle>
-            <div className="flex flex-wrap gap-2">
-              {EXAMPLE_QUERIES.map((q) => (
-                <button
-                  key={q.id}
-                  onClick={() => handleQuerySelect(q.id)}
-                  className={cn(
-                    'rounded-md border px-3 py-1.5 font-mono text-[11px] transition-all',
-                    selectedQueryId === q.id
-                      ? 'border-blue-400 bg-blue-50 text-blue-700 font-bold'
-                      : 'border-border bg-muted/30 text-muted-foreground hover:bg-muted',
-                  )}
-                >
-                  {q.label[lang]}
-                </button>
+  if (overrideResult) {
+    const { columns, rows, summary } = overrideResult
+    const summaryText = summary ? summary[lang] : (lang === 'ko' ? `${rows.length}개 행` : `${rows.length} rows`)
+    return (
+      <div>
+        <div className="mb-1.5 font-mono text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+          {t.resultTitle} — <span className="text-emerald-600">{summaryText}</span>
+        </div>
+        <div className="inline-block rounded-lg border">
+          <table className="text-xs">
+            <thead>
+              <tr className="border-b bg-muted/60">
+                {columns.map((h) => (
+                  <th key={h} className="px-3 py-2 text-left font-mono font-bold text-muted-foreground whitespace-nowrap">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row, i) => (
+                <tr key={i} className={cn('border-b last:border-0', i % 2 === 0 ? 'bg-background' : 'bg-muted/20')}>
+                  {columns.map((c) => (
+                    <td key={c} className="px-3 py-1.5 font-mono text-[11px] whitespace-nowrap text-foreground/80">
+                      {row[c] == null
+                        ? <span className="italic text-muted-foreground/50">NULL</span>
+                        : String(row[c])}
+                    </td>
+                  ))}
+                </tr>
               ))}
-            </div>
-          </div>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    )
+  }
 
-          <div className="rounded-xl border bg-zinc-950 overflow-hidden">
-            <div className="flex items-center gap-2 border-b border-zinc-800 bg-zinc-900 px-4 py-2">
-              <span className="font-mono text-[10px] text-zinc-400 uppercase tracking-widest">SQL</span>
-            </div>
-            <div className="relative p-5">
-              {customSql === '' && (
-                <div className="pointer-events-none absolute inset-5">
-                  <SqlHighlight sql={activeSql} activeClause={activeClause} />
-                </div>
-              )}
-              <textarea
-                value={customSql !== '' ? customSql : activeSql}
-                onChange={(e) => handleCustomChange(e.target.value)}
-                className="relative z-10 w-full resize-none bg-transparent font-mono text-xs leading-relaxed text-transparent caret-white focus:text-foreground/80 outline-none selection:bg-blue-800/50"
-                rows={5}
-                spellCheck={false}
-              />
-            </div>
-          </div>
+  if (parsed.type === 'GROUPBY' && parsed.groupRows) {
+    const cols = parsed.groupCols ?? ['dept_id']
+    return (
+      <div>
+        <div className="mb-1.5 font-mono text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+          {t.groupResultTitle} — {t.groupRows(parsed.groupRows.length)}
+        </div>
+        <div className="inline-block rounded-lg border">
+          <table className="text-xs">
+            <thead>
+              <tr className="border-b bg-muted/60">
+                {cols.map((h) => (
+                  <th key={h} className="px-3 py-2 text-left font-mono font-bold text-muted-foreground whitespace-nowrap">
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {parsed.groupRows.map((row, i) => (
+                <tr key={i} className={cn('border-b last:border-0', i % 2 === 0 ? 'bg-background' : 'bg-muted/20')}>
+                  {cols.map((c) => (
+                    <td key={c} className="px-3 py-1.5 font-mono text-[11px] whitespace-nowrap text-foreground/80">
+                      {String((row as unknown as Record<string, unknown>)[c] ?? 'NULL')}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    )
+  }
 
-          <div className="flex gap-2">
-            <button
-              onClick={reset}
-              className="rounded-lg border border-border bg-muted px-4 py-2 font-mono text-xs text-muted-foreground hover:bg-muted/80 transition-colors"
-            >
-              {t.resetBtn}
-            </button>
-            <button
-              onClick={runSimulation}
-              disabled={isRunning}
-              className={cn(
-                'flex-1 rounded-lg border px-4 py-2 font-mono text-xs font-bold transition-all',
-                isRunning
-                  ? 'border-border bg-muted text-muted-foreground cursor-not-allowed'
-                  : 'border-emerald-600 bg-emerald-500 text-emerald-950 hover:bg-emerald-400 shadow-sm',
-              )}
-            >
-              {isRunning ? '▶ 실행 중...' : `▶ ${t.runBtn}`}
-            </button>
-          </div>
+  if (parsed.type === 'SELECT') {
+    const headers: EmpKey[] = parsed.columns.length > 0
+      ? (parsed.columns as EmpKey[])
+      : [...ALL_COLUMNS]
+    const summaryText = t.rowsMatched(parsed.resultRows.length)
+    return (
+      <div>
+        <div className="mb-1.5 font-mono text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+          {t.resultTitle} — <span className="text-emerald-600">{summaryText}</span>
+        </div>
+        <div className="inline-block rounded-lg border">
+          <table className="text-xs">
+            <thead>
+              <tr className="border-b bg-muted/60">
+                {headers.map((h) => (
+                  <th key={h} className="px-3 py-2 text-left font-mono font-bold text-muted-foreground whitespace-nowrap">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {parsed.resultRows.map((row, i) => (
+                <tr key={i} className={cn('border-b last:border-0', i % 2 === 0 ? 'bg-background' : 'bg-muted/20')}>
+                  {headers.map((c) => (
+                    <td key={c} className="px-3 py-1.5 font-mono text-[11px] whitespace-nowrap text-foreground/80">
+                      {String(row[c] ?? 'NULL')}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    )
+  }
 
-          <div>
-            <div className="flex items-center gap-2 mb-2">
-              <SubTitle>{t.stepsTitle}</SubTitle>
-              {isComplete && (
-                <span className="mb-2 font-mono text-[10px] text-muted-foreground">
-                  {lang === 'ko' ? '— 클릭해서 설명 펼치기' : '— click to expand'}
-                </span>
-              )}
-            </div>
-            <div className="flex flex-col gap-2">
-              {steps.map((step, idx) => {
-                const c = STEP_COLOR[step.color] ?? STEP_COLOR.blue
-                const isActive = !isComplete && idx === currentStepIdx
-                const isDone = isComplete || (currentStepIdx >= 0 && idx < currentStepIdx)
-                const isExpanded = isComplete && expandedStep === idx
-
+  if (parsed.type === 'UPDATE') {
+    return (
+      <div>
+        <div className="mb-1.5 font-mono text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+          {t.resultTitle} — <span className="text-amber-600">{t.updatedRows(parsed.matchedRows.length)}</span>
+        </div>
+        <div className="inline-block rounded-lg border">
+          <table className="text-xs">
+            <thead>
+              <tr className="border-b bg-muted/60">
+                {ALL_COLUMNS.map((h) => (
+                  <th key={h} className="px-3 py-2 text-left font-mono font-bold text-muted-foreground whitespace-nowrap">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {EMPLOYEES.map((emp) => {
+                const isHit = parsed.matchedRows.some((r) => r.emp_id === emp.emp_id)
+                const resultRow = parsed.resultRows.find((r) => r.emp_id === emp.emp_id)
                 return (
-                  <motion.div
-                    key={step.id}
-                    animate={
-                      isActive
-                        ? { scale: 1.01, opacity: 1 }
-                        : isDone
-                        ? { scale: 1, opacity: 1 }
-                        : { scale: 1, opacity: 0.4 }
-                    }
-                    transition={{ duration: 0.25 }}
-                    onClick={() => {
-                      if (isComplete) setExpandedStep(expandedStep === idx ? null : idx)
-                    }}
-                    className={cn(
-                      'rounded-lg border p-3 transition-all',
-                      isActive && `${c.bg} ${c.border}`,
-                      isExpanded && `${c.bg} ${c.border}`,
-                      !isActive && !isExpanded && isDone && 'border-emerald-200 bg-emerald-50/40',
-                      !isActive && !isExpanded && !isDone && 'border-border bg-card',
-                      isComplete && 'cursor-pointer hover:brightness-95',
-                    )}
-                  >
-                    <div className="flex items-center gap-2 mb-0.5">
-                      <span className={cn(
-                        'h-2 w-2 rounded-full shrink-0',
-                        isActive ? c.dot : isDone ? 'bg-emerald-400' : 'bg-muted-foreground/30',
-                      )} />
-                      <span className={cn(
-                        'font-mono text-[11px] font-bold flex-1',
-                        isActive ? c.text : isDone ? 'text-emerald-700' : 'text-muted-foreground/50',
-                      )}>
-                        {step.phase}
-                      </span>
-                      {isComplete && (
-                        <span className="font-mono text-[10px] text-muted-foreground/60">
-                          {isExpanded ? '▲' : '▼'}
-                        </span>
-                      )}
-                    </div>
-                    <AnimatePresence>
-                      {(isActive || isExpanded) && (
-                        <motion.p
-                          initial={{ height: 0, opacity: 0 }}
-                          animate={{ height: 'auto', opacity: 1 }}
-                          exit={{ height: 0, opacity: 0 }}
-                          transition={{ duration: 0.2 }}
-                          className={cn('text-[11px] leading-relaxed overflow-hidden mt-1', isExpanded ? c.text : c.text)}
-                        >
-                          {step.desc[lang]}
-                        </motion.p>
-                      )}
-                    </AnimatePresence>
-                  </motion.div>
+                  <EmpRow
+                    key={emp.emp_id}
+                    row={isHit && resultRow ? resultRow : emp}
+                    highlighted={isHit}
+                    deleted={false}
+                    columns={[]}
+                    original={isHit ? emp : undefined}
+                  />
                 )
               })}
-            </div>
-          </div>
+            </tbody>
+          </table>
         </div>
+      </div>
+    )
+  }
 
-        {/* ── Right: Table visualization ── */}
-        <div className="flex flex-col gap-4">
-          <div>
-            <SubTitle>{t.tablePreviewTitle}</SubTitle>
-            <div className="overflow-x-auto rounded-lg border">
-              <table className="w-full text-xs">
-                <thead>
-                  <tr className="border-b bg-muted/60">
-                    {tableHeaders.map((h) => (
-                      <th key={h} className="px-3 py-2 text-left font-mono font-bold text-muted-foreground whitespace-nowrap">
-                        {h}
-                      </th>
-                    ))}
+  if (parsed.type === 'DELETE') {
+    return (
+      <div>
+        <div className="mb-1.5 font-mono text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+          {t.resultTitle} — <span className="text-rose-600">{t.deletedRows(parsed.matchedRows.length)}</span>
+        </div>
+        <div className="inline-block rounded-lg border">
+          <table className="text-xs">
+            <thead>
+              <tr className="border-b bg-muted/60">
+                {ALL_COLUMNS.map((h) => (
+                  <th key={h} className="px-3 py-2 text-left font-mono font-bold text-muted-foreground whitespace-nowrap">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {EMPLOYEES.map((emp) => {
+                const isHit = parsed.matchedRows.some((r) => r.emp_id === emp.emp_id)
+                return (
+                  <EmpRow
+                    key={emp.emp_id}
+                    row={emp}
+                    highlighted={isHit}
+                    deleted={isHit}
+                    columns={[]}
+                  />
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    )
+  }
+
+  return null
+}
+
+// ── Merge panel ─────────────────────────────────────────────────────────────
+
+function MergePanel({ mergeData, t }: {
+  mergeData: NonNullable<ExampleQuery['mergeData']>
+  t: typeof T['ko']
+}) {
+  const cols = ['emp_id', 'first_name', 'dept_id', 'salary']
+  const statusStyle: Record<string, string> = {
+    updated:   'bg-amber-50 border-amber-200',
+    inserted:  'bg-emerald-50 border-emerald-200',
+    unchanged: '',
+  }
+  const statusBadge: Record<string, { cls: string; label: string }> = {
+    updated:   { cls: 'bg-amber-100 text-amber-700',   label: 'UPDATED'   },
+    inserted:  { cls: 'bg-emerald-100 text-emerald-700', label: 'INSERTED' },
+    unchanged: { cls: 'bg-muted text-muted-foreground', label: '—'         },
+  }
+
+  function SimpleTable({ rows, highlightIds, strikeIds, joinKey }: {
+    rows: Record<string, unknown>[]
+    highlightIds?: unknown[]
+    strikeIds?: unknown[]
+    joinKey: string
+  }) {
+    return (
+      <div className="inline-block rounded-lg border overflow-hidden">
+        <table className="text-xs">
+          <thead>
+            <tr className="border-b bg-muted/60">
+              {cols.map((h) => (
+                <th key={h} className="px-3 py-2 text-left font-mono font-bold text-muted-foreground whitespace-nowrap">{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row, i) => {
+              const id = row[joinKey]
+              const isHighlighted = highlightIds?.includes(id)
+              const isStruck = strikeIds?.includes(id)
+              return (
+                <tr key={i} className={cn('border-b last:border-0', isHighlighted ? 'bg-blue-50' : (i % 2 === 0 ? 'bg-background' : 'bg-muted/20'))}>
+                  {cols.map((c) => (
+                    <td key={c} className={cn('px-3 py-1.5 font-mono text-[11px] whitespace-nowrap', isStruck ? 'line-through text-muted-foreground/50' : 'text-foreground/80')}>
+                      {String(row[c] ?? 'NULL')}
+                    </td>
+                  ))}
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex flex-col gap-5">
+      {/* SOURCE + TARGET side by side */}
+      <div className="flex gap-4 flex-wrap">
+        <div>
+          <div className="mb-1.5 font-mono text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+            {t.mergeSourceTitle}
+          </div>
+          <SimpleTable
+            rows={mergeData.sourceRows}
+            highlightIds={[...mergeData.matchedIds, ...mergeData.insertedIds]}
+            joinKey={mergeData.joinKey}
+          />
+        </div>
+        <div>
+          <div className="mb-1.5 font-mono text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+            {t.mergeTargetTitle}
+          </div>
+          <SimpleTable
+            rows={mergeData.targetRows}
+            highlightIds={mergeData.matchedIds}
+            joinKey={mergeData.joinKey}
+          />
+        </div>
+      </div>
+
+      {/* Result */}
+      <div>
+        <div className="mb-1.5 font-mono text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+          {t.mergeResultTitle} —{' '}
+          <span className="text-amber-600">{mergeData.matchedIds.length}개 Updated</span>
+          {' · '}
+          <span className="text-emerald-600">{mergeData.insertedIds.length}개 Inserted</span>
+        </div>
+        <div className="inline-block rounded-lg border overflow-hidden">
+          <table className="text-xs">
+            <thead>
+              <tr className="border-b bg-muted/60">
+                {cols.map((h) => (
+                  <th key={h} className="px-3 py-2 text-left font-mono font-bold text-muted-foreground whitespace-nowrap">{h}</th>
+                ))}
+                <th className="px-3 py-2 text-left font-mono font-bold text-muted-foreground whitespace-nowrap">status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {mergeData.resultRows.map((row, i) => {
+                const status = String(row['_status'] ?? 'unchanged')
+                const orig = mergeData.targetRows.find((r) => r[mergeData.joinKey] === row[mergeData.joinKey])
+                return (
+                  <tr key={i} className={cn('border-b last:border-0 transition-colors', statusStyle[status] ?? (i % 2 === 0 ? 'bg-background' : 'bg-muted/20'))}>
+                    {cols.map((c) => {
+                      const isChangedSalary = c === 'salary' && status === 'updated' && orig && orig[c] !== row[c]
+                      return (
+                        <td key={c} className={cn('px-3 py-1.5 font-mono text-[11px] whitespace-nowrap', isChangedSalary ? 'font-bold text-amber-700' : 'text-foreground/80')}>
+                          {String(row[c] ?? 'NULL')}
+                          {isChangedSalary && (
+                            <span className="ml-1.5 font-normal text-muted-foreground/60 line-through text-[10px]">
+                              {String(orig[c])}
+                            </span>
+                          )}
+                        </td>
+                      )
+                    })}
+                    <td className="px-3 py-1.5 font-mono text-[11px] whitespace-nowrap">
+                      <span className={cn('rounded px-1.5 py-0.5 text-[10px] font-bold', statusBadge[status]?.cls)}>
+                        {statusBadge[status]?.label}
+                      </span>
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {EMPLOYEES.map((emp) => {
-                    const isHighlighted = parsed !== null &&
-                      parsed.matchedRows.some((r) => r.emp_id === emp.emp_id)
-                    const resultRow = parsed?.resultRows.find((r) => r.emp_id === emp.emp_id)
-                    const isDeleted = parsed?.type === 'DELETE' && isHighlighted
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  )
+}
 
-                    return (
-                      <EmpRow
-                        key={emp.emp_id}
-                        row={parsed?.type === 'UPDATE' && resultRow ? resultRow : emp}
-                        highlighted={isHighlighted}
-                        deleted={!!isDeleted}
-                        columns={visibleColumns}
-                        original={parsed?.type === 'UPDATE' && isHighlighted ? emp : undefined}
-                      />
-                    )
-                  })}
-                </tbody>
-              </table>
+// ── Main component ──────────────────────────────────────────────────────────
+
+export function ExecutionSimulator({ lang, t }: { lang: 'ko' | 'en'; t: typeof T['ko'] }) {
+  const [selectedId, setSelectedId] = useState<string>(EXAMPLE_QUERIES[0].id)
+
+  const selectedQuery = EXAMPLE_QUERIES.find((q) => q.id === selectedId) ?? EXAMPLE_QUERIES[0]
+  const parsed = parseAndExecute(selectedQuery.sql, EMPLOYEES)
+
+  const steps =
+    selectedQuery.steps ? selectedQuery.steps :
+    parsed.type === 'UPDATE' ? UPDATE_STEPS :
+    parsed.type === 'DELETE' ? DELETE_STEPS :
+    SELECT_STEPS
+
+  const ALL_COLUMNS = ['emp_id', 'first_name', 'last_name', 'dept_id', 'salary', 'job_title', 'manager_id'] as const
+
+  return (
+    <PageContainer className="max-w-[1200px]">
+      <ChapterTitle icon="📋" num={1} title={t.chapterTitle} subtitle={t.chapterSubtitle} />
+
+      {/* Query picker */}
+      <div className="mb-6">
+        <Prose>{t.pickQuery}</Prose>
+        <div className="flex flex-wrap gap-2">
+          {EXAMPLE_QUERIES.map((q) => (
+            <button
+              key={q.id}
+              onClick={() => setSelectedId(q.id)}
+              className={cn(
+                'rounded-md border px-3 py-1.5 font-mono text-[11px] transition-all',
+                selectedId === q.id
+                  ? 'border-blue-400 bg-blue-50 text-blue-700 font-bold shadow-sm'
+                  : 'border-border bg-muted/30 text-muted-foreground hover:bg-muted',
+              )}
+            >
+              {q.label[lang]}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Steps (left) + Table & Result (right) */}
+      <div className="flex gap-6 items-start">
+
+        {/* Left: SQL + execution steps — fixed width, vertical list */}
+        <div className="w-[414px] shrink-0">
+
+          {/* SQL display */}
+          <div className="mb-4 rounded-xl border overflow-hidden">
+            <div className="border-b px-4 py-2">
+              <span className="font-mono text-[10px] text-zinc-400 uppercase tracking-widest">SQL</span>
+            </div>
+            <div className="p-4">
+              <SqlHighlight sql={selectedQuery.sql} />
             </div>
           </div>
-
-          <AnimatePresence>
-            {parsed && currentStepIdx >= 0 && (
-              <motion.div
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -4 }}
-                className="rounded-lg border bg-card p-4"
-              >
-                <div className="mb-2 font-mono text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                  {t.resultTitle}
-                </div>
-                {parsed.type === 'SELECT' && (
-                  <p className="font-mono text-xs text-emerald-600 font-bold">
-                    {t.rowsMatched(parsed.matchedRows.length)}
-                  </p>
-                )}
-                {parsed.type === 'UPDATE' && (
-                  <p className="font-mono text-xs text-amber-600 font-bold">
-                    {t.updatedRows(parsed.matchedRows.length)}
-                  </p>
-                )}
-                {parsed.type === 'DELETE' && (
-                  <p className="font-mono text-xs text-rose-600 font-bold">
-                    {t.deletedRows(parsed.matchedRows.length)}
-                  </p>
-                )}
-
-                {parsed.type === 'SELECT' && !isRunning && currentStepIdx >= steps.length - 1 && (
-                  <div className="mt-3 overflow-x-auto rounded border">
-                    <table className="w-full text-xs">
-                      <thead>
-                        <tr className="border-b bg-muted/60">
-                          {tableHeaders.map((h) => (
-                            <th key={h} className="px-3 py-2 text-left font-mono font-bold text-muted-foreground whitespace-nowrap">{h}</th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {parsed.resultRows.map((row, i) => (
-                          <tr key={i} className={cn('border-b last:border-0', i % 2 === 0 ? 'bg-background' : 'bg-muted/20')}>
-                            {tableHeaders.map((c) => (
-                              <td key={c} className="px-3 py-1.5 font-mono text-[11px] text-foreground/80">
-                                {String(row[c] ?? 'NULL')}
-                              </td>
-                            ))}
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+          <SectionTitle>{t.stepsTitle}</SectionTitle>
+          <div className="flex flex-col gap-2">
+            {steps.map((step, idx) => {
+              const c = STEP_COLOR[step.color] ?? STEP_COLOR.blue
+              return (
+                <div key={step.id} className={cn('rounded-lg border p-3', c.bg, c.border)}>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className={cn('h-2 w-2 rounded-full shrink-0', c.dot)} />
+                    <span className={cn('font-mono text-[11px] font-bold', c.text)}>{step.phase}</span>
+                    <span className="font-mono text-[10px] text-muted-foreground/60 ml-auto">
+                      Step {idx + 1}
+                    </span>
                   </div>
-                )}
-              </motion.div>
-            )}
-          </AnimatePresence>
+                  <p className={cn('text-[11px] leading-relaxed', c.text)}>{step.desc[lang]}</p>
+                  {step.hint && (
+                    <div className="mt-2 rounded border border-muted-foreground/20 bg-white/60 px-2.5 py-1.5">
+                      <span className="mr-1 text-[10px]">💡</span>
+                      <span className="text-[10px] leading-relaxed text-muted-foreground">{step.hint[lang]}</span>
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
         </div>
+
+        {/* Right: tables + result — takes remaining space */}
+        <div className="min-w-0 flex-1 flex flex-col gap-6">
+          {selectedQuery.type === 'MERGE' && selectedQuery.mergeData ? (
+            <MergePanel mergeData={selectedQuery.mergeData} t={t} />
+          ) : (
+            <>
+              <div>
+                <div className="mb-2 font-mono text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                  {t.tableTitle}
+                </div>
+                <div className="inline-block rounded-lg border overflow-x-auto">
+                  <table className="text-xs">
+                    <thead>
+                      <tr className="border-b bg-muted/60">
+                        {ALL_COLUMNS.map((h) => (
+                          <th key={h} className="px-3 py-2 text-left font-mono font-bold text-muted-foreground whitespace-nowrap">{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {EMPLOYEES.map((emp) => {
+                        const isHighlighted = parsed.matchedRows.some((r) => r.emp_id === emp.emp_id)
+                        const resultRow = parsed.resultRows.find((r) => r.emp_id === emp.emp_id)
+                        const isDeleted = parsed.type === 'DELETE' && isHighlighted
+                        return (
+                          <EmpRow
+                            key={emp.emp_id}
+                            row={parsed.type === 'UPDATE' && resultRow ? resultRow : emp}
+                            highlighted={isHighlighted}
+                            deleted={!!isDeleted}
+                            columns={[]}
+                            original={parsed.type === 'UPDATE' && isHighlighted ? emp : undefined}
+                          />
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <ResultTable parsed={parsed} t={t} lang={lang} overrideResult={selectedQuery.overrideResult} />
+            </>
+          )}
+        </div>
+
       </div>
     </PageContainer>
   )
 }
-
-export { T as ExecutionT }

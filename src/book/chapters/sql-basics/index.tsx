@@ -5,6 +5,8 @@ import { JoinSection, JoinT } from './JoinSection'
 import { NullSection } from './NullSection'
 import { DateSection } from './DateSection'
 import { WindowFuncSection } from './WindowFuncSection'
+import { MergeSection } from './MergeSection'
+import { RollupSection } from './RollupSection'
 import { ExecutionSimulator, ExecutionT } from './ExecutionSection'
 
 interface Props {
@@ -20,6 +22,8 @@ export function SqlBasicsPage({ sectionId }: Props) {
   if (sectionId === 'sql-basics-null')       return <NullSection lang={lang} />
   if (sectionId === 'sql-basics-date')       return <DateSection lang={lang} />
   if (sectionId === 'sql-basics-windowFunc') return <WindowFuncSection lang={lang} />
+  if (sectionId === 'sql-basics-merge')      return <MergeSection lang={lang} />
+  if (sectionId === 'sql-basics-rollup')     return <RollupSection lang={lang} />
   if (sectionId === 'sql-basics-execution')  return <ExecutionSimulator lang={lang} t={ExecutionT[lang]} />
   return null
 }

@@ -35,15 +35,16 @@ export function TableOfContents({ activeSectionId, onSelect }: Props) {
   }
 
   return (
-    <div className="flex min-h-full flex-col py-3">
+    <div className="flex min-h-full flex-col">
       {/* Header */}
-      <div className="mb-1 px-4 pb-2 border-b">
+      <div className="shrink-0 px-4 py-2 border-b">
         <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
           {lang === 'ko' ? '목차' : 'Table of Contents'}
         </span>
       </div>
 
       {/* Chapters */}
+      <div className="flex flex-col py-3">
       {BOOK_CHAPTERS.map((chapter) => {
         const isOpen = !!openChapters[chapter.id]
         const c = COLOR_MAP[chapter.color] ?? COLOR_MAP.blue
@@ -161,6 +162,7 @@ export function TableOfContents({ activeSectionId, onSelect }: Props) {
           </div>
         )
       })}
+      </div>
 
       {/* Developer credit — pinned to bottom */}
       <div className="mt-auto border-t pt-3 pb-1 px-4">

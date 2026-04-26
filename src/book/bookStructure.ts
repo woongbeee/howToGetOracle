@@ -57,6 +57,20 @@ export const BOOK_CHAPTERS: BookChapter[] = [
         title: { ko: '윈도우 함수', en: 'Oracle Window function' },
       },
       {
+        id: 'sql-basics-merge',
+        title: {
+          ko: 'MERGE INTO — 병합 구문',
+          en: 'MERGE INTO — Merge Statement',
+        },
+      },
+      {
+        id: 'sql-basics-rollup',
+        title: {
+          ko: 'ROLLUP / CUBE / PIVOT',
+          en: 'ROLLUP / CUBE / PIVOT',
+        },
+      },
+      {
         id: 'sql-basics-execution',
         title: {
           ko: 'SQL 실행 순서 시뮬레이터',

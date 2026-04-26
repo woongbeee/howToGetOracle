@@ -4,21 +4,15 @@ import { cn } from '@/lib/utils'
 
 export function PageContainer({ children, className }: { children: ReactNode; className?: string }) {
   return (
-    <div className={cn('mx-auto max-w-4xl px-8 py-10', className)}>
+    <div className={cn('max-w-4xl px-8 pt-6 pb-10', className)}>
       {children}
     </div>
   )
 }
 
-export function ChapterTitle({ icon, num, title, subtitle }: { icon: string; num: number; title: string; subtitle?: string }) {
+export function ChapterTitle({ title, subtitle }: { icon?: string; num?: number; title: string; subtitle?: string }) {
   return (
-    <div className="mb-8">
-      <div className="mb-3 flex items-center gap-2">
-        <span className="font-mono text-2xl">{icon}</span>
-        <span className="font-mono text-xs font-bold uppercase tracking-widest text-muted-foreground">
-          Chapter {String(num).padStart(2, '0')}
-        </span>
-      </div>
+    <div className="mb-5">
       <h1 className="text-3xl font-bold tracking-tight leading-tight">{title}</h1>
       {subtitle && <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{subtitle}</p>}
     </div>

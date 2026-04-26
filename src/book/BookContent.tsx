@@ -59,7 +59,7 @@ export const BookContent = memo(function BookContent({ sectionId, onNavigate }: 
       </div>
 
       {/* Content area — full-height sections skip scroll wrapper */}
-      <div className={cn('min-h-0 flex-1', isFullscreen ? 'overflow-hidden' : 'overflow-y-auto')}>
+      <div className={cn('min-h-0 flex-1', isFullscreen ? 'overflow-hidden' : 'overflow-x-hidden overflow-y-auto')}>
         {isFullscreen ? (
           <div key={sectionId} className="h-full">
             <SectionRouter sectionId={sectionId} />
