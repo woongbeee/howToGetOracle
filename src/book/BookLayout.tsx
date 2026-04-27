@@ -6,7 +6,6 @@ import { TableOfContents } from './TableOfContents'
 import { BookContent } from './BookContent'
 import { GlossaryPanel } from './GlossaryPanel'
 import { Badge } from '@/components/ui/badge'
-import { cn } from '@/lib/utils'
 
 interface Props {
   onHome: () => void
