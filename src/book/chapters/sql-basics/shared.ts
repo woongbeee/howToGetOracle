@@ -1068,7 +1068,7 @@ export const EXAMPLE_QUERIES: ExampleQuery[] = [
       {
         id: 'result', phase: '⑥ 결과 반환',
         label: { ko: '결과 반환', en: 'Return results' },
-        desc: { ko: '상세 6행 + 부서 소계 3행 + 전체 총계 1행 = 총 10행이 반환됩니다.', en: '6 detail rows + 3 dept subtotals + 1 grand total = 10 rows returned.' },
+        desc: { ko: '상세 4행 + 부서 소계 3행 + 전체 총계 1행 = 총 8행이 반환됩니다.', en: '6 detail rows + 3 dept subtotals + 1 grand total = 10 rows returned.' },
         color: 'emerald',
       },
     ],
@@ -1477,6 +1477,24 @@ export const CLAUSE_DEMOS: ClauseDemo[] = [
           en: 'Sort by the 2nd SELECT column (first_name) ascending',
         },
       },
+      {
+        op: 'NULLS LAST',
+        sql: 'SELECT emp_id, first_name, manager_id\nFROM   employees\nORDER BY manager_id NULLS LAST',
+        type: 'SELECT',
+        desc: {
+          ko: 'manager_id 오름차순 정렬 시 NULL 값을 맨 마지막으로 보냅니다. Oracle 기본값은 ASC일 때 NULL을 맨 뒤에 두지 않으므로, 명시적으로 NULLS LAST를 지정해야 합니다.',
+          en: 'Sort manager_id ascending, placing NULL values at the end. Oracle\'s default does not put NULLs last for ASC — specify NULLS LAST explicitly.',
+        },
+      },
+      {
+        op: 'NULLS FIRST',
+        sql: 'SELECT emp_id, first_name, manager_id\nFROM   employees\nORDER BY manager_id NULLS FIRST',
+        type: 'SELECT',
+        desc: {
+          ko: 'manager_id 오름차순 정렬 시 NULL 값을 맨 처음으로 보냅니다. Oracle 기본값은 DESC일 때 NULL을 맨 앞에 두므로, ASC에서 NULL을 앞으로 보내려면 NULLS FIRST를 명시해야 합니다.',
+          en: 'Sort manager_id ascending, placing NULL values at the beginning. Specify NULLS FIRST explicitly when you want NULLs first in an ASC sort.',
+        },
+      },
     ],
   },
   {
@@ -1553,25 +1571,48 @@ export const CLAUSE_DEMOS: ClauseDemo[] = [
 
 // ── Pure utility functions ─────────────────────────────────────────────────
 
-export function parseOrderPart(s: string, selectCols?: string[]): { key: keyof Employee; dir: 'ASC' | 'DESC' } {
-  const parts = s.trim().split(/\s+/)
+export function parseOrderPart(s: string, selectCols?: string[]): { key: keyof Employee; dir: 'ASC' | 'DESC'; nulls?: 'FIRST' | 'LAST' } {
+  const upper = s.trim().toUpperCase()
+  const nulls: 'FIRST' | 'LAST' | undefined =
+    upper.includes('NULLS FIRST') ? 'FIRST' :
+    upper.includes('NULLS LAST')  ? 'LAST'  : undefined
+  const cleaned = s.trim().replace(/NULLS\s+(FIRST|LAST)/i, '').trim()
+  const parts = cleaned.split(/\s+/)
   const dir = parts[1]?.toUpperCase() === 'DESC' ? 'DESC' : 'ASC'
   if (/^\d+$/.test(parts[0])) {
     const pos = parseInt(parts[0]) - 1
     const colName = selectCols?.[pos] ?? EMP_COLS[pos] ?? 'emp_id'
-    return { key: colName as keyof Employee, dir }
+    return { key: colName as keyof Employee, dir, nulls }
   }
   const key = parts[0].toLowerCase() as keyof Employee
-  return { key, dir }
+  return { key, dir, nulls }
 }
 
-export function sortRows(rows: Employee[], key: keyof Employee, dir: 'ASC' | 'DESC', key2?: keyof Employee, dir2?: 'ASC' | 'DESC'): Employee[] {
+export function sortRows(
+  rows: Employee[],
+  key: keyof Employee, dir: 'ASC' | 'DESC', key2?: keyof Employee, dir2?: 'ASC' | 'DESC',
+  nulls?: 'FIRST' | 'LAST', nulls2?: 'FIRST' | 'LAST',
+): Employee[] {
   return rows.slice().sort((a, b) => {
     const av = a[key], bv = b[key]
+    const aNull = av === null || av === undefined
+    const bNull = bv === null || bv === undefined
+    if (aNull || bNull) {
+      const nullLast = nulls === 'LAST' || (!nulls && dir === 'ASC')
+      if (aNull && bNull) return 0
+      return aNull ? (nullLast ? 1 : -1) : (nullLast ? -1 : 1)
+    }
     const cmp = typeof av === 'number' && typeof bv === 'number' ? av - bv : String(av).localeCompare(String(bv))
     if (cmp !== 0) return dir === 'DESC' ? -cmp : cmp
     if (key2) {
       const av2 = a[key2], bv2 = b[key2]
+      const a2Null = av2 === null || av2 === undefined
+      const b2Null = bv2 === null || bv2 === undefined
+      if (a2Null || b2Null) {
+        const null2Last = nulls2 === 'LAST' || (!nulls2 && dir2 === 'ASC')
+        if (a2Null && b2Null) return 0
+        return a2Null ? (null2Last ? 1 : -1) : (null2Last ? -1 : 1)
+      }
       const cmp2 = typeof av2 === 'number' && typeof bv2 === 'number' ? av2 - bv2 : String(av2).localeCompare(String(bv2))
       return dir2 === 'DESC' ? -cmp2 : cmp2
     }
@@ -1812,8 +1853,9 @@ export function parseAndExecute(sql: string, data: Employee[]): ParsedQuery {
       const parts = orderMatch[1].split(',').map((s) => s.trim())
       const parse1 = parseOrderPart(parts[0], columns)
       orderKey = parse1.key; orderDir = parse1.dir
-      if (parts[1]) { const p2 = parseOrderPart(parts[1], columns); orderKey2 = p2.key; orderDir2 = p2.dir }
-      result = sortRows([...distinctMatched], orderKey, orderDir, orderKey2, orderDir2)
+      const nulls1 = parse1.nulls; let nulls2: 'FIRST' | 'LAST' | undefined
+      if (parts[1]) { const p2 = parseOrderPart(parts[1], columns); orderKey2 = p2.key; orderDir2 = p2.dir; nulls2 = p2.nulls }
+      result = sortRows([...distinctMatched], orderKey, orderDir, orderKey2, orderDir2, nulls1, nulls2)
         .map((r) => columns.length === 0 ? r : projectRow(r, columns))
     }
 

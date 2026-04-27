@@ -48,7 +48,7 @@ export const BookContent = memo(function BookContent({ sectionId, onNavigate }: 
   return (
     <div className="flex h-full flex-col overflow-hidden">
       {/* Breadcrumb */}
-      <div className="flex shrink-0 items-center gap-1.5 border-b bg-muted/30 px-6 py-2">
+      <div className="flex h-[35px] shrink-0 items-center gap-1.5 border-b bg-muted/30 px-6">
         <span className={cn('font-mono text-[10px] font-medium', c.text)}>
           {chapter.icon} {chapter.num.toString().padStart(2, '0')}. {chapter.title[lang]}
         </span>
@@ -81,7 +81,7 @@ export const BookContent = memo(function BookContent({ sectionId, onNavigate }: 
       </div>
 
       {/* Prev / Next navigation — hidden for full-height simulator sections */}
-      <div className={cn('flex shrink-0 items-center justify-between border-t bg-card px-6 py-3', isFullscreen && 'hidden')}>
+      <div className={cn('flex h-[52px] shrink-0 items-center justify-between border-t bg-card px-6', isFullscreen && 'hidden')}>
         <div className="flex-1">
           {adjacent.prev && (
             <button

@@ -1,5 +1,5 @@
 // Shared UI primitives for book chapter pages
-import type { ReactNode } from 'react'
+import { type ReactNode, useEffect, useRef } from 'react'
 import { cn } from '@/lib/utils'
 import { useSimulationStore } from '@/store/simulationStore'
 
@@ -41,7 +41,7 @@ export function ChapterTitle({ title, subtitle }: { icon?: string; num?: number;
 
 export function SectionTitle({ children }: { children: ReactNode }) {
   return (
-    <h2 className="mb-4 text-xl font-bold tracking-tight">{children}</h2>
+    <h2 className="mt-8 mb-4 text-xl font-bold tracking-tight">{children}</h2>
   )
 }
 
@@ -58,7 +58,7 @@ export function Prose({ children, className }: { children: ReactNode; className?
 }
 
 export function InfoBox({ color = 'blue', icon, title, children }: {
-  color?: 'blue' | 'orange' | 'violet' | 'emerald' | 'amber' | 'rose'
+  color?: 'blue' | 'orange' | 'violet' | 'emerald' | 'amber' | 'rose' | 'cyan'
   icon?: string
   title?: string
   children: ReactNode
@@ -70,6 +70,7 @@ export function InfoBox({ color = 'blue', icon, title, children }: {
     emerald: 'bg-emerald-50 border-emerald-200 text-emerald-800',
     amber:   'bg-amber-50 border-amber-200 text-amber-800',
     rose:    'bg-rose-50 border-rose-200 text-rose-800',
+    cyan:    'bg-cyan-50 border-cyan-200 text-cyan-800',
   }
   return (
     <div className={cn('mb-4 rounded-lg border p-4', styles[color])}>
@@ -162,4 +163,108 @@ export function SimulatorPlaceholder({ label, color = 'blue' }: { label: string;
 
 export function Divider() {
   return <div className="my-8 border-t" />
+}
+
+// ── TermPopup ────────────────────────────────────────────────────────────────
+// 인라인 용어 버튼 + 클릭 시 말풍선 팝업. 배경은 그대로 유지됨.
+// 사용:
+//   const [open, setOpen] = useState(false)
+//   <TermPopup label="타임존이란?" title="타임존" icon="🌏"
+//              open={open} onOpen={() => setOpen(true)} onClose={() => setOpen(false)}>
+//     ...내용...
+//   </TermPopup>
+
+interface TermPopupProps {
+  label: string
+  title: string
+  icon?: string
+  color?: 'blue' | 'orange' | 'violet' | 'emerald' | 'amber' | 'rose' | 'cyan'
+  open: boolean
+  onOpen: () => void
+  onClose: () => void
+  children: ReactNode
+}
+
+export function TermPopup({ label, title, icon, color = 'cyan', open, onOpen, onClose, children }: TermPopupProps) {
+  const wrapperRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!open) return
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    const onOutside = (e: MouseEvent) => {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) onClose()
+    }
+    window.addEventListener('keydown', onKey)
+    document.addEventListener('mousedown', onOutside)
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      document.removeEventListener('mousedown', onOutside)
+    }
+  }, [open, onClose])
+
+  const headerStyles: Record<string, string> = {
+    blue:    'bg-blue-50 border-blue-200 text-blue-800',
+    orange:  'bg-orange-50 border-orange-200 text-orange-800',
+    violet:  'bg-violet-50 border-violet-200 text-violet-800',
+    emerald: 'bg-emerald-50 border-emerald-200 text-emerald-800',
+    amber:   'bg-amber-50 border-amber-200 text-amber-800',
+    rose:    'bg-rose-50 border-rose-200 text-rose-800',
+    cyan:    'bg-cyan-50 border-cyan-200 text-cyan-800',
+  }
+
+  const tailStyles: Record<string, string> = {
+    blue:    'border-r-blue-200',
+    orange:  'border-r-orange-200',
+    violet:  'border-r-violet-200',
+    emerald: 'border-r-emerald-200',
+    amber:   'border-r-amber-200',
+    rose:    'border-r-rose-200',
+    cyan:    'border-r-cyan-200',
+  }
+
+  return (
+    <div ref={wrapperRef} className="relative inline-block">
+      <button
+        onClick={() => open ? onClose() : onOpen()}
+        className={cn(
+          'inline-flex items-center gap-1 rounded border border-dashed px-1.5 py-0.5 font-mono text-[11px] font-bold transition-colors',
+          open
+            ? 'border-cyan-400 bg-cyan-50 text-cyan-700'
+            : 'border-cyan-300 text-cyan-700 hover:bg-cyan-50',
+        )}
+      >
+        {icon && <span>{icon}</span>}
+        {label}
+        <span className="opacity-50">{open ? '▲' : '▼'}</span>
+      </button>
+
+      {open && (
+        <div className="absolute left-full top-1/2 z-40 ml-2.5 w-96 -translate-y-1/2">
+          {/* 말풍선 꼬리 */}
+          <div
+            className={cn(
+              'absolute -left-2 top-1/2 -translate-y-1/2 border-8 border-transparent',
+              tailStyles[color],
+            )}
+          />
+          <div className="overflow-hidden rounded-xl border bg-white shadow-xl">
+            <div className={cn('flex items-center gap-2 border-b px-4 py-3', headerStyles[color])}>
+              {icon && <span className="text-sm">{icon}</span>}
+              <span className="font-mono text-xs font-bold">{title}</span>
+              <button
+                onClick={onClose}
+                className="ml-auto text-[11px] opacity-50 hover:opacity-100"
+                aria-label="닫기"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="px-4 py-3.5 text-xs leading-relaxed text-gray-700">
+              {children}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
 }

@@ -24,7 +24,7 @@ export const BOOK_CHAPTERS: BookChapter[] = [
     num: 1,
     icon: '📋',
     color: 'emerald',
-    title: { ko: 'SQL 기본 문법', en: 'SQL Basics' },
+    title: { ko: 'SQL 문법', en: 'SQL Syntax Fundamentals' },
     sections: [
       {
         id: 'sql-basics-syntax',
@@ -66,8 +66,15 @@ export const BOOK_CHAPTERS: BookChapter[] = [
       {
         id: 'sql-basics-rollup',
         title: {
-          ko: 'ROLLUP / CUBE / PIVOT',
-          en: 'ROLLUP / CUBE / PIVOT',
+          ko: 'ROLLUP / CUBE / GROUPING SETS / GROUPING',
+          en: 'ROLLUP / CUBE / GROUPING SETS / GROUPING',
+        },
+      },
+      {
+        id: 'sql-basics-pivot',
+        title: {
+          ko: 'PIVOT / UNPIVOT',
+          en: 'PIVOT / UNPIVOT',
         },
       },
       {

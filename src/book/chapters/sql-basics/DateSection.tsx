@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
-import { PageContainer, ChapterTitle, Prose, Divider, InfoBox } from '../shared'
+import { PageContainer, ChapterTitle, Prose, Divider, InfoBox, TermPopup } from '../shared'
 import { SqlHighlight } from './SqlHighlight'
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -33,12 +33,20 @@ interface FuncItem {
   note?: { ko: string; en: string }
   dualInfo?: { ko: string; en: string }
   arith?: { title: { ko: string; en: string }; rows: ArithRow[] }
+  arith2?: { title: { ko: string; en: string }; rows: ArithRow[] }
   tzSetup?: TzSetupBlock[]
   vsNote?: { ko: string; en: string }
   tzInfo?: { ko: string; en: string }
-  typeCompare?: { ko: string; en: string }
+  tzConvert?: {
+    desc: { ko: string; en: string }
+    example: string
+    resultHeaders: string[]
+    resultRows: string[][]
+    tzSetup: TzSetupBlock[]
+  }
   castExample?: { sql: string; headers: string[]; rows: string[][] }
   formatMasks?: { title: { ko: string; en: string }; rows: FormatMaskRow[] }
+  nlsNote?: { ko: string; en: string }
 }
 
 // ── Data ───────────────────────────────────────────────────────────────────
@@ -55,6 +63,10 @@ const FUNC_ITEMS: FuncItem[] = [
       ko: 'DUAL은 Oracle이 제공하는 특수한 1행 1열 더미 테이블입니다. 테이블 없이 함수나 표현식의 결과만 조회할 때 FROM DUAL을 사용합니다. SELECT SYSDATE FROM DUAL 처럼 실제 테이블 없이도 SQL 문법을 유지할 수 있습니다.',
       en: 'DUAL is a special one-row, one-column dummy table provided by Oracle. Use FROM DUAL when you only need to evaluate a function or expression without querying a real table — e.g., SELECT SYSDATE FROM DUAL.',
     },
+    nlsNote: {
+      ko: "예시의 결과값이 실제 실행 결과와 다를 수 있습니다. SYSDATE는 쿼리를 실행하는 시점의 DB 서버 시각을 반환하기 때문에 실행할 때마다 값이 달라집니다. 또한 NLS_DATE_FORMAT 설정에 따라 날짜의 표시 형식도 환경마다 다르게 보일 수 있습니다.\n\nNLS(National Language Support)란 Oracle이 날짜·숫자·문자 표기 방식을 각 나라의 언어 및 지역 설정에 맞게 자동으로 처리하는 기능입니다. SYSDATE를 화면에 표시할 때 어떤 형식으로 보여줄지는 세션의 NLS_DATE_FORMAT 값이 결정합니다.\n\nV$NLS_PARAMETERS 뷰에서 현재 적용된 NLS 설정을 확인할 수 있습니다.\n\n  SELECT parameter, value\n  FROM   V$NLS_PARAMETERS\n  WHERE  parameter = 'NLS_DATE_FORMAT';\n\n결과 예시: NLS_DATE_FORMAT = 'RR/MM/DD'\n\n세션 단위로 바꾸려면 ALTER SESSION SET NLS_DATE_FORMAT = 'YYYY-MM-DD HH24:MI:SS' 명령을 사용합니다. 이 설정은 현재 접속에만 적용되며, SYSDATE를 조회하면 지정한 형식으로 출력됩니다.",
+      en: "The example result above may differ from what you see when you run it. SYSDATE returns the DB server's current date and time at the moment the query executes, so the value changes every time. The display format may also vary depending on your session's NLS_DATE_FORMAT setting.\n\nNLS (National Language Support) is Oracle's mechanism for automatically adapting date, number, and character display to each country's language and regional settings. When SYSDATE is displayed, the session's NLS_DATE_FORMAT value controls how it appears.\n\nCheck the current NLS settings via the V$NLS_PARAMETERS view:\n\n  SELECT parameter, value\n  FROM   V$NLS_PARAMETERS\n  WHERE  parameter = 'NLS_DATE_FORMAT';\n\nSample result: NLS_DATE_FORMAT = 'RR/MM/DD'\n\nTo change it for the current session: ALTER SESSION SET NLS_DATE_FORMAT = 'YYYY-MM-DD HH24:MI:SS'. This applies only to the current connection — SYSDATE output will then appear in the specified format.",
+    },
     example:
       'SELECT SYSDATE,\n       SYSDATE + 1                      AS tomorrow,\n       SYSDATE - 7                      AS week_ago,\n       SYSDATE + 1/24                   AS plus_1h,\n       SYSDATE + 30/1440                AS plus_30m,\n       SYSDATE - TO_DATE(\'2025-01-01\', \'YYYY-MM-DD\') AS days_since\nFROM   DUAL',
     resultHeaders: ['SYSDATE', 'tomorrow', 'week_ago', 'plus_1h', 'plus_30m', 'days_since'],
@@ -68,10 +80,6 @@ const FUNC_ITEMS: FuncItem[] = [
         '114.396',
       ],
     ],
-    typeCompare: {
-      ko: 'SYSDATE와 SYSTIMESTAMP는 서로 다른 타입입니다. SYSDATE는 DATE(초 정밀도, 타임존 없음), SYSTIMESTAMP는 TIMESTAMP WITH TIME ZONE(나노초 정밀도, 타임존 포함)입니다. 두 타입을 같은 컬럼에 저장하거나 비교할 때는 명시적 변환이 필요합니다.',
-      en: 'SYSDATE and SYSTIMESTAMP are different types. SYSDATE is DATE (second precision, no timezone); SYSTIMESTAMP is TIMESTAMP WITH TIME ZONE (nanosecond precision, with timezone). Explicit conversion is required when storing or comparing them together.',
-    },
     arith: {
       title: { ko: 'DATE 산술 연산 규칙', en: 'DATE Arithmetic Rules' },
       rows: [
@@ -115,6 +123,10 @@ const FUNC_ITEMS: FuncItem[] = [
   {
     name: 'SYSTIMESTAMP',
     signature: 'SYSTIMESTAMP',
+    tzInfo: {
+      ko: "타임존(Timezone)이란 지구를 경도에 따라 나눈 시간 구역입니다. 같은 순간이라도 지역마다 현지 시각이 다르기 때문에 국제 시스템에서는 타임존을 명시해 시각의 기준을 맞춥니다.\n\n타임존을 표현하는 방법은 두 가지입니다.\n\n① 고정 오프셋: '+09:00', '-05:00' 처럼 UTC(협정 세계시)와의 시간 차이를 직접 숫자로 표기합니다.\n② 지역 이름(IANA 데이터베이스): 'Asia/Seoul', 'America/New_York', 'Europe/London', 'UTC' 처럼 도시·지역 이름을 사용합니다. 이 방식은 일광절약시간(DST) 전환을 자동으로 반영합니다.\n\nOracle에서 사용 가능한 전체 타임존 목록은 SELECT * FROM V$TIMEZONE_NAMES 로 조회할 수 있습니다.",
+      en: "A timezone is a region of the globe that observes the same standard time. Because the same moment corresponds to different local times in different places, international systems attach timezone information to timestamps so everyone agrees on when something happened.\n\nTimezones are expressed in two ways:\n\n① Fixed offset: '+09:00', '-05:00' — the numeric difference from UTC (Coordinated Universal Time).\n② Region name (IANA database): 'Asia/Seoul', 'America/New_York', 'Europe/London', 'UTC'. This form automatically handles Daylight Saving Time (DST) transitions.\n\nQuery the full list of timezones Oracle supports: SELECT * FROM V$TIMEZONE_NAMES.",
+    },
     desc: {
       ko: 'DB 서버의 현재 날짜·시간·소수점 이하 초(fractional seconds)와 타임존 오프셋을 포함한 TIMESTAMP WITH TIME ZONE 타입을 반환합니다. SYSDATE보다 정밀한 시각이 필요하거나, 타임존 정보가 필요한 경우에 사용합니다.',
       en: 'Returns the current date, time, fractional seconds, and timezone offset as TIMESTAMP WITH TIME ZONE. Use when you need sub-second precision or timezone-aware timestamps — more precise than SYSDATE.',
@@ -132,17 +144,6 @@ const FUNC_ITEMS: FuncItem[] = [
         '2025-04-25 09:30:00.623 +09:00',
       ],
     ],
-    castExample: {
-      sql: "-- SYSDATE → TIMESTAMP 변환 (타임존 없음)\nSELECT CAST(SYSDATE AS TIMESTAMP)          AS ts_no_tz,\n       -- TIMESTAMP에 타임존 붙이기\n       FROM_TZ(CAST(SYSDATE AS TIMESTAMP),\n               'Asia/Seoul')               AS ts_with_tz,\n       -- SYSTIMESTAMP → DATE 변환 (소수초·타임존 손실)\n       CAST(SYSTIMESTAMP AS DATE)           AS back_to_date\nFROM   DUAL",
-      headers: ['ts_no_tz', 'ts_with_tz', 'back_to_date'],
-      rows: [
-        [
-          '2025-04-25 09:30:00.000000',
-          '2025-04-25 09:30:00.000000 +09:00',
-          '2025-04-25 09:30:00',
-        ],
-      ],
-    },
     arith: {
       title: { ko: 'TIMESTAMP 산술 — INTERVAL 리터럴', en: 'TIMESTAMP Arithmetic — INTERVAL Literals' },
       rows: [
@@ -171,6 +172,91 @@ const FUNC_ITEMS: FuncItem[] = [
           result: 'INTERVAL 값',
           desc: { ko: 'TIMESTAMP - TIMESTAMP = INTERVAL DAY TO SECOND', en: 'result is INTERVAL DAY TO SECOND' },
         },
+      ],
+    },
+    arith2: {
+      title: { ko: 'SYSTIMESTAMP 끼리 뺄셈 예시', en: 'SYSTIMESTAMP Subtraction Example' },
+      rows: [
+        {
+          expr: 'ts_end - ts_start',
+          result: '+00 00:02:35.847000',
+          desc: { ko: 'INTERVAL DAY TO SECOND 타입 반환', en: 'returns INTERVAL DAY TO SECOND' },
+        },
+        {
+          expr: '(ts_end - ts_start) * 86400',
+          result: '155.847',
+          desc: { ko: '초 단위로 환산 (INTERVAL → 초)', en: 'convert to seconds' },
+        },
+        {
+          expr: "EXTRACT(MINUTE FROM ts_end - ts_start)",
+          result: '2',
+          desc: { ko: 'EXTRACT로 분 단위만 추출', en: 'extract minutes with EXTRACT' },
+        },
+        {
+          expr: "EXTRACT(SECOND FROM ts_end - ts_start)",
+          result: '35.847',
+          desc: { ko: 'EXTRACT로 초(소수점 포함) 추출', en: 'extract seconds (with fractions)' },
+        },
+      ],
+    },
+    tzConvert: {
+      desc: {
+        ko: 'Oracle은 세 가지 방법으로 타임존을 변환합니다. AT TIME ZONE은 기존 TIMESTAMP를 다른 시간대로 변환합니다. FROM_TZ는 타임존 정보가 없는 TIMESTAMP에 타임존을 붙입니다. SYS_EXTRACT_UTC는 어떤 타임존이든 UTC(협정 세계시)로 통일해 비교할 때 씁니다.',
+        en: 'Oracle provides three main timezone tools. AT TIME ZONE converts an existing TIMESTAMP to a different timezone. FROM_TZ attaches a timezone to a plain TIMESTAMP. SYS_EXTRACT_UTC normalizes any timestamp to UTC for comparison.',
+      },
+      example:
+        "SELECT SYSTIMESTAMP                                        AS seoul_time,\n       SYSTIMESTAMP AT TIME ZONE 'UTC'                      AS utc_time,\n       SYSTIMESTAMP AT TIME ZONE 'America/New_York'         AS ny_time,\n       FROM_TZ(CAST(SYSDATE AS TIMESTAMP), 'Asia/Seoul')\n         AT TIME ZONE 'Europe/London'                       AS london_time,\n       SYS_EXTRACT_UTC(SYSTIMESTAMP)                        AS extracted_utc\nFROM   DUAL",
+      resultHeaders: ['seoul_time', 'utc_time', 'ny_time', 'london_time', 'extracted_utc'],
+      resultRows: [
+        [
+          '2025-04-25 09:30:00 +09:00',
+          '2025-04-25 00:30:00 +00:00',
+          '2025-04-24 20:30:00 -04:00',
+          '2025-04-25 01:30:00 +01:00',
+          '2025-04-25 00:30:00',
+        ],
+      ],
+      tzSetup: [
+        {
+          title: { ko: '세션 타임존 설정 및 확인', en: 'Session Timezone — Set & Check' },
+          lines: [
+            {
+              code: "ALTER SESSION SET TIME_ZONE = 'Asia/Seoul';",
+              comment: { ko: '세션 타임존을 서울(+09:00)로 설정', en: 'set session timezone to Seoul (+09:00)' },
+            },
+            {
+              code: "ALTER SESSION SET TIME_ZONE = '+09:00';",
+              comment: { ko: '오프셋으로 직접 지정도 가능', en: 'fixed offset also works' },
+            },
+            {
+              code: 'SELECT DBTIMEZONE      FROM DUAL;',
+              comment: { ko: 'DB 서버 타임존 확인', en: 'check DB server timezone' },
+            },
+            {
+              code: 'SELECT SESSIONTIMEZONE FROM DUAL;',
+              comment: { ko: '현재 세션 타임존 확인', en: 'check current session timezone' },
+            },
+            {
+              code: 'SELECT CURRENT_TIMESTAMP FROM DUAL;',
+              comment: { ko: '세션 타임존 반영 — 세션 변경 시 값도 바뀜', en: 'reflects session timezone — changes with session' },
+            },
+            {
+              code: 'SELECT SYSTIMESTAMP    FROM DUAL;',
+              comment: { ko: 'DB 서버 타임존 고정 — 세션 변경과 무관', en: 'fixed to DB server timezone — unaffected by session' },
+            },
+          ],
+        },
+      ],
+    },
+    castExample: {
+      sql: "-- SYSDATE → TIMESTAMP 변환 (타임존 없음)\nSELECT CAST(SYSDATE AS TIMESTAMP)          AS ts_no_tz,\n       -- TIMESTAMP에 타임존 붙이기\n       FROM_TZ(CAST(SYSDATE AS TIMESTAMP),\n               'Asia/Seoul')               AS ts_with_tz,\n       -- SYSTIMESTAMP → DATE 변환 (소수초·타임존 손실)\n       CAST(SYSTIMESTAMP AS DATE)           AS back_to_date\nFROM   DUAL",
+      headers: ['ts_no_tz', 'ts_with_tz', 'back_to_date'],
+      rows: [
+        [
+          '2025-04-25 09:30:00.000000',
+          '2025-04-25 09:30:00.000000 +09:00',
+          '2025-04-25 09:30:00',
+        ],
       ],
     },
     vsNote: {
@@ -226,15 +312,40 @@ const FUNC_ITEMS: FuncItem[] = [
     name: 'TRUNC (날짜)',
     signature: 'TRUNC(date [, fmt])',
     desc: {
-      ko: "날짜를 지정한 단위(fmt)로 잘라냅니다. fmt를 생략하면 시간을 00:00:00으로 초기화합니다. TRUNC(date, 'MM')은 해당 월의 1일, TRUNC(date, 'YYYY')는 해당 연도의 1월 1일로 반환합니다.",
-      en: "Truncates a date to the specified unit (fmt). Omitting fmt zeros out the time portion (00:00:00). TRUNC(date, 'MM') returns the 1st of the month; TRUNC(date, 'YYYY') returns January 1st of the year.",
+      ko: "TRUNC는 '잘라내다(truncate)'의 줄임말입니다. 숫자에서는 소수점 이하를 버리듯, 날짜에서는 지정한 단위 아래의 시간 정보를 모두 제거합니다. 반올림 없이 항상 내림(버림)만 합니다.\n\n날짜를 지정한 단위(fmt)로 잘라냅니다. fmt를 생략하면 시간을 00:00:00으로 초기화합니다. TRUNC(date, 'MM')은 해당 월의 1일, TRUNC(date, 'YYYY')는 해당 연도의 1월 1일로 반환합니다.",
+      en: "TRUNC is short for 'truncate', meaning to cut off. Just as truncating a number drops the decimal part, truncating a date removes all time information below the specified unit — always rounding down, never up.\n\nTruncates a date to the specified unit (fmt). Omitting fmt zeros out the time portion (00:00:00). TRUNC(date, 'MM') returns the 1st of the month; TRUNC(date, 'YYYY') returns January 1st of the year.",
     },
     example:
-      "SELECT SYSDATE,\n       TRUNC(SYSDATE)         AS day_start,\n       TRUNC(SYSDATE, 'MM')   AS month_start,\n       TRUNC(SYSDATE, 'YYYY') AS year_start\nFROM   DUAL",
-    resultHeaders: ['SYSDATE', 'day_start', 'month_start', 'year_start'],
+      "SELECT SYSDATE,\n       TRUNC(SYSDATE)           AS day_start,\n       TRUNC(SYSDATE, 'MM')     AS month_start,\n       TRUNC(SYSDATE, 'YYYY')   AS year_start,\n       TRUNC(SYSDATE, 'IW')     AS iso_week_mon,\n       TRUNC(SYSDATE, 'WW')     AS week_sun,\n       TRUNC(SYSDATE, 'MI')     AS minute_start,\n       TRUNC(SYSDATE, 'YEAR')   AS year_start2\nFROM   DUAL",
+    resultHeaders: ['SYSDATE', 'day_start', 'month_start', 'year_start', 'iso_week_mon', 'week_sun', 'minute_start', 'year_start2'],
     resultRows: [
-      ['2025-04-25 09:30:00', '2025-04-25 00:00:00', '2025-04-01 00:00:00', '2025-01-01 00:00:00'],
+      [
+        '2025-04-25 09:30:45',
+        '2025-04-25 00:00:00',
+        '2025-04-01 00:00:00',
+        '2025-01-01 00:00:00',
+        '2025-04-21 00:00:00',
+        '2025-04-20 00:00:00',
+        '2025-04-25 09:30:00',
+        '2025-01-01 00:00:00',
+      ],
     ],
+    formatMasks: {
+      title: { ko: 'TRUNC 주요 fmt 값', en: 'TRUNC fmt Values' },
+      rows: [
+        { mask: '(생략)',  example: '2025-04-25 00:00:00', desc: { ko: '시간 부분을 00:00:00으로 초기화', en: 'zero out time portion' } },
+        { mask: 'DD',     example: '2025-04-25 00:00:00', desc: { ko: '하루의 시작 (생략과 동일)', en: 'start of day (same as omitting)' } },
+        { mask: 'MM',     example: '2025-04-01 00:00:00', desc: { ko: '해당 월의 1일', en: '1st of the month' } },
+        { mask: 'YYYY',   example: '2025-01-01 00:00:00', desc: { ko: '해당 연도의 1월 1일', en: 'January 1st of the year' } },
+        { mask: 'YEAR',   example: '2025-01-01 00:00:00', desc: { ko: 'YYYY와 동일 (연도 시작)', en: 'same as YYYY (year start)' } },
+        { mask: 'IW',     example: '2025-04-21 00:00:00', desc: { ko: 'ISO 주의 월요일 (ISO 8601 기준)', en: 'Monday of the ISO week (ISO 8601)' } },
+        { mask: 'WW',     example: '2025-04-20 00:00:00', desc: { ko: '연도 시작 기준 해당 주의 첫날(일요일)', en: 'first day of the week from year start (Sunday)' } },
+        { mask: 'MI',     example: '2025-04-25 09:30:00', desc: { ko: '해당 분의 시작 (초 제거)', en: 'start of the minute (seconds zeroed)' } },
+        { mask: 'HH / HH24', example: '2025-04-25 09:00:00', desc: { ko: '해당 시의 시작 (분·초 제거)', en: 'start of the hour (minutes and seconds zeroed)' } },
+        { mask: 'Q',      example: '2025-04-01 00:00:00', desc: { ko: '해당 분기의 첫날', en: 'first day of the quarter' } },
+        { mask: 'DDD',    example: '2025-04-25 00:00:00', desc: { ko: 'DD와 동일', en: 'same as DD' } },
+      ],
+    },
     note: {
       ko: "날짜 범위 검색 시 WHERE hire_date >= TRUNC(SYSDATE, 'MM') 패턴으로 이번 달 1일부터의 데이터를 정확하게 조회할 수 있습니다.",
       en: "For range queries, WHERE hire_date >= TRUNC(SYSDATE, 'MM') precisely retrieves data from the first day of the current month.",
@@ -298,65 +409,6 @@ const FUNC_ITEMS: FuncItem[] = [
       en: "The result of TO_CHAR is VARCHAR2. Using it in date comparisons performs string comparison — always compare dates as DATE types.",
     },
   },
-  {
-    name: '타임존 변환',
-    signature: 'AT TIME ZONE / FROM_TZ / SYS_EXTRACT_UTC',
-    desc: {
-      ko: 'Oracle은 세 가지 방법으로 타임존을 다룹니다. AT TIME ZONE은 기존 TIMESTAMP를 다른 시간대로 변환합니다. FROM_TZ는 타임존 정보가 없는 TIMESTAMP에 타임존을 붙입니다. SYS_EXTRACT_UTC는 어떤 타임존이든 UTC(협정 세계시)로 통일해 비교할 때 씁니다.',
-      en: 'Oracle provides three main timezone tools. AT TIME ZONE converts an existing TIMESTAMP to a different timezone. FROM_TZ attaches a timezone to a plain TIMESTAMP. SYS_EXTRACT_UTC normalizes any timestamp to UTC for comparison.',
-    },
-    tzInfo: {
-      ko: "타임존 이름 예시: 'Asia/Seoul' (+09:00), 'America/New_York' (-05:00 또는 -04:00 DST), 'Europe/London' (+00:00 또는 +01:00 DST), 'UTC'. Oracle은 IANA 타임존 데이터베이스를 사용합니다. SELECT * FROM V$TIMEZONE_NAMES 로 전체 목록을 조회할 수 있습니다.",
-      en: "Timezone name examples: 'Asia/Seoul' (+09:00), 'America/New_York' (-05:00 or -04:00 DST), 'Europe/London' (+00:00 or +01:00 DST), 'UTC'. Oracle uses the IANA timezone database. Query V$TIMEZONE_NAMES for the full list.",
-    },
-    example:
-      "SELECT SYSTIMESTAMP                                        AS seoul_time,\n       SYSTIMESTAMP AT TIME ZONE 'UTC'                      AS utc_time,\n       SYSTIMESTAMP AT TIME ZONE 'America/New_York'         AS ny_time,\n       FROM_TZ(CAST(SYSDATE AS TIMESTAMP), 'Asia/Seoul')\n         AT TIME ZONE 'Europe/London'                       AS london_time,\n       SYS_EXTRACT_UTC(SYSTIMESTAMP)                        AS extracted_utc\nFROM   DUAL",
-    resultHeaders: ['seoul_time', 'utc_time', 'ny_time', 'london_time', 'extracted_utc'],
-    resultRows: [
-      [
-        '2025-04-25 09:30:00 +09:00',
-        '2025-04-25 00:30:00 +00:00',
-        '2025-04-24 20:30:00 -04:00',
-        '2025-04-25 01:30:00 +01:00',
-        '2025-04-25 00:30:00',
-      ],
-    ],
-    tzSetup: [
-      {
-        title: { ko: '세션 타임존 설정 및 확인', en: 'Session Timezone — Set & Check' },
-        lines: [
-          {
-            code: "ALTER SESSION SET TIME_ZONE = 'Asia/Seoul';",
-            comment: { ko: '세션 타임존을 서울(+09:00)로 설정', en: 'set session timezone to Seoul (+09:00)' },
-          },
-          {
-            code: "ALTER SESSION SET TIME_ZONE = '+09:00';",
-            comment: { ko: '오프셋으로 직접 지정도 가능', en: 'fixed offset also works' },
-          },
-          {
-            code: 'SELECT DBTIMEZONE      FROM DUAL;',
-            comment: { ko: 'DB 서버 타임존 확인', en: 'check DB server timezone' },
-          },
-          {
-            code: 'SELECT SESSIONTIMEZONE FROM DUAL;',
-            comment: { ko: '현재 세션 타임존 확인', en: 'check current session timezone' },
-          },
-          {
-            code: 'SELECT CURRENT_TIMESTAMP FROM DUAL;',
-            comment: { ko: '세션 타임존 반영 — 세션 변경 시 값도 바뀜', en: 'reflects session timezone — changes with session' },
-          },
-          {
-            code: 'SELECT SYSTIMESTAMP    FROM DUAL;',
-            comment: { ko: 'DB 서버 타임존 고정 — 세션 변경과 무관', en: 'fixed to DB server timezone — unaffected by session' },
-          },
-        ],
-      },
-    ],
-    note: {
-      ko: "세션 타임존은 ALTER SESSION SET TIME_ZONE = 'Asia/Seoul' 로 바꿀 수 있습니다. DB 서버 타임존은 SELECT DBTIMEZONE FROM DUAL, 세션 타임존은 SELECT SESSIONTIMEZONE FROM DUAL 로 확인합니다.",
-      en: "Change the session timezone with ALTER SESSION SET TIME_ZONE = 'Asia/Seoul'. Check DB timezone: SELECT DBTIMEZONE FROM DUAL; session timezone: SELECT SESSIONTIMEZONE FROM DUAL.",
-    },
-  },
 ]
 
 const ITEM_COLOR: Record<string, { bg: string; border: string; text: string; active: string; code: string }> = {
@@ -367,7 +419,6 @@ const ITEM_COLOR: Record<string, { bg: string; border: string; text: string; act
   'TRUNC (날짜)':   { bg: 'bg-orange-50', border: 'border-orange-200', text: 'text-orange-800', active: 'bg-orange-100 text-orange-700', code: 'bg-orange-50 border-orange-100' },
   'TO_DATE':        { bg: 'bg-rose-50',   border: 'border-rose-200',   text: 'text-rose-800',   active: 'bg-rose-100 text-rose-700',    code: 'bg-rose-50 border-rose-100'    },
   'TO_CHAR (날짜)': { bg: 'bg-amber-50',  border: 'border-amber-200',  text: 'text-amber-800',  active: 'bg-amber-100 text-amber-700',   code: 'bg-amber-50 border-amber-100'  },
-  '타임존 변환':    { bg: 'bg-teal-50',   border: 'border-teal-200',   text: 'text-teal-800',   active: 'bg-teal-100 text-teal-700',    code: 'bg-teal-50 border-teal-100'    },
 }
 
 // ── ResultTable ──────────────────────────────────────────────────────────────
@@ -378,13 +429,10 @@ function ResultTable({ headers, rows }: { headers: string[]; rows: string[][] })
       <table className="w-auto">
         <thead>
           <tr className="border-b bg-muted/60">
-            {headers.map((h, i) => (
+            {headers.map((h) => (
               <th
                 key={h}
-                className={cn(
-                  'whitespace-nowrap px-2.5 py-1.5 text-left font-mono text-[10px] font-bold',
-                  i === headers.length - 1 ? 'text-emerald-700' : 'text-muted-foreground',
-                )}
+                className="whitespace-nowrap px-2.5 py-1.5 text-left font-mono text-[10px] font-bold text-muted-foreground"
               >
                 {h}
               </th>
@@ -397,10 +445,7 @@ function ResultTable({ headers, rows }: { headers: string[]; rows: string[][] })
               {row.map((cell, ci) => (
                 <td
                   key={ci}
-                  className={cn(
-                    'whitespace-nowrap px-2.5 py-1 font-mono text-[11px]',
-                    ci === row.length - 1 ? 'font-bold text-emerald-700' : 'text-foreground/80',
-                  )}
+                  className="whitespace-nowrap px-2.5 py-1 font-mono text-[11px] text-foreground/80"
                 >
                   {cell}
                 </td>
@@ -426,7 +471,7 @@ function FormatMaskTable({ title, rows, lang }: { title: { ko: string; en: strin
           <thead>
             <tr className="border-b bg-muted/60">
               <th className="whitespace-nowrap px-2.5 py-1.5 text-left font-mono text-[10px] font-bold text-muted-foreground">{lang === 'ko' ? '마스크' : 'Mask'}</th>
-              <th className="whitespace-nowrap px-2.5 py-1.5 text-left font-mono text-[10px] font-bold text-emerald-700">{lang === 'ko' ? '출력 예' : 'Output'}</th>
+              <th className="whitespace-nowrap px-2.5 py-1.5 text-left font-mono text-[10px] font-bold text-muted-foreground">{lang === 'ko' ? '출력 예' : 'Output'}</th>
               <th className="whitespace-nowrap px-2.5 py-1.5 text-left font-mono text-[10px] font-bold text-muted-foreground">{lang === 'ko' ? '설명' : 'Note'}</th>
             </tr>
           </thead>
@@ -434,7 +479,7 @@ function FormatMaskTable({ title, rows, lang }: { title: { ko: string; en: strin
             {rows.map((r) => (
               <tr key={r.mask} className="border-b last:border-0">
                 <td className="whitespace-nowrap px-2.5 py-1 font-mono text-[11px] font-bold text-blue-700">{r.mask}</td>
-                <td className="whitespace-nowrap px-2.5 py-1 font-mono text-[11px] font-bold text-emerald-700">{r.example}</td>
+                <td className="whitespace-nowrap px-2.5 py-1 font-mono text-[11px] text-foreground/80">{r.example}</td>
                 <td className="whitespace-nowrap px-2.5 py-1 font-mono text-[11px] text-foreground/70">{r.desc[lang]}</td>
               </tr>
             ))}
@@ -458,7 +503,7 @@ function ArithTable({ title, rows, lang }: { title: { ko: string; en: string }; 
           <thead>
             <tr className="border-b bg-muted/60">
               <th className="whitespace-nowrap px-2.5 py-1.5 text-left font-mono text-[10px] font-bold text-muted-foreground">식</th>
-              <th className="whitespace-nowrap px-2.5 py-1.5 text-left font-mono text-[10px] font-bold text-emerald-700">{lang === 'ko' ? '결과' : 'Result'}</th>
+              <th className="whitespace-nowrap px-2.5 py-1.5 text-left font-mono text-[10px] font-bold text-muted-foreground">{lang === 'ko' ? '결과' : 'Result'}</th>
               <th className="whitespace-nowrap px-2.5 py-1.5 text-left font-mono text-[10px] font-bold text-muted-foreground">{lang === 'ko' ? '설명' : 'Note'}</th>
             </tr>
           </thead>
@@ -466,7 +511,7 @@ function ArithTable({ title, rows, lang }: { title: { ko: string; en: string }; 
             {rows.map((r) => (
               <tr key={r.expr} className="border-b last:border-0">
                 <td className="whitespace-nowrap px-2.5 py-1 font-mono text-[11px] text-blue-700">{r.expr}</td>
-                <td className="whitespace-nowrap px-2.5 py-1 font-mono text-[11px] font-bold text-emerald-700">{r.result}</td>
+                <td className="whitespace-nowrap px-2.5 py-1 font-mono text-[11px] text-foreground/80">{r.result}</td>
                 <td className="whitespace-nowrap px-2.5 py-1 font-mono text-[11px] text-foreground/70">{r.desc[lang]}</td>
               </tr>
             ))}
@@ -486,7 +531,9 @@ const T = {
     result: '실행 결과',
     dualBoxTitle: 'DUAL 이란?',
     vsTitle: 'SYSDATE vs SYSTIMESTAMP',
-    tzBoxTitle: '타임존 이름 참고',
+    nlsBoxTitle: 'SYSDATE의 실행 결과가 다르게 보인다면?',
+    tzConvertTitle: '타임존 변환',
+    arith2Title: 'SYSTIMESTAMP 끼리의 연산',
   },
   en: {
     chapterTitle: '날짜와 시간를 다루는 법',
@@ -496,7 +543,9 @@ const T = {
     result: 'Result',
     dualBoxTitle: 'What is DUAL?',
     vsTitle: 'SYSDATE vs SYSTIMESTAMP',
-    tzBoxTitle: 'Timezone Name Reference',
+    nlsBoxTitle: 'Why Does Your SYSDATE Result Look Different?',
+    tzConvertTitle: 'Timezone Conversion',
+    arith2Title: 'SYSTIMESTAMP Subtraction',
   },
 }
 
@@ -505,6 +554,7 @@ const T = {
 export function DateSection({ lang }: { lang: 'ko' | 'en' }) {
   const t = T[lang]
   const [openItem, setOpenItem] = useState<string>(FUNC_ITEMS[0].name)
+  const [tzModalOpen, setTzModalOpen] = useState(false)
   const item = FUNC_ITEMS.find((f) => f.name === openItem)!
   const s = ITEM_COLOR[item.name]
 
@@ -561,27 +611,30 @@ export function DateSection({ lang }: { lang: 'ko' | 'en' }) {
 
             {/* 설명 */}
             <div className="rounded-xl border bg-card px-4 py-3">
-              <Prose>{item.desc[lang]}</Prose>
+              {item.desc[lang].split('\n\n').map((para, i) => (
+                <Prose key={i}>{para}</Prose>
+              ))}
+              {item.tzInfo && (
+                <div className="mt-1">
+                  <TermPopup
+                    label={lang === 'ko' ? '타임존이란?' : 'What is a Timezone?'}
+                    title={lang === 'ko' ? '타임존이란?' : 'What is a Timezone?'}
+                    icon="🌏"
+                    color="cyan"
+                    open={tzModalOpen}
+                    onOpen={() => setTzModalOpen(true)}
+                    onClose={() => setTzModalOpen(false)}
+                  >
+                    <span style={{ whiteSpace: 'pre-line' }}>{item.tzInfo[lang]}</span>
+                  </TermPopup>
+                </div>
+              )}
             </div>
 
             {/* DUAL 설명 InfoBox (SYSDATE 항목에만) */}
             {item.dualInfo && (
               <InfoBox color="blue" icon="🗄️" title={t.dualBoxTitle}>
                 {item.dualInfo[lang]}
-              </InfoBox>
-            )}
-
-            {/* DATE vs TIMESTAMP 타입 비교 */}
-            {item.typeCompare && (
-              <InfoBox color="orange" icon="⚡" title={t.vsTitle}>
-                {item.typeCompare[lang]}
-              </InfoBox>
-            )}
-
-            {/* 타임존 이름 InfoBox (타임존 항목에만) */}
-            {item.tzInfo && (
-              <InfoBox color="emerald" icon="🌏" title={t.tzBoxTitle}>
-                {item.tzInfo[lang]}
               </InfoBox>
             )}
 
@@ -621,32 +674,65 @@ export function DateSection({ lang }: { lang: 'ko' | 'en' }) {
               <ArithTable title={item.arith.title} rows={item.arith.rows} lang={lang} />
             )}
 
-            {/* 타임존 설정 코드 블록 */}
-            {item.tzSetup && item.tzSetup.map((block) => (
-              <div key={block.title.ko}>
+            {/* SYSTIMESTAMP 끼리의 연산 예시 */}
+            {item.arith2 && (
+              <div>
                 <p className="mb-1.5 font-mono text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-                  {block.title[lang]}
+                  {t.arith2Title}
                 </p>
-                <div className={cn('overflow-x-auto rounded-xl border px-4 py-3', s.code)}>
-                  <table className="w-full text-xs">
-                    <tbody>
-                      {block.lines.map((line, i) => (
-                        <tr key={i}>
-                          <td className="whitespace-nowrap py-0.5 pr-4 font-mono text-[11px] text-blue-700">
-                            {line.code}
-                          </td>
-                          {line.comment[lang] && (
-                            <td className="py-0.5 font-mono text-[11px] text-muted-foreground">
-                              {`-- ${line.comment[lang]}`}
-                            </td>
-                          )}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                <div className={cn('mb-3 rounded-xl border px-4 py-3', s.code)}>
+                  <SqlHighlight sql={
+                    "-- 두 SYSTIMESTAMP 값 사이의 경과 시간 측정\nSELECT ts_end - ts_start                              AS diff_interval,\n       EXTRACT(MINUTE FROM ts_end - ts_start)          AS diff_min,\n       EXTRACT(SECOND FROM ts_end - ts_start)          AS diff_sec\nFROM (\n  SELECT SYSTIMESTAMP                          AS ts_start,\n         SYSTIMESTAMP + INTERVAL '0:2:35.847' MINUTE TO SECOND AS ts_end\n  FROM DUAL\n)"
+                  } />
                 </div>
+                <ArithTable title={item.arith2.title} rows={item.arith2.rows} lang={lang} />
               </div>
-            ))}
+            )}
+
+            {/* 타임존 변환 (SYSTIMESTAMP 항목 내) */}
+            {item.tzConvert && (
+              <>
+                <Divider />
+                <div>
+                  <p className="mb-2 font-mono text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                    {t.tzConvertTitle}
+                  </p>
+                  <div className="mb-3 rounded-xl border bg-card px-4 py-3">
+                    <Prose>{item.tzConvert.desc[lang]}</Prose>
+                  </div>
+                  <div className={cn('mb-3 rounded-xl border px-4 py-3', s.code)}>
+                    <SqlHighlight sql={item.tzConvert.example} />
+                  </div>
+                  <ResultTable headers={item.tzConvert.resultHeaders} rows={item.tzConvert.resultRows} />
+                </div>
+
+                {item.tzConvert.tzSetup.map((block) => (
+                  <div key={block.title.ko}>
+                    <p className="mb-1.5 font-mono text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                      {block.title[lang]}
+                    </p>
+                    <div className={cn('overflow-x-auto rounded-xl border px-4 py-3', s.code)}>
+                      <table className="w-full text-xs">
+                        <tbody>
+                          {block.lines.map((line, i) => (
+                            <tr key={i}>
+                              <td className="whitespace-nowrap py-0.5 pr-4 font-mono text-[11px] text-blue-700">
+                                {line.code}
+                              </td>
+                              {line.comment[lang] && (
+                                <td className="py-0.5 font-mono text-[11px] text-muted-foreground">
+                                  {`-- ${line.comment[lang]}`}
+                                </td>
+                              )}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                ))}
+              </>
+            )}
 
             {/* 포맷 마스크 표 */}
             {item.formatMasks && (
@@ -657,6 +743,13 @@ export function DateSection({ lang }: { lang: 'ko' | 'en' }) {
             {item.vsNote && (
               <InfoBox color="orange" icon="⚡" title={t.vsTitle}>
                 {item.vsNote[lang]}
+              </InfoBox>
+            )}
+
+            {/* NLS 설명 InfoBox (SYSDATE 항목에만) */}
+            {item.nlsNote && (
+              <InfoBox color="violet" icon="🌐" title={t.nlsBoxTitle}>
+                <span style={{ whiteSpace: 'pre-line' }}>{item.nlsNote[lang]}</span>
               </InfoBox>
             )}
 

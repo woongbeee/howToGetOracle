@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils'
 interface Props {
   activeSectionId: string
   onSelect: (sectionId: string) => void
+  onToggle: () => void
 }
 
 const COLOR_MAP: Record<string, { dot: string; active: string; hover: string; num: string; chapterActive: string }> = {
@@ -20,7 +21,7 @@ const COLOR_MAP: Record<string, { dot: string; active: string; hover: string; nu
   teal:   { dot: 'bg-teal-400',   active: 'bg-teal-50 text-teal-700',   hover: 'hover:bg-teal-50/60',   num: 'text-teal-400',   chapterActive: 'text-teal-600' },
 }
 
-export function TableOfContents({ activeSectionId, onSelect }: Props) {
+export function TableOfContents({ activeSectionId, onSelect, onToggle }: Props) {
   const lang = useSimulationStore((s) => s.lang)
   // Find which chapter contains the active section — expand it by default
   const defaultOpen = BOOK_CHAPTERS.reduce<Record<string, boolean>>((acc, ch) => {
@@ -37,10 +38,17 @@ export function TableOfContents({ activeSectionId, onSelect }: Props) {
   return (
     <div className="flex min-h-full flex-col">
       {/* Header */}
-      <div className="shrink-0 px-4 py-2 border-b">
+      <div className="shrink-0 flex h-[35px] items-center justify-between px-4 border-b">
         <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
           {lang === 'ko' ? '목차' : 'Table of Contents'}
         </span>
+        <button
+          onClick={onToggle}
+          title={lang === 'ko' ? '목차 닫기' : 'Close TOC'}
+          className="flex items-center gap-0.5 rounded px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground/50 transition-colors hover:bg-muted hover:text-muted-foreground"
+        >
+          ‹‹
+        </button>
       </div>
 
       {/* Chapters */}
@@ -165,7 +173,7 @@ export function TableOfContents({ activeSectionId, onSelect }: Props) {
       </div>
 
       {/* Developer credit — pinned to bottom */}
-      <div className="mt-auto border-t pt-3 pb-1 px-4">
+      <div className="mt-auto flex h-[52px] items-center border-t px-4">
         <a
           href="https://woongbee.notion.site"
           target="_blank"

@@ -89,8 +89,7 @@ const T = {
     deleteDesc:
       'WHERE 절에 조건을 기술해서 선택된 행을 삭제할 수 있습니다. WHERE절을 쓰지 않으면 전체 행이 삭제됩니다.',
     deleteTip:
-      'DELETE는 행 단위로 Undo 로그를 남겨 느릴 수 있습니다.(하지만 ROLLBACK이 가능합니다.)' +
-      '전체 삭제라면 TRUNCATE TABLE이 훨씬 빠릅니다.',
+      'DELETE는 행 단위로 Undo 로그를 남겨 느릴 수 있습니다.(하지만 ROLLBACK이 가능합니다.) 전체 삭제라면 TRUNCATE TABLE이 훨씬 빠릅니다.\n\nTRUNCATE는 "잘라내다"는 뜻으로, TRUNCATE TABLE은 테이블의 모든 행을 한 번에 제거하는 DDL 명령입니다. DELETE와 달리 행별 Undo 로그를 남기지 않아 매우 빠르지만, ROLLBACK이 불가능합니다.',
   },
   en: {
     chapterTitle: 'Core Syntax — SELECT / FROM / WHERE',
@@ -177,8 +176,7 @@ const T = {
     deleteDesc:
       'Write a condition in the WHERE clause to delete the matching rows. Omitting WHERE deletes all rows.',
     deleteTip:
-      'DELETE writes per-row undo logs and can be slow. (However, ROLLBACK is possible.) ' +
-      'For full-table removal, TRUNCATE TABLE is much faster.',
+      'DELETE writes per-row undo logs and can be slow. (However, ROLLBACK is possible.) For full-table removal, TRUNCATE TABLE is much faster.\n\nTRUNCATE means "to cut off". TRUNCATE TABLE is a DDL command that removes all rows from a table at once. Unlike DELETE, it does not write per-row undo logs — making it extremely fast — but ROLLBACK is not possible.',
   },
 }
 
@@ -300,7 +298,7 @@ export function SyntaxSection({ lang, t }: { lang: 'ko' | 'en'; t: typeof T['ko'
             <SectionTitle>{t.deleteTitle}</SectionTitle>
             <Prose>{t.deleteDesc}</Prose>
             <InfoBox color="blue" icon="💡" title={lang === 'ko' ? '더 알아보기' : 'Advanced'}>
-              {t.deleteTip}
+              <span style={{ whiteSpace: 'pre-line' }}>{t.deleteTip}</span>
             </InfoBox>
           </>
         }

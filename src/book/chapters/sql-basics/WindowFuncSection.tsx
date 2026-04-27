@@ -149,14 +149,20 @@ function rollingAvgRows(): (string | null)[][] {
   })
 }
 
-// RANGE BETWEEN 1000 PRECEDING AND CURRENT ROW
-function rangeRows(): (string | null)[][] {
-  const rows = [...EMP_ROWS].sort((a, b) => Number(a[0]) - Number(b[0])).slice(0, 6)
-  return rows.map((r) => {
+// ROWS vs RANGE: ORDER BY salary, emp_id <= 106 (6명), salary 오름차순
+function rowsVsRangeRows(): (string | null)[][] {
+  const rows = [...EMP_ROWS]
+    .filter((r) => Number(r[0]) <= 106)
+    .sort((a, b) => Number(a[3]) - Number(b[3]))
+  return rows.map((r, i) => {
     const sal = Number(r[3])
-    const window = rows.filter((w) => Number(w[3]) >= sal - 1000 && Number(w[3]) <= sal)
-    const sum = window.reduce((s, w) => s + Number(w[3]), 0)
-    return [r[1], r[3], String(sum)]
+    // ROWS BETWEEN 2 PRECEDING AND CURRENT ROW: 물리적 2행 앞~현재
+    const rowsWindow = rows.slice(Math.max(0, i - 2), i + 1)
+    const rowsSum = rowsWindow.reduce((s, w) => s + Number(w[3]), 0)
+    // RANGE BETWEEN 1000 PRECEDING AND CURRENT ROW: salary >= sal-1000 인 행~현재
+    const rangeWindow = rows.filter((w) => Number(w[3]) >= sal - 1000 && Number(w[3]) <= sal)
+    const rangeSum = rangeWindow.reduce((s, w) => s + Number(w[3]), 0)
+    return [r[1], r[3], String(rowsSum), String(rangeSum)]
   })
 }
 
@@ -487,8 +493,8 @@ const FRAME_ITEMS: FrameFuncItem[] = [
     },
     example:
       '-- ROWS: 물리적 행 2개 앞부터 현재까지\nSELECT first_name, salary,\n       SUM(salary) OVER (\n         ORDER BY salary\n         ROWS BETWEEN 2 PRECEDING AND CURRENT ROW\n       ) AS rows_sum,\n-- RANGE: salary가 현재값 -1000 이상인 행부터 현재까지\n       SUM(salary) OVER (\n         ORDER BY salary\n         RANGE BETWEEN 1000 PRECEDING AND CURRENT ROW\n       ) AS range_sum\nFROM   employees\nWHERE  emp_id <= 106\nORDER BY salary',
-    resultHeaders: ['first_name', 'salary', 'range_sum'],
-    resultRows: rangeRows(),
+    resultHeaders: ['first_name', 'salary', 'rows_sum', 'range_sum'],
+    resultRows: rowsVsRangeRows(),
     note: {
       ko: '【언제 ROWS를 쓸까】 행의 개수(위치)로 범위를 정하고 싶을 때. 직전 3건, 이동 3행 평균 등.\n【언제 RANGE를 쓸까】 날짜나 금액처럼 값의 범위로 경계를 정하고 싶을 때. 오늘 기준 최근 7일, 현재 급여 ±500 범위 등.',
       en: '[When to use ROWS] When the boundary should be based on a fixed number of rows: "the previous 3 rows", "a 3-row moving average".\n[When to use RANGE] When the boundary should be based on value distance: "the last 7 days", "salaries within ±500 of the current row".',

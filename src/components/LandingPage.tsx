@@ -9,7 +9,7 @@ const T = {
     title2: '완전 학습 가이드',
     desc: '애니메이션과 시뮬레이터로 Oracle 내부 동작 원리를 직접 보며 학습합니다.',
     cta: '학습 시작하기',
-    footer: '© 2026 Oracle DB Internals — 교육 목적으로 제작되었습니다.',
+    footer: '© 2026 Oracle DB Interactive Learning Book — 교육 목적으로 제작되었습니다.',
     langToggle: 'EN',
   },
   en: {
@@ -17,7 +17,7 @@ const T = {
     title2: 'Dynamic Learning Book',
     desc: 'Skip the static docs — watch Oracle internals come alive through animations and hands-on simulators.',
     cta: 'Start Learning',
-    footer: '© 2026 Oracle DB Internals — Built for educational purposes.',
+    footer: '© 2026 Oracle DB Interactive Learning Book — Built for educational purposes.',
     langToggle: '한국어',
   },
 }
