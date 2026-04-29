@@ -23,7 +23,7 @@ export const BOOK_CHAPTERS: BookChapter[] = [
     id: 'sql-basics',
     num: 1,
     icon: '📋',
-    color: 'emerald',
+    color: 'brand-navy',
     title: { ko: 'SQL 문법', en: 'SQL Syntax Fundamentals' },
     sections: [
       {

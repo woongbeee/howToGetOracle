@@ -24,7 +24,7 @@ export function WipBanner() {
 
 export function PageContainer({ children, className }: { children: ReactNode; className?: string }) {
   return (
-    <div className={cn('max-w-4xl px-8 pt-6 pb-10', className)}>
+    <div className={cn('mx-auto w-full max-w-4xl px-8 pt-6 pb-10', className)}>
       {children}
     </div>
   )
@@ -57,20 +57,17 @@ export function Prose({ children, className }: { children: ReactNode; className?
   )
 }
 
-export function InfoBox({ color = 'blue', icon, title, children }: {
-  color?: 'blue' | 'orange' | 'violet' | 'emerald' | 'amber' | 'rose' | 'cyan'
+export function InfoBox({ color = 'tip', icon, title, children }: {
+  color?: 'info' | 'tip' | 'warning' | 'danger'
   icon?: string
   title?: string
   children: ReactNode
 }) {
-  const styles = {
-    blue:    'bg-blue-50 border-blue-200 text-blue-800',
-    orange:  'bg-orange-50 border-orange-200 text-orange-800',
-    violet:  'bg-violet-50 border-violet-200 text-violet-800',
-    emerald: 'bg-emerald-50 border-emerald-200 text-emerald-800',
-    amber:   'bg-amber-50 border-amber-200 text-amber-800',
-    rose:    'bg-rose-50 border-rose-200 text-rose-800',
-    cyan:    'bg-cyan-50 border-cyan-200 text-cyan-800',
+  const styles: Record<string, string> = {
+    info:    'bg-ios-blue-light border-ios-blue/20 text-ios-blue-dark',
+    tip:     'bg-ios-teal-light border-ios-teal/20 text-ios-teal-dark',
+    warning: 'bg-ios-orange-light border-ios-orange/25 text-ios-orange-dark',
+    danger:  'bg-ios-red-light border-ios-red/20 text-ios-red-dark',
   }
   return (
     <div className={cn('mb-4 rounded-lg border p-4', styles[color])}>
@@ -116,14 +113,15 @@ export function Table({ headers, rows }: { headers: string[]; rows: string[][] }
 
 export function ConceptGrid({ items }: { items: Array<{ icon: string; title: string; desc: string; color?: string }> }) {
   const colorMap: Record<string, string> = {
-    blue:    'border-blue-200 bg-blue-50/50',
-    orange:  'border-orange-200 bg-orange-50/50',
-    violet:  'border-violet-200 bg-violet-50/50',
-    emerald: 'border-emerald-200 bg-emerald-50/50',
-    amber:   'border-amber-200 bg-amber-50/50',
-    rose:    'border-rose-200 bg-rose-50/50',
-    cyan:    'border-cyan-200 bg-cyan-50/50',
-    teal:    'border-teal-200 bg-teal-50/50',
+    info:    'border-ios-blue/20 bg-ios-blue-light/60',
+    tip:     'border-ios-teal/20 bg-ios-teal-light/60',
+    warning: 'border-ios-orange/25 bg-ios-orange-light/60',
+    danger:  'border-ios-red/20 bg-ios-red-light/60',
+    /* legacy aliases kept for backward compat */
+    blue:    'border-ios-blue/20 bg-ios-blue-light/60',
+    orange:  'border-ios-orange/25 bg-ios-orange-light/60',
+    teal:    'border-ios-teal/20 bg-ios-teal-light/60',
+    rose:    'border-ios-red/20 bg-ios-red-light/60',
   }
 
   return (
@@ -143,14 +141,10 @@ export function ConceptGrid({ items }: { items: Array<{ icon: string; title: str
 
 export function SimulatorPlaceholder({ label, color = 'blue' }: { label: string; color?: string }) {
   const colorMap: Record<string, string> = {
-    blue:    'border-blue-300 bg-blue-50 text-blue-700',
-    violet:  'border-violet-300 bg-violet-50 text-violet-700',
-    emerald: 'border-emerald-300 bg-emerald-50 text-emerald-700',
-    orange:  'border-orange-300 bg-orange-50 text-orange-700',
-    cyan:    'border-cyan-300 bg-cyan-50 text-cyan-700',
-    rose:    'border-rose-300 bg-rose-50 text-rose-700',
-    amber:   'border-amber-300 bg-amber-50 text-amber-700',
-    teal:    'border-teal-300 bg-teal-50 text-teal-700',
+    blue:    'border-ios-blue/30 bg-ios-blue-light text-ios-blue-dark',
+    teal:    'border-ios-teal/30 bg-ios-teal-light text-ios-teal-dark',
+    orange:  'border-ios-orange/30 bg-ios-orange-light text-ios-orange-dark',
+    red:     'border-ios-red/30 bg-ios-red-light text-ios-red-dark',
   }
   return (
     <div className={cn('flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed p-12', colorMap[color])}>
@@ -178,14 +172,14 @@ interface TermPopupProps {
   label: string
   title: string
   icon?: string
-  color?: 'blue' | 'orange' | 'violet' | 'emerald' | 'amber' | 'rose' | 'cyan'
+  color?: 'info' | 'tip' | 'warning' | 'danger'
   open: boolean
   onOpen: () => void
   onClose: () => void
   children: ReactNode
 }
 
-export function TermPopup({ label, title, icon, color = 'cyan', open, onOpen, onClose, children }: TermPopupProps) {
+export function TermPopup({ label, title, icon, color = 'tip', open, onOpen, onClose, children }: TermPopupProps) {
   const wrapperRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -203,23 +197,17 @@ export function TermPopup({ label, title, icon, color = 'cyan', open, onOpen, on
   }, [open, onClose])
 
   const headerStyles: Record<string, string> = {
-    blue:    'bg-blue-50 border-blue-200 text-blue-800',
-    orange:  'bg-orange-50 border-orange-200 text-orange-800',
-    violet:  'bg-violet-50 border-violet-200 text-violet-800',
-    emerald: 'bg-emerald-50 border-emerald-200 text-emerald-800',
-    amber:   'bg-amber-50 border-amber-200 text-amber-800',
-    rose:    'bg-rose-50 border-rose-200 text-rose-800',
-    cyan:    'bg-cyan-50 border-cyan-200 text-cyan-800',
+    info:    'bg-ios-blue-light border-ios-blue/20 text-ios-blue-dark',
+    tip:     'bg-ios-teal-light border-ios-teal/20 text-ios-teal-dark',
+    warning: 'bg-ios-orange-light border-ios-orange/25 text-ios-orange-dark',
+    danger:  'bg-ios-red-light border-ios-red/20 text-ios-red-dark',
   }
 
   const tailStyles: Record<string, string> = {
-    blue:    'border-r-blue-200',
-    orange:  'border-r-orange-200',
-    violet:  'border-r-violet-200',
-    emerald: 'border-r-emerald-200',
-    amber:   'border-r-amber-200',
-    rose:    'border-r-rose-200',
-    cyan:    'border-r-cyan-200',
+    info:    'border-r-ios-blue/20',
+    tip:     'border-r-ios-teal/20',
+    warning: 'border-r-ios-orange/25',
+    danger:  'border-r-ios-red/20',
   }
 
   return (
@@ -229,8 +217,8 @@ export function TermPopup({ label, title, icon, color = 'cyan', open, onOpen, on
         className={cn(
           'inline-flex items-center gap-1 rounded border border-dashed px-1.5 py-0.5 font-mono text-[11px] font-bold transition-colors',
           open
-            ? 'border-cyan-400 bg-cyan-50 text-cyan-700'
-            : 'border-cyan-300 text-cyan-700 hover:bg-cyan-50',
+            ? 'border-ios-teal/40 bg-ios-teal-light text-ios-teal-dark'
+            : 'border-ios-teal/30 text-ios-teal-dark hover:bg-ios-teal-light',
         )}
       >
         {icon && <span>{icon}</span>}

@@ -10,16 +10,6 @@ interface Props {
   onToggle: () => void
 }
 
-const COLOR_MAP: Record<string, { dot: string; active: string; hover: string; num: string; chapterActive: string }> = {
-  blue:   { dot: 'bg-blue-400',   active: 'bg-blue-50 text-blue-700',   hover: 'hover:bg-blue-50/60',   num: 'text-blue-400',   chapterActive: 'text-blue-600' },
-  violet: { dot: 'bg-violet-400', active: 'bg-violet-50 text-violet-700', hover: 'hover:bg-violet-50/60', num: 'text-violet-400', chapterActive: 'text-violet-600' },
-  emerald:{ dot: 'bg-emerald-400',active: 'bg-emerald-50 text-emerald-700',hover:'hover:bg-emerald-50/60',num:'text-emerald-400', chapterActive:'text-emerald-600' },
-  orange: { dot: 'bg-orange-400', active: 'bg-orange-50 text-orange-700', hover: 'hover:bg-orange-50/60', num: 'text-orange-400', chapterActive: 'text-orange-600' },
-  cyan:   { dot: 'bg-cyan-400',   active: 'bg-cyan-50 text-cyan-700',   hover: 'hover:bg-cyan-50/60',   num: 'text-cyan-400',   chapterActive: 'text-cyan-600' },
-  rose:   { dot: 'bg-rose-400',   active: 'bg-rose-50 text-rose-700',   hover: 'hover:bg-rose-50/60',   num: 'text-rose-400',   chapterActive: 'text-rose-600' },
-  amber:  { dot: 'bg-amber-400',  active: 'bg-amber-50 text-amber-700', hover: 'hover:bg-amber-50/60',  num: 'text-amber-400',  chapterActive: 'text-amber-600' },
-  teal:   { dot: 'bg-teal-400',   active: 'bg-teal-50 text-teal-700',   hover: 'hover:bg-teal-50/60',   num: 'text-teal-400',   chapterActive: 'text-teal-600' },
-}
 
 export function TableOfContents({ activeSectionId, onSelect, onToggle }: Props) {
   const lang = useSimulationStore((s) => s.lang)
@@ -54,9 +44,9 @@ export function TableOfContents({ activeSectionId, onSelect, onToggle }: Props) 
       {/* Chapters */}
       <div className="flex flex-col py-3">
       {BOOK_CHAPTERS.map((chapter) => {
-        const isOpen = !!openChapters[chapter.id]
-        const c = COLOR_MAP[chapter.color] ?? COLOR_MAP.blue
-        const hasActive = chapter.sections.some((s) => s.id === activeSectionId)
+        const isOpen      = !!openChapters[chapter.id]
+        const hasActive   = chapter.sections.some((s) => s.id === activeSectionId)
+        const isChapter1  = chapter.num === 1
 
         return (
           <div key={chapter.id} className="flex flex-col">
@@ -64,37 +54,40 @@ export function TableOfContents({ activeSectionId, onSelect, onToggle }: Props) 
             <button
               onClick={() => toggleChapter(chapter.id)}
               className={cn(
-                'group flex w-full items-center gap-2 px-3 py-2 text-left transition-colors hover:bg-muted/60',
-                hasActive && 'bg-muted/40'
+                'group flex w-full items-center gap-2 px-3 py-2 text-left transition-colors',
+                isChapter1 ? 'hover:bg-muted/60' : 'hover:bg-muted/30',
+                hasActive && isChapter1 && 'bg-muted/40',
               )}
             >
               {/* Collapse arrow */}
               <motion.span
                 animate={{ rotate: isOpen ? 90 : 0 }}
                 transition={{ duration: 0.18 }}
-                className="shrink-0 font-mono text-[9px] text-muted-foreground/60"
+                className={cn('shrink-0 font-mono text-[9px]', isChapter1 ? 'text-muted-foreground/60' : 'text-muted-foreground/25')}
               >
                 ▶
               </motion.span>
 
               {/* Chapter icon + number */}
-              <span className={cn('shrink-0 text-sm leading-none', c.num)}>{chapter.icon}</span>
-              <span className={cn('font-mono text-[10px] font-bold text-muted-foreground/50 shrink-0')}>
+              <span className={cn('shrink-0 text-sm leading-none', isChapter1 ? '' : 'opacity-30')}>{chapter.icon}</span>
+              <span className={cn('font-mono text-[10px] font-bold shrink-0', isChapter1 ? 'text-muted-foreground/50' : 'text-muted-foreground/25')}>
                 {String(chapter.num).padStart(2, '0')}
               </span>
 
               {/* Chapter title */}
               <span
                 className={cn(
-                  'min-w-0 flex-1 truncate font-mono text-[11px] font-medium leading-tight transition-colors',
-                  hasActive ? c.chapterActive : 'text-foreground/80 group-hover:text-foreground'
+                  'min-w-0 flex-1 truncate font-mono text-[11px] leading-tight transition-colors',
+                  isChapter1
+                    ? hasActive ? 'font-bold text-ios-orange-dark' : 'font-bold text-foreground/80 group-hover:text-foreground'
+                    : 'font-medium text-muted-foreground/30',
                 )}
               >
                 {chapter.title[lang]}
               </span>
 
               {/* Active dot */}
-              {hasActive && <span className={cn('h-1.5 w-1.5 shrink-0 rounded-full', c.dot)} />}
+              {hasActive && isChapter1 && <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-ios-orange" />}
             </button>
 
             {/* Sections */}
@@ -110,26 +103,31 @@ export function TableOfContents({ activeSectionId, onSelect, onToggle }: Props) 
                 >
                   <div className="ml-[1.1rem] border-l border-border/50 pb-1">
                     {chapter.sections.map((section, idx) => {
-                      const isActive = section.id === activeSectionId
+                      const isActive    = section.id === activeSectionId
                       const isSimulator = section.hasSimulator
+                      const isChapter1  = chapter.num === 1
 
                       return (
                         <button
                           key={section.id}
                           onClick={() => {
                             onSelect(section.id)
-                            // Auto-expand chapter if selecting from outside
                             setOpenChapters((prev) => ({ ...prev, [chapter.id]: true }))
                           }}
                           className={cn(
-                            'group flex w-full items-center gap-2 px-3 py-1.5 text-left transition-colors',
-                            isActive ? c.active : 'text-muted-foreground hover:text-foreground',
-                            !isActive && c.hover,
-                            'rounded-r-md'
+                            'group flex w-full items-center gap-2 px-3 py-1.5 text-left transition-colors rounded-r-md',
+                            isActive
+                              ? 'bg-ios-orange-light text-ios-orange-dark'
+                              : isChapter1
+                                ? 'text-muted-foreground hover:bg-ios-orange-light/40 hover:text-ios-orange-dark'
+                                : 'text-muted-foreground/30 cursor-pointer',
                           )}
                         >
                           {/* Section number */}
-                          <span className="shrink-0 font-mono text-[9px] text-muted-foreground/40">
+                          <span className={cn(
+                            'shrink-0 font-mono text-[9px]',
+                            isActive ? 'text-ios-orange-dark/60' : isChapter1 ? 'text-muted-foreground/40' : 'text-muted-foreground/20'
+                          )}>
                             {chapter.num}.{idx + 1}
                           </span>
 
@@ -137,7 +135,7 @@ export function TableOfContents({ activeSectionId, onSelect, onToggle }: Props) 
                           <span
                             className={cn(
                               'min-w-0 flex-1 truncate font-mono text-[11px] leading-tight',
-                              isActive ? 'font-semibold' : 'font-normal'
+                              isActive ? 'font-bold' : isChapter1 ? 'font-medium' : 'font-normal'
                             )}
                           >
                             {section.title[lang]}
@@ -147,7 +145,7 @@ export function TableOfContents({ activeSectionId, onSelect, onToggle }: Props) 
                           {isSimulator && (
                             <span className={cn(
                               'shrink-0 rounded-full px-1.5 py-0.5 font-mono text-[8px] font-bold uppercase',
-                              isActive ? 'bg-white/60 text-current' : 'bg-muted text-muted-foreground'
+                              isActive ? 'bg-ios-orange/20 text-ios-orange-dark' : isChapter1 ? 'bg-muted text-muted-foreground' : 'bg-muted/40 text-muted-foreground/30'
                             )}>
                               SIM
                             </span>
@@ -157,7 +155,7 @@ export function TableOfContents({ activeSectionId, onSelect, onToggle }: Props) 
                           {isActive && (
                             <motion.span
                               layoutId="toc-active"
-                              className={cn('h-1.5 w-1.5 shrink-0 rounded-full', c.dot)}
+                              className="h-1.5 w-1.5 shrink-0 rounded-full bg-ios-orange"
                             />
                           )}
                         </button>
@@ -181,7 +179,7 @@ export function TableOfContents({ activeSectionId, onSelect, onToggle }: Props) 
           className="group flex items-center gap-2 rounded-md px-1 py-1.5 transition-colors hover:bg-muted/60"
         >
           <span className="font-mono text-[9px] text-muted-foreground/40 transition-colors group-hover:text-muted-foreground">
-            developed by
+            created by
           </span>
           <span className="font-mono text-[10px] font-semibold text-muted-foreground transition-colors group-hover:text-foreground">
             Woongbee

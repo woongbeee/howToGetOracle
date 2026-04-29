@@ -4,8 +4,8 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
 // https://vite.dev/config/
-export default defineConfig({
-  base: '/woongbeee/',
+export default defineConfig(({ command }) => ({
+  base: command === 'build' ? '/woongbeee/' : '/',
   plugins: [react(), tailwindcss()],
   resolve: {
     alias: {
@@ -17,4 +17,4 @@ export default defineConfig({
       new Date().toISOString().slice(0, 10) // "YYYY-MM-DD" at build time
     ),
   },
-})
+}))

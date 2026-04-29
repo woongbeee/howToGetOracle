@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import { PageContainer, ChapterTitle, Prose, Divider } from '../shared'
 import { SqlHighlight } from './SqlHighlight'
+import { EMPLOYEES } from './shared'
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -20,18 +21,15 @@ interface FuncItem {
   note?: { ko: string; en: string }
 }
 
-// ── Sample data ─────────────────────────────────────────────────────────────
+// ── Sample data (first 10 from shared EMPLOYEES) ────────────────────────────
 
-const EMP_ROWS: (string | null)[][] = [
-  ['101', 'Alice',  '10', '7200', 'null'],
-  ['102', 'Bob',    '20', '5400', '101' ],
-  ['103', 'Carol',  '10', '8100', '101' ],
-  ['104', 'David',  '30', '4900', '102' ],
-  ['105', 'Eva',    '20', '6300', '101' ],
-  ['106', 'Frank',  '30', '3800', '102' ],
-  ['107', 'Grace',  '10', '9500', 'null'],
-  ['108', 'Henry',  '20', '5900', '101' ],
-]
+const EMP_ROWS: (string | null)[][] = EMPLOYEES.slice(0, 10).map((e) => [
+  String(e.emp_id),
+  e.first_name,
+  String(e.dept_id),
+  String(e.salary),
+  e.manager_id != null ? String(e.manager_id) : 'null',
+])
 
 // ── Data ───────────────────────────────────────────────────────────────────
 
@@ -120,12 +118,7 @@ const FUNC_ITEMS: FuncItem[] = [
   },
 ]
 
-const ITEM_COLOR: Record<string, { bg: string; border: string; text: string; active: string; code: string }> = {
-  'CASE WHEN': { bg: 'bg-blue-50',   border: 'border-blue-200',   text: 'text-blue-800',   active: 'bg-blue-100 text-blue-700',    code: 'bg-blue-50 border-blue-100'    },
-  'DECODE':    { bg: 'bg-violet-50', border: 'border-violet-200', text: 'text-violet-800', active: 'bg-violet-100 text-violet-700', code: 'bg-violet-50 border-violet-100' },
-  'NVL':       { bg: 'bg-orange-50', border: 'border-orange-200', text: 'text-orange-800', active: 'bg-orange-100 text-orange-700', code: 'bg-orange-50 border-orange-100' },
-  'NVL2':      { bg: 'bg-amber-50',  border: 'border-amber-200',  text: 'text-amber-800',  active: 'bg-amber-100 text-amber-700',   code: 'bg-amber-50 border-amber-100'  },
-}
+const C = { bg: 'bg-muted/40', border: 'border-border', text: 'text-foreground/80', active: 'bg-ios-blue-light text-ios-blue-dark', code: 'bg-muted/30 border-border' }
 
 // ── MiniTable ───────────────────────────────────────────────────────────────
 
@@ -145,7 +138,7 @@ function MiniTable({ headers, rows, highlightLast }: {
                 className={cn(
                   'px-2.5 py-1.5 text-left font-mono text-[10px] font-bold',
                   highlightLast && i === headers.length - 1
-                    ? 'text-emerald-700'
+                    ? 'text-ios-blue-dark'
                     : 'text-muted-foreground',
                 )}
               >
@@ -166,7 +159,7 @@ function MiniTable({ headers, rows, highlightLast }: {
                     className={cn(
                       'px-2.5 py-1 font-mono text-[11px]',
                       isNull      ? 'italic text-muted-foreground/40' :
-                      isHighlight ? 'font-bold text-emerald-700'      :
+                      isHighlight ? 'font-bold text-ios-blue-dark'      :
                                     'text-foreground/80',
                     )}
                   >
@@ -205,10 +198,9 @@ export function NullSection({ lang }: { lang: 'ko' | 'en' }) {
   const t = T[lang]
   const [openItem, setOpenItem] = useState<string>(FUNC_ITEMS[0].name)
   const item = FUNC_ITEMS.find((f) => f.name === openItem)!
-  const s = ITEM_COLOR[item.name]
 
   return (
-    <PageContainer>
+    <PageContainer className="max-w-5xl">
       <ChapterTitle
         icon="📋"
         num={1}
@@ -220,7 +212,6 @@ export function NullSection({ lang }: { lang: 'ko' | 'en' }) {
         {/* LEFT: 함수 목록 */}
         <div className="flex flex-col gap-1 rounded-xl border bg-muted/30 p-2">
           {FUNC_ITEMS.map((f) => {
-            const fc = ITEM_COLOR[f.name]
             const isActive = f.name === openItem
             return (
               <button
@@ -228,7 +219,7 @@ export function NullSection({ lang }: { lang: 'ko' | 'en' }) {
                 onClick={() => setOpenItem(f.name)}
                 className={cn(
                   'rounded-lg px-3 py-2 text-left font-mono text-xs font-bold transition-all',
-                  isActive ? fc.active : 'text-muted-foreground hover:bg-muted',
+                  isActive ? C.active : 'text-muted-foreground hover:bg-muted',
                 )}
               >
                 {f.name}
@@ -248,12 +239,12 @@ export function NullSection({ lang }: { lang: 'ko' | 'en' }) {
             className="flex flex-col gap-4"
           >
             {/* 헤더 */}
-            <div className={cn('rounded-xl border px-4 py-3', s.bg, s.border, s.text)}>
+            <div className={cn('rounded-xl border px-4 py-3', C.bg, C.border, C.text)}>
               <div className="mb-1 font-mono text-[10px] font-bold uppercase tracking-wider opacity-60">
                 {t.categoryLabel}
               </div>
               <div className="font-mono text-xl font-black">{item.name}</div>
-              <div className={cn('mt-1.5 inline-block rounded border px-2 py-0.5 font-mono text-[11px]', s.active)}>
+              <div className={cn('mt-1.5 inline-block rounded border px-2 py-0.5 font-mono text-[11px]', C.active)}>
                 {item.signature}
               </div>
             </div>
@@ -268,7 +259,7 @@ export function NullSection({ lang }: { lang: 'ko' | 'en' }) {
               <p className="mb-1.5 font-mono text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
                 {t.exampleQuery}
               </p>
-              <div className={cn('rounded-xl border px-4 py-3', s.code)}>
+              <div className={cn('rounded-xl border px-4 py-3', C.code)}>
                 <SqlHighlight sql={item.example} />
               </div>
             </div>
@@ -289,7 +280,7 @@ export function NullSection({ lang }: { lang: 'ko' | 'en' }) {
             {item.note && (
               <>
                 <Divider />
-                <div className={cn('rounded-xl border px-4 py-3 text-xs leading-relaxed', s.bg, s.border, s.text)}>
+                <div className={cn('rounded-xl border px-4 py-3 text-xs leading-relaxed', C.bg, C.border, C.text)}>
                   <span className="mr-1.5 font-bold">💡</span>{item.note[lang]}
                 </div>
               </>

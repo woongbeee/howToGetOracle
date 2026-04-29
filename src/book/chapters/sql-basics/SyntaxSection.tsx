@@ -243,7 +243,7 @@ export function SyntaxSection({ lang, t }: { lang: 'ko' | 'en'; t: typeof T['ko'
           </>
         }
         bottomContent={
-          <InfoBox color="blue" icon="💡" title={lang === 'ko' ? '더 알아보기' : 'Advanced'}>
+          <InfoBox color="tip" icon="💡" title={lang === 'ko' ? '더 알아보기' : 'Advanced'}>
             {t.distinctTip}
           </InfoBox>
         }
@@ -264,7 +264,7 @@ export function SyntaxSection({ lang, t }: { lang: 'ko' | 'en'; t: typeof T['ko'
           </>
         }
         bottomContent={
-          <InfoBox color="blue" icon="💡" title={lang === 'ko' ? 'NULL이란?' : 'What is NULL?'}>
+          <InfoBox color="tip" icon="💡" title={lang === 'ko' ? 'NULL이란?' : 'What is NULL?'}>
             {t.whereNullTip}
           </InfoBox>
         }
@@ -280,7 +280,7 @@ export function SyntaxSection({ lang, t }: { lang: 'ko' | 'en'; t: typeof T['ko'
           <>
             <SectionTitle>{t.updateTitle}</SectionTitle>
             <Prose>{t.updateDesc}</Prose>
-            <InfoBox color="orange" icon="⚠️" title={lang === 'ko' ? '주의' : 'Warning'}>
+            <InfoBox color="warning" icon="⚠️" title={lang === 'ko' ? '주의' : 'Warning'}>
               {t.updateWarning}
             </InfoBox>
           </>
@@ -297,7 +297,7 @@ export function SyntaxSection({ lang, t }: { lang: 'ko' | 'en'; t: typeof T['ko'
           <>
             <SectionTitle>{t.deleteTitle}</SectionTitle>
             <Prose>{t.deleteDesc}</Prose>
-            <InfoBox color="blue" icon="💡" title={lang === 'ko' ? '더 알아보기' : 'Advanced'}>
+            <InfoBox color="tip" icon="💡" title={lang === 'ko' ? '더 알아보기' : 'Advanced'}>
               <span style={{ whiteSpace: 'pre-line' }}>{t.deleteTip}</span>
             </InfoBox>
           </>

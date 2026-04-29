@@ -6,13 +6,21 @@ import { SqlHighlight } from './SqlHighlight'
 
 // ── MiniSimulatorTable ─────────────────────────────────────────────────────
 
-export function MiniSimulatorTable({ sql }: { sql: string }) {
+export function MiniSimulatorTable({ sql, lang }: { sql: string; lang?: 'ko' | 'en' }) {
   const ALL_COLS: Array<keyof Employee> = ['emp_id', 'first_name', 'last_name', 'dept_id', 'salary', 'job_title', 'manager_id']
   const parsed = parseAndExecute(sql, EMPLOYEES)
 
+  function displayVal(emp: Employee, col: keyof Employee): string {
+    if (lang === 'ko') {
+      if (col === 'first_name') return emp.first_name_ko
+      if (col === 'last_name') return emp.last_name_ko
+    }
+    return String(emp[col] ?? 'NULL')
+  }
+
   if (parsed.type === 'GROUPBY' && parsed.groupRows) {
     const cols = parsed.groupCols ?? ['dept_id', 'cnt']
-    const DEPT_COLOR: Record<number, string> = { 10: 'bg-blue-50', 20: 'bg-violet-50', 30: 'bg-orange-50' }
+    const DEPT_COLOR: Record<number, string> = { 10: 'bg-ios-blue-light', 20: 'bg-ios-teal-light', 30: 'bg-muted/40' }
     return (
       <>
         <div className="overflow-x-auto rounded-lg border text-xs">
@@ -45,7 +53,7 @@ export function MiniSimulatorTable({ sql }: { sql: string }) {
           </table>
         </div>
         <div className="font-mono text-[11px]">
-          <span className="text-violet-600 font-bold">{parsed.groupRows.length} groups</span>
+          <span className="text-ios-teal-dark font-bold">{parsed.groupRows.length} groups</span>
         </div>
       </>
     )
@@ -72,10 +80,10 @@ export function MiniSimulatorTable({ sql }: { sql: string }) {
                   initial={{ opacity: 0, y: -4 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.2, delay: i * 0.05 }}
-                  className={cn('border-b last:border-0', i % 2 === 0 ? 'bg-emerald-50' : 'bg-emerald-50/50')}
+                  className={cn('border-b last:border-0', i % 2 === 0 ? 'bg-ios-teal-light' : 'bg-ios-teal-light/50')}
                 >
                   {(parsed.columns as Array<keyof Employee>).map((col) => (
-                    <td key={col} className="px-2 py-1 font-mono text-[10px] font-medium text-emerald-800">
+                    <td key={col} className="px-2 py-1 font-mono text-[10px] font-medium text-ios-teal-dark">
                       {String(r[col] ?? 'NULL')}
                     </td>
                   ))}
@@ -100,10 +108,13 @@ export function MiniSimulatorTable({ sql }: { sql: string }) {
       ? (parsed.columns as Array<keyof Employee>)
       : ALL_COLS
 
-  const displayOrder: Employee[] =
+  const hasWhere = parsed.whereExpr !== ''
+  const baseRows: Employee[] =
     parsed.type === 'SELECT' && parsed.orderKey
       ? parsed.resultRows.map((r) => EMPLOYEES.find((e) => e.emp_id === r.emp_id)!).filter(Boolean)
-      : EMPLOYEES
+      : (hasWhere || parsed.type === 'UPDATE' || parsed.type === 'DELETE')
+        ? EMPLOYEES.filter((e) => matchedIds.has(e.emp_id))
+        : EMPLOYEES
 
   return (
     <>
@@ -115,7 +126,7 @@ export function MiniSimulatorTable({ sql }: { sql: string }) {
                 const isOrderKey = parsed.orderKey === h || parsed.orderKey2 === h
                 const dir = parsed.orderKey === h ? parsed.orderDir : parsed.orderDir2
                 return (
-                  <th key={h} className={cn('whitespace-nowrap px-2 py-1.5 text-left font-mono text-[10px] font-bold', isOrderKey ? 'text-blue-600' : 'text-muted-foreground')}>
+                  <th key={h} className={cn('whitespace-nowrap px-2 py-1.5 text-left font-mono text-[10px] font-bold', isOrderKey ? 'text-ios-blue' : 'text-muted-foreground')}>
                     {h}{isOrderKey ? (dir === 'DESC' ? ' ↓' : ' ↑') : ''}
                   </th>
                 )
@@ -123,9 +134,9 @@ export function MiniSimulatorTable({ sql }: { sql: string }) {
             </tr>
           </thead>
           <tbody>
-            {displayOrder.map((emp, i) => {
-              const matched   = matchedIds.has(emp.emp_id)
-              const isDeleted = parsed.type === 'DELETE' && matched
+            {baseRows.map((emp, i) => {
+              const matched    = matchedIds.has(emp.emp_id)
+              const isDeleted  = parsed.type === 'DELETE' && matched
               const displayRow = parsed.type === 'UPDATE' && matched && updatedMap.has(emp.emp_id)
                 ? updatedMap.get(emp.emp_id)! : emp
 
@@ -133,43 +144,40 @@ export function MiniSimulatorTable({ sql }: { sql: string }) {
                 <motion.tr
                   key={emp.emp_id}
                   initial={parsed.orderKey ? { opacity: 0, y: -4 } : false}
-                  animate={
-                    parsed.type === 'DELETE'
-                      ? { opacity: isDeleted ? 0.3 : 1, y: 0 }
-                      : matched ? { opacity: 1, y: 0 } : { opacity: 0.35, y: 0 }
-                  }
+                  animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.2, delay: parsed.orderKey ? i * 0.04 : 0 }}
                   className={cn(
                     'border-b last:border-0',
-                    matched && !isDeleted && !parsed.orderKey && 'bg-orange-50',
-                    isDeleted && 'bg-rose-50',
+                    matched && !isDeleted && !parsed.orderKey && 'bg-ios-blue-light',
+                    isDeleted && 'bg-ios-red-light',
                   )}
                 >
                   {showCols.map((col) => {
-                    const origVal = parsed.type === 'UPDATE' && matched ? emp[col] : undefined
-                    const newVal  = displayRow[col]
+                    const origVal = parsed.type === 'UPDATE' && matched ? displayVal(emp, col) : undefined
+                    const newVal  = displayVal(displayRow, col)
                     const changed = origVal !== undefined && origVal !== newVal
                     return (
-                      <td key={col} className={cn('px-2 py-1 font-mono text-[10px]', isDeleted && 'line-through text-rose-400')}>
+                      <td key={col} className={cn('px-2 py-1 font-mono text-[10px]', isDeleted && 'line-through text-ios-red')}>
                         {changed ? (
                           <span>
-                            <span className="text-rose-400 line-through mr-1">{String(origVal)}</span>
-                            <span className="text-emerald-600 font-bold">{String(newVal)}</span>
+                            <span className="text-ios-red line-through mr-1">{origVal}</span>
+                            <span className="text-ios-teal-dark font-bold">{newVal}</span>
                           </span>
-                        ) : String(newVal ?? 'NULL')}
+                        ) : newVal}
                       </td>
                     )
                   })}
                 </motion.tr>
               )
             })}
+
           </tbody>
         </table>
       </div>
       <div className="font-mono text-[11px]">
-        {parsed.type === 'SELECT' && <span className="text-emerald-600 font-bold">{matchedIds.size} rows returned</span>}
-        {parsed.type === 'UPDATE' && <span className="text-amber-600 font-bold">{matchedIds.size} rows updated</span>}
-        {parsed.type === 'DELETE' && <span className="text-rose-600 font-bold">{matchedIds.size} rows deleted</span>}
+        {parsed.type === 'SELECT' && <span className="text-ios-teal-dark font-bold">{matchedIds.size} rows returned</span>}
+        {parsed.type === 'UPDATE' && <span className="text-ios-orange-dark font-bold">{matchedIds.size} rows updated</span>}
+        {parsed.type === 'DELETE' && <span className="text-ios-red-dark font-bold">{matchedIds.size} rows deleted</span>}
       </div>
     </>
   )
@@ -207,7 +215,7 @@ export function MiniSimulator({
           {activeDesc && (
             <p className="font-mono text-[11px] text-muted-foreground leading-relaxed">{activeDesc}</p>
           )}
-          <MiniSimulatorTable sql={activeSql} />
+          <MiniSimulatorTable sql={activeSql} lang={lang} />
         </motion.div>
       </AnimatePresence>
     </div>
@@ -254,7 +262,7 @@ export function ClickableSyntaxRow({
                   className={cn(
                     'cursor-pointer border-b last:border-0 transition-colors',
                     ri === selectedRow
-                      ? 'bg-orange-50 outline outline-1 outline-orange-300'
+                      ? 'bg-ios-blue-light outline outline-1 outline-ios-blue/30'
                       : ri % 2 === 0 ? 'bg-background hover:bg-muted/40' : 'bg-muted/20 hover:bg-muted/40',
                   )}
                 >
@@ -263,7 +271,7 @@ export function ClickableSyntaxRow({
                       key={ci}
                       className={cn(
                         'px-3 py-1.5 font-mono text-[11px]',
-                        ri === selectedRow ? 'text-orange-800 font-medium' : 'text-foreground/80',
+                        ri === selectedRow ? 'text-ios-blue-dark font-medium' : 'text-foreground/80',
                       )}
                     >
                       {cell}

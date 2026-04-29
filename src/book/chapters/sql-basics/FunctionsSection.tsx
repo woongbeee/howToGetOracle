@@ -130,12 +130,7 @@ const FUNC_ITEMS: FuncItem[] = [
   },
 ]
 
-const ITEM_COLOR: Record<string, { bg: string; border: string; text: string; active: string; code: string; result: string }> = {
-  'CASE WHEN': { bg: 'bg-blue-50',   border: 'border-blue-200',   text: 'text-blue-800',   active: 'bg-blue-100 text-blue-700',    code: 'bg-blue-50/60 border-blue-100',    result: 'bg-blue-50 border-blue-200 text-blue-900'   },
-  'DECODE':    { bg: 'bg-violet-50', border: 'border-violet-200', text: 'text-violet-800', active: 'bg-violet-100 text-violet-700', code: 'bg-violet-50/60 border-violet-100', result: 'bg-violet-50 border-violet-200 text-violet-900' },
-  'NVL':       { bg: 'bg-orange-50', border: 'border-orange-200', text: 'text-orange-800', active: 'bg-orange-100 text-orange-700', code: 'bg-orange-50/60 border-orange-100', result: 'bg-orange-50 border-orange-200 text-orange-900' },
-  'NVL2':      { bg: 'bg-amber-50',  border: 'border-amber-200',  text: 'text-amber-800',  active: 'bg-amber-100 text-amber-700',   code: 'bg-amber-50/60 border-amber-100',   result: 'bg-amber-50 border-amber-200 text-amber-900'  },
-}
+const C = { bg: 'bg-muted/40', border: 'border-border', text: 'text-foreground/80', active: 'bg-ios-blue-light text-ios-blue-dark', code: 'bg-muted/30 border-border' }
 
 // ── MiniTable ───────────────────────────────────────────────────────────────
 
@@ -155,7 +150,7 @@ function MiniTable({ headers, rows, highlightLast }: {
                 className={cn(
                   'px-2.5 py-1.5 text-left font-mono text-[10px] font-bold',
                   highlightLast && i === headers.length - 1
-                    ? 'text-emerald-700'
+                    ? 'text-ios-blue-dark'
                     : 'text-muted-foreground',
                 )}
               >
@@ -176,7 +171,7 @@ function MiniTable({ headers, rows, highlightLast }: {
                     className={cn(
                       'px-2.5 py-1 font-mono text-[11px]',
                       isNull       ? 'italic text-muted-foreground/40' :
-                      isHighlight  ? 'font-bold text-emerald-700'      :
+                      isHighlight  ? 'font-bold text-ios-blue-dark'      :
                                      'text-foreground/80',
                     )}
                   >
@@ -197,7 +192,6 @@ function MiniTable({ headers, rows, highlightLast }: {
 export function FunctionsSection({ lang }: { lang: 'ko' | 'en' }) {
   const [openItem, setOpenItem] = useState<string>(FUNC_ITEMS[0].name)
   const item = FUNC_ITEMS.find((f) => f.name === openItem)!
-  const s = ITEM_COLOR[item.name]
 
   return (
     <PageContainer>
@@ -216,7 +210,6 @@ export function FunctionsSection({ lang }: { lang: 'ko' | 'en' }) {
         {/* LEFT: 함수 목록 */}
         <div className="flex flex-col gap-1 rounded-xl border bg-muted/30 p-2">
           {FUNC_ITEMS.map((f) => {
-            const fc = ITEM_COLOR[f.name]
             const isActive = f.name === openItem
             return (
               <button
@@ -224,7 +217,7 @@ export function FunctionsSection({ lang }: { lang: 'ko' | 'en' }) {
                 onClick={() => setOpenItem(f.name)}
                 className={cn(
                   'rounded-lg px-3 py-2 text-left font-mono text-xs font-bold transition-all',
-                  isActive ? fc.active : 'text-muted-foreground hover:bg-muted',
+                  isActive ? C.active : 'text-muted-foreground hover:bg-muted',
                 )}
               >
                 {f.name}
@@ -244,12 +237,12 @@ export function FunctionsSection({ lang }: { lang: 'ko' | 'en' }) {
             className="flex flex-col gap-4"
           >
             {/* 헤더 */}
-            <div className={cn('rounded-xl border px-4 py-3', s.bg, s.border, s.text)}>
+            <div className={cn('rounded-xl border px-4 py-3', C.bg, C.border, C.text)}>
               <div className="mb-1 font-mono text-[10px] font-bold uppercase tracking-wider opacity-60">
                 {lang === 'ko' ? '조건 / NULL 처리 함수' : 'Conditional / NULL Functions'}
               </div>
               <div className="font-mono text-xl font-black">{item.name}</div>
-              <div className={cn('mt-1.5 inline-block rounded border px-2 py-0.5 font-mono text-[11px]', s.active)}>
+              <div className={cn('mt-1.5 inline-block rounded border px-2 py-0.5 font-mono text-[11px]', C.active)}>
                 {item.signature}
               </div>
             </div>
@@ -264,7 +257,7 @@ export function FunctionsSection({ lang }: { lang: 'ko' | 'en' }) {
               <p className="mb-1.5 font-mono text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
                 {lang === 'ko' ? '예시 쿼리' : 'Example Query'}
               </p>
-              <div className={cn('rounded-xl border px-4 py-3', s.code)}>
+              <div className={cn('rounded-xl border px-4 py-3', C.code)}>
                 <SqlHighlight sql={item.example} />
               </div>
             </div>
@@ -285,7 +278,7 @@ export function FunctionsSection({ lang }: { lang: 'ko' | 'en' }) {
             {item.note && (
               <>
                 <Divider />
-                <div className={cn('rounded-xl border px-4 py-3 text-xs leading-relaxed', s.bg, s.border, s.text)}>
+                <div className={cn('rounded-xl border px-4 py-3 text-xs leading-relaxed', C.bg, C.border, C.text)}>
                   <span className="mr-1.5 font-bold">💡</span>{item.note[lang]}
                 </div>
               </>

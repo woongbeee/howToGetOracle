@@ -1,4 +1,5 @@
 // Shared data, types, and pure utility functions for sql-basics chapter sections
+import { HR_SCHEMA } from '@/data/hrSchema'
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -6,6 +7,8 @@ export interface Employee {
   emp_id: number
   first_name: string
   last_name: string
+  first_name_ko: string
+  last_name_ko: string
   dept_id: number
   salary: number
   job_title: string
@@ -85,18 +88,43 @@ export interface ClauseDemo {
   variants?: ClauseVariant[]
 }
 
-// ── Sample data ────────────────────────────────────────────────────────────
+// ── Sample data (derived from HR_SCHEMA) ───────────────────────────────────
 
-export const EMPLOYEES: Employee[] = [
-  { emp_id: 101, first_name: 'Alice',   last_name: 'Kim',    dept_id: 10, salary: 7200, job_title: 'Engineer',  manager_id: null },
-  { emp_id: 102, first_name: 'Bob',     last_name: 'Park',   dept_id: 20, salary: 5400, job_title: 'Analyst',   manager_id: 101  },
-  { emp_id: 103, first_name: 'Carol',   last_name: 'Lee',    dept_id: 10, salary: 8100, job_title: 'Engineer',  manager_id: 101  },
-  { emp_id: 104, first_name: 'David',   last_name: 'Choi',   dept_id: 30, salary: 4900, job_title: 'Support',   manager_id: 102  },
-  { emp_id: 105, first_name: 'Eva',     last_name: 'Jung',   dept_id: 20, salary: 6300, job_title: 'Analyst',   manager_id: 101  },
-  { emp_id: 106, first_name: 'Frank',   last_name: 'Oh',     dept_id: 30, salary: 3800, job_title: 'Support',   manager_id: 102  },
-  { emp_id: 107, first_name: 'Grace',   last_name: 'Yoon',   dept_id: 10, salary: 9500, job_title: 'Lead',      manager_id: null },
-  { emp_id: 108, first_name: 'Henry',   last_name: 'Han',    dept_id: 20, salary: 5900, job_title: 'Analyst',   manager_id: 101  },
-]
+const JOB_TITLE_MAP: Record<string, string> = {
+  AD_PRES:   'President',
+  AD_VP:     'VP',
+  AD_ASST:   'Asst',
+  FI_MGR:    'Finance Mgr',
+  FI_ACCOUNT:'Accountant',
+  AC_MGR:    'Acctg Mgr',
+  AC_ACCOUNT:'Pub Accountant',
+  SA_MAN:    'Sales Mgr',
+  SA_REP:    'Sales Rep',
+  PU_MAN:    'Purchasing Mgr',
+  PU_CLERK:  'Purchasing Clerk',
+  ST_MAN:    'Stock Mgr',
+  ST_CLERK:  'Stock Clerk',
+  SH_CLERK:  'Shipping Clerk',
+  IT_PROG:   'IT Prog',
+  MK_MAN:    'Marketing Mgr',
+  MK_REP:    'Marketing Rep',
+  HR_REP:    'HR Rep',
+  PR_REP:    'PR Rep',
+}
+
+const _hrEmpTable = HR_SCHEMA.find((t) => t.name === 'EMPLOYEES')!
+
+export const EMPLOYEES: Employee[] = _hrEmpTable.rows.map((r) => ({
+  emp_id:        r['EMPLOYEE_ID']    as number,
+  first_name:    r['FIRST_NAME']    as string,
+  last_name:     r['LAST_NAME']     as string,
+  first_name_ko: r['FIRST_NAME_KO'] as string,
+  last_name_ko:  r['LAST_NAME_KO']  as string,
+  dept_id:       r['DEPARTMENT_ID'] as number,
+  salary:        r['SALARY']        as number,
+  job_title:     JOB_TITLE_MAP[r['JOB_ID'] as string] ?? (r['JOB_ID'] as string),
+  manager_id:    r['MANAGER_ID']    as number | null,
+}))
 
 export const EMP_COLS: Array<keyof Employee> = ['emp_id', 'first_name', 'last_name', 'dept_id', 'salary', 'job_title', 'manager_id']
 
@@ -313,26 +341,49 @@ export const DELETE_STEPS: ExecStep[] = [
 
 // ── Color helpers ──────────────────────────────────────────────────────────
 
+const IOS_STEP = { bg: 'bg-ios-blue-light', text: 'text-ios-blue-dark', border: 'border-ios-blue/20', dot: 'bg-ios-blue' }
+
 export const STEP_COLOR: Record<string, { bg: string; text: string; border: string; dot: string }> = {
-  violet:  { bg: 'bg-violet-50',  text: 'text-violet-700',  border: 'border-violet-200', dot: 'bg-violet-400' },
-  orange:  { bg: 'bg-orange-50',  text: 'text-orange-700',  border: 'border-orange-200', dot: 'bg-orange-400' },
-  blue:    { bg: 'bg-blue-50',    text: 'text-blue-700',    border: 'border-blue-200',   dot: 'bg-blue-400'   },
-  emerald: { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200',dot: 'bg-emerald-400'},
-  rose:    { bg: 'bg-rose-50',    text: 'text-rose-700',    border: 'border-rose-200',   dot: 'bg-rose-400'   },
-  amber:   { bg: 'bg-amber-50',   text: 'text-amber-700',   border: 'border-amber-200',  dot: 'bg-amber-400'  },
+  violet:  IOS_STEP,
+  orange:  IOS_STEP,
+  blue:    IOS_STEP,
+  emerald: IOS_STEP,
+  rose:    IOS_STEP,
+  amber:   IOS_STEP,
 }
 
 export const CLAUSE_COLOR: Record<string, string> = {
-  blue:    'border-blue-200 bg-blue-50 text-blue-800',
-  violet:  'border-violet-200 bg-violet-50 text-violet-800',
-  orange:  'border-orange-200 bg-orange-50 text-orange-800',
-  amber:   'border-amber-200 bg-amber-50 text-amber-800',
-  rose:    'border-rose-200 bg-rose-50 text-rose-800',
+  blue:   'border-ios-blue/20 bg-ios-blue-light text-ios-blue-dark',
+  violet: 'border-violet-200 bg-violet-50 text-violet-800',
+  orange: 'border-ios-orange/30 bg-ios-orange-light text-ios-orange-dark',
+  amber:  'border-amber-200 bg-amber-50 text-amber-800',
+  rose:   'border-ios-red/20 bg-ios-red-light text-ios-red-dark',
 }
 
 // ── Example queries ────────────────────────────────────────────────────────
 
-export const EXAMPLE_QUERIES: ExampleQuery[] = [
+function buildExampleQueries(emps: Employee[]): ExampleQuery[] {
+  const dept60 = emps.filter((e) => e.dept_id === 60)
+  const dept60Names = dept60.map((e) => e.first_name).join(', ')
+  const dept60Count = dept60.length
+
+  const highSal = emps.filter((e) => e.salary >= 12000)
+  const highSalSample = highSal.slice(0, 4).map((e) => `${e.first_name} ${e.last_name}(${e.salary})`).join(', ')
+
+  const kNames = emps.filter((e) => e.last_name.startsWith('K')).map((e) => e.last_name)
+  const kNamesStr = [...new Set(kNames)].join(', ')
+  const kCount = emps.filter((e) => e.last_name.startsWith('K')).length
+
+  const dept60ForUpdate = dept60
+  const updateSalaryList = dept60ForUpdate.slice(0, 3).map((e) => `${e.first_name} ${e.salary} → ${Math.round(e.salary * 1.10)}`).join(', ')
+
+  const deleteThreshold = 2700
+  const deletable = emps.filter((e) => e.salary < deleteThreshold)
+  const deleteSample = deletable.slice(0, 3).map((e) => `${e.first_name} ${e.last_name}(${e.salary})`).join(', ')
+
+  const totalCount = emps.length
+
+  return [
   {
     id: 'q1',
     label: { ko: '전체 조회', en: 'Select all' },
@@ -361,8 +412,8 @@ export const EXAMPLE_QUERIES: ExampleQuery[] = [
         id: 'result', phase: '③ 결과 반환',
         label: { ko: '결과 반환', en: 'Return results' },
         desc: {
-          ko: '8개 행 전체가 최종 결과 집합으로 클라이언트(PGA)에 전달됩니다.',
-          en: 'All 8 rows are returned to the client (PGA) as the final result set.',
+          ko: `${totalCount}개 행 전체가 최종 결과 집합으로 클라이언트(PGA)에 전달됩니다.`,
+          en: `All ${totalCount} rows are returned to the client (PGA) as the final result set.`,
         },
         color: 'emerald',
       },
@@ -370,8 +421,8 @@ export const EXAMPLE_QUERIES: ExampleQuery[] = [
   },
   {
     id: 'q2',
-    label: { ko: '부서 10 조회', en: 'Dept 10 filter' },
-    sql: "SELECT emp_id, first_name, salary\nFROM employees\nWHERE dept_id = 10",
+    label: { ko: '부서 60 조회', en: 'Dept 60 filter' },
+    sql: "SELECT emp_id, first_name, salary\nFROM employees\nWHERE dept_id = 60",
     type: 'SELECT',
     steps: [
       {
@@ -387,8 +438,8 @@ export const EXAMPLE_QUERIES: ExampleQuery[] = [
         id: 'where', phase: '② WHERE',
         label: { ko: 'WHERE — 행 필터링', en: 'WHERE — Row filter' },
         desc: {
-          ko: '각 행에 dept_id = 10 조건을 적용합니다. dept_id가 10인 Alice, Carol, Grace 3개 행만 다음 단계로 넘어갑니다.',
-          en: 'dept_id = 10 is evaluated for each row. Only Alice, Carol, and Grace (dept_id 10) pass through.',
+          ko: `각 행에 dept_id = 60 조건을 적용합니다. IT 부서 소속인 ${dept60Names} ${dept60Count}개 행만 다음 단계로 넘어갑니다.`,
+          en: `dept_id = 60 is evaluated for each row. Only the ${dept60Count} IT department rows (${dept60Names}) pass through.`,
         },
         color: 'orange',
       },
@@ -396,8 +447,8 @@ export const EXAMPLE_QUERIES: ExampleQuery[] = [
         id: 'select', phase: '③ SELECT',
         label: { ko: 'SELECT — 컬럼 투영', en: 'SELECT — Column projection' },
         desc: {
-          ko: '필터된 3개 행에서 emp_id, first_name, salary 3개 컬럼만 추출합니다. 나머지 컬럼(last_name, dept_id 등)은 이 단계에서 제외됩니다.',
-          en: 'Only emp_id, first_name, and salary are projected from the 3 filtered rows. Other columns are dropped here.',
+          ko: `필터된 ${dept60Count}개 행에서 emp_id, first_name, salary 3개 컬럼만 추출합니다. 나머지 컬럼(last_name, dept_id 등)은 이 단계에서 제외됩니다.`,
+          en: `Only emp_id, first_name, and salary are projected from the ${dept60Count} filtered rows. Other columns are dropped here.`,
         },
         color: 'blue',
       },
@@ -405,8 +456,8 @@ export const EXAMPLE_QUERIES: ExampleQuery[] = [
         id: 'result', phase: '④ 결과 반환',
         label: { ko: '결과 반환', en: 'Return results' },
         desc: {
-          ko: '3개 행, 3개 컬럼의 결과 집합이 클라이언트에 전달됩니다.',
-          en: 'A result set of 3 rows × 3 columns is returned to the client.',
+          ko: `${dept60Count}개 행, 3개 컬럼의 결과 집합이 클라이언트에 전달됩니다.`,
+          en: `A result set of ${dept60Count} rows × 3 columns is returned to the client.`,
         },
         color: 'emerald',
       },
@@ -415,7 +466,7 @@ export const EXAMPLE_QUERIES: ExampleQuery[] = [
   {
     id: 'q3',
     label: { ko: '고급여 조회', en: 'High salary' },
-    sql: "SELECT emp_id, first_name, last_name, salary\nFROM employees\nWHERE salary >= 7000",
+    sql: "SELECT emp_id, first_name, last_name, salary\nFROM employees\nWHERE salary >= 12000",
     type: 'SELECT',
     steps: [
       {
@@ -431,8 +482,8 @@ export const EXAMPLE_QUERIES: ExampleQuery[] = [
         id: 'where', phase: '② WHERE',
         label: { ko: 'WHERE — 행 필터링', en: 'WHERE — Row filter' },
         desc: {
-          ko: '각 행에 salary >= 7000 조건을 적용합니다. Alice(7200), Carol(8100), Grace(9500) 3개 행만 통과합니다.',
-          en: 'salary >= 7000 is evaluated for each row. Alice (7200), Carol (8100), and Grace (9500) pass.',
+          ko: `각 행에 salary >= 12000 조건을 적용합니다. ${highSalSample} 등 고액 연봉자 행들이 통과합니다.`,
+          en: `salary >= 12000 is evaluated for each row. High earners such as ${highSalSample} pass.`,
         },
         color: 'orange',
       },
@@ -440,8 +491,8 @@ export const EXAMPLE_QUERIES: ExampleQuery[] = [
         id: 'select', phase: '③ SELECT',
         label: { ko: 'SELECT — 컬럼 투영', en: 'SELECT — Column projection' },
         desc: {
-          ko: '필터된 3개 행에서 emp_id, first_name, last_name, salary 4개 컬럼만 추출합니다.',
-          en: 'emp_id, first_name, last_name, and salary are projected from the 3 filtered rows.',
+          ko: '필터된 행에서 emp_id, first_name, last_name, salary 4개 컬럼만 추출합니다.',
+          en: 'emp_id, first_name, last_name, and salary are projected from the filtered rows.',
         },
         color: 'blue',
       },
@@ -449,8 +500,8 @@ export const EXAMPLE_QUERIES: ExampleQuery[] = [
         id: 'result', phase: '④ 결과 반환',
         label: { ko: '결과 반환', en: 'Return results' },
         desc: {
-          ko: '3개 행, 4개 컬럼의 결과 집합이 클라이언트에 전달됩니다.',
-          en: 'A result set of 3 rows × 4 columns is returned to the client.',
+          ko: '조건을 통과한 행들과 4개 컬럼의 결과 집합이 클라이언트에 전달됩니다.',
+          en: 'The matching rows with 4 columns are returned to the client.',
         },
         color: 'emerald',
       },
@@ -475,8 +526,8 @@ export const EXAMPLE_QUERIES: ExampleQuery[] = [
         id: 'where', phase: '② WHERE',
         label: { ko: 'WHERE — 행 필터링', en: 'WHERE — Row filter' },
         desc: {
-          ko: "각 행에 last_name LIKE 'K%' 조건을 적용합니다. last_name이 'K'로 시작하는 Alice Kim 1개 행만 통과합니다.",
-          en: "last_name LIKE 'K%' is evaluated for each row. Only Alice Kim (last_name starts with 'K') passes.",
+          ko: `각 행에 last_name LIKE 'K%' 조건을 적용합니다. last_name이 'K'로 시작하는 ${kNamesStr} ${kCount}개 행이 통과합니다.`,
+          en: `last_name LIKE 'K%' is evaluated for each row. ${kNamesStr} (last names starting with 'K') — ${kCount} rows pass.`,
         },
         color: 'orange',
       },
@@ -484,8 +535,8 @@ export const EXAMPLE_QUERIES: ExampleQuery[] = [
         id: 'select', phase: '③ SELECT',
         label: { ko: 'SELECT — 컬럼 투영', en: 'SELECT — Column projection' },
         desc: {
-          ko: '필터된 1개 행에서 emp_id, first_name, last_name 3개 컬럼만 추출합니다.',
-          en: 'emp_id, first_name, and last_name are projected from the 1 filtered row.',
+          ko: `필터된 ${kCount}개 행에서 emp_id, first_name, last_name 3개 컬럼만 추출합니다.`,
+          en: `emp_id, first_name, and last_name are projected from the ${kCount} filtered rows.`,
         },
         color: 'blue',
       },
@@ -493,8 +544,8 @@ export const EXAMPLE_QUERIES: ExampleQuery[] = [
         id: 'result', phase: '④ 결과 반환',
         label: { ko: '결과 반환', en: 'Return results' },
         desc: {
-          ko: '1개 행, 3개 컬럼의 결과 집합이 클라이언트에 전달됩니다.',
-          en: 'A result set of 1 row × 3 columns is returned to the client.',
+          ko: `${kCount}개 행, 3개 컬럼의 결과 집합이 클라이언트에 전달됩니다.`,
+          en: `A result set of ${kCount} rows × 3 columns is returned to the client.`,
         },
         color: 'emerald',
       },
@@ -503,7 +554,7 @@ export const EXAMPLE_QUERIES: ExampleQuery[] = [
   {
     id: 'q5',
     label: { ko: 'UPDATE 급여 인상', en: 'UPDATE salary' },
-    sql: "UPDATE employees\nSET salary = salary * 1.10\nWHERE dept_id = 10",
+    sql: "UPDATE employees\nSET salary = salary * 1.10\nWHERE dept_id = 60",
     type: 'UPDATE',
     steps: [
       {
@@ -519,8 +570,8 @@ export const EXAMPLE_QUERIES: ExampleQuery[] = [
         id: 'where', phase: '② WHERE',
         label: { ko: 'WHERE — 대상 행 선택', en: 'WHERE — Target row selection' },
         desc: {
-          ko: 'dept_id = 10 조건으로 수정 대상 행을 찾습니다. Alice, Carol, Grace 3개 행이 선택됩니다.',
-          en: 'dept_id = 10 identifies the rows to modify. Alice, Carol, and Grace are selected.',
+          ko: `dept_id = 60 조건으로 IT 부서 수정 대상 행을 찾습니다. ${dept60Names} ${dept60Count}개 행이 선택됩니다.`,
+          en: `dept_id = 60 identifies IT department rows to modify. ${dept60Names} — ${dept60Count} rows are selected.`,
         },
         color: 'orange',
       },
@@ -528,8 +579,8 @@ export const EXAMPLE_QUERIES: ExampleQuery[] = [
         id: 'lock', phase: '③ Row Lock',
         label: { ko: 'Row Lock — 행 잠금', en: 'Row Lock — Row locking' },
         desc: {
-          ko: '선택된 3개 행(Alice, Carol, Grace)에 자물쇠를 겁니다. 내가 수정하는 동안 다른 사람이 같은 행을 동시에 바꾸지 못하도록 막습니다.',
-          en: 'A lock is placed on all 3 rows (Alice, Carol, Grace) so no one else can modify them while this update is in progress.',
+          ko: `선택된 ${dept60Count}개 행에 자물쇠를 겁니다. 내가 수정하는 동안 다른 사람이 같은 행을 동시에 바꾸지 못하도록 막습니다.`,
+          en: `A lock is placed on all ${dept60Count} rows so no one else can modify them while this update is in progress.`,
         },
         hint: {
           ko: 'Row Lock: 데이터베이스가 여러 사용자가 동시에 같은 데이터를 수정할 때 충돌이 생기지 않도록 "지금 내가 쓰는 중"이라고 표시하는 장치입니다. 지금 자세히 몰라도 됩니다.',
@@ -541,8 +592,8 @@ export const EXAMPLE_QUERIES: ExampleQuery[] = [
         id: 'undo', phase: '④ 변경 전 값 저장 (Undo)',
         label: { ko: '변경 전 값 저장 (Undo)', en: 'Save old values (Undo)' },
         desc: {
-          ko: '수정하기 전 salary 값(Alice 7200, Carol 8100, Grace 9500)을 따로 보관합니다. 나중에 "취소(ROLLBACK)"를 하면 이 값으로 되돌아갑니다.',
-          en: 'The original salary values (Alice 7200, Carol 8100, Grace 9500) are saved. If ROLLBACK is run later, Oracle restores these exact values.',
+          ko: `수정하기 전 salary 값(${updateSalaryList.split(' → ').join(' ')})을 따로 보관합니다.`,
+          en: `Original salary values (${dept60ForUpdate.slice(0, 3).map((e) => `${e.first_name} ${e.salary}`).join(', ')}) are saved before modification.`,
         },
         hint: {
           ko: 'Undo: "되돌리기용 메모"입니다. Oracle이 변경 전 데이터를 Undo 영역에 보관해두고, ROLLBACK 명령이 오면 이 메모를 보고 원래대로 복구합니다. 지금 자세히 몰라도 됩니다.',
@@ -554,8 +605,8 @@ export const EXAMPLE_QUERIES: ExampleQuery[] = [
         id: 'set', phase: '⑤ SET 적용',
         label: { ko: 'SET — 값 변경', en: 'SET — Apply new values' },
         desc: {
-          ko: 'salary * 1.10 계산을 실행해 새 값을 메모리에 씁니다. Alice 7200 → 7920, Carol 8100 → 8910, Grace 9500 → 10450.',
-          en: 'salary * 1.10 is calculated and written to memory. Alice 7200 → 7920, Carol 8100 → 8910, Grace 9500 → 10450.',
+          ko: `salary * 1.10 계산을 실행해 새 값을 메모리에 씁니다. ${updateSalaryList} 등.`,
+          en: `salary * 1.10 is calculated and written to memory. ${updateSalaryList}, etc.`,
         },
         color: 'blue',
       },
@@ -563,8 +614,8 @@ export const EXAMPLE_QUERIES: ExampleQuery[] = [
         id: 'redo', phase: '⑥ 변경 이력 기록 (Redo)',
         label: { ko: 'Redo Log 기록', en: 'Write redo log' },
         desc: {
-          ko: '3개 행의 변경 내용을 이력 파일에 기록합니다. 서버가 갑자기 꺼져도 이 이력을 보고 변경 사항을 복구할 수 있습니다.',
-          en: 'All 3 row changes are recorded in a history file. If the server crashes, Oracle uses this file to recover the changes.',
+          ko: `${dept60Count}개 행의 변경 내용을 이력 파일에 기록합니다. 서버가 갑자기 꺼져도 이 이력을 보고 변경 사항을 복구할 수 있습니다.`,
+          en: `All ${dept60Count} row changes are recorded in a history file. If the server crashes, Oracle uses this file to recover the changes.`,
         },
         hint: {
           ko: 'Redo Log: "무슨 변경이 있었는지" 기록하는 장부입니다. 장애 후 재시작 시 Oracle이 이 장부를 보고 커밋된 변경 사항을 복원합니다. 지금 자세히 몰라도 됩니다.',
@@ -577,7 +628,7 @@ export const EXAMPLE_QUERIES: ExampleQuery[] = [
   {
     id: 'q6',
     label: { ko: 'DELETE 저급여 삭제', en: 'DELETE low salary' },
-    sql: "DELETE FROM employees\nWHERE salary < 4500",
+    sql: "DELETE FROM employees\nWHERE salary < 2700",
     type: 'DELETE',
     steps: [
       {
@@ -593,8 +644,8 @@ export const EXAMPLE_QUERIES: ExampleQuery[] = [
         id: 'where', phase: '② WHERE',
         label: { ko: 'WHERE — 삭제 대상 선택', en: 'WHERE — Select rows to delete' },
         desc: {
-          ko: 'salary < 4500 조건으로 삭제 대상 행을 찾습니다. Frank(3800) 1개 행이 선택됩니다.',
-          en: 'salary < 4500 identifies the rows to delete. Only Frank (salary 3800) is selected.',
+          ko: `salary < 2700 조건으로 삭제 대상 행을 찾습니다. ${deleteSample} 등 조건을 만족하는 행들이 선택됩니다.`,
+          en: `salary < 2700 identifies the rows to delete. Rows such as ${deleteSample} are selected.`,
         },
         color: 'orange',
       },
@@ -602,8 +653,8 @@ export const EXAMPLE_QUERIES: ExampleQuery[] = [
         id: 'lock', phase: '③ Row Lock',
         label: { ko: 'Row Lock — 행 잠금', en: 'Row Lock — Row locking' },
         desc: {
-          ko: 'Frank 행에 자물쇠를 겁니다. 내가 삭제하는 동안 다른 사람이 이 행을 수정하지 못하도록 막습니다.',
-          en: "A lock is placed on Frank's row so no one else can modify it while the delete is in progress.",
+          ko: '삭제 대상 행들에 자물쇠를 겁니다. 내가 삭제하는 동안 다른 사람이 이 행들을 수정하지 못하도록 막습니다.',
+          en: 'Locks are placed on each row to be deleted, preventing others from modifying them while the delete is in progress.',
         },
         hint: {
           ko: 'Row Lock: 데이터베이스가 여러 사용자가 동시에 같은 데이터를 바꿀 때 충돌이 생기지 않도록 "지금 내가 쓰는 중"이라고 표시하는 장치입니다. 지금 자세히 몰라도 됩니다.',
@@ -615,21 +666,21 @@ export const EXAMPLE_QUERIES: ExampleQuery[] = [
         id: 'undo', phase: '④ 삭제 전 행 저장 (Undo)',
         label: { ko: '삭제 전 행 저장 (Undo)', en: 'Save row before delete (Undo)' },
         desc: {
-          ko: 'Frank 행 전체를 따로 보관합니다. 나중에 "취소(ROLLBACK)"를 하면 이 복사본으로 Frank 행이 다시 살아납니다.',
-          en: "A full copy of Frank's row is saved. If ROLLBACK is run, Oracle uses this copy to bring the row back.",
+          ko: '삭제 대상 행 전체를 따로 보관합니다. 나중에 "취소(ROLLBACK)"를 하면 이 복사본으로 행들이 다시 살아납니다.',
+          en: 'Full copies of all rows to be deleted are saved. If ROLLBACK is run, Oracle uses these copies to restore the rows.',
         },
         hint: {
           ko: 'Undo: "되돌리기용 메모"입니다. Oracle이 삭제 전 데이터를 Undo 영역에 보관해두고, ROLLBACK 명령이 오면 이 메모를 보고 원래대로 복구합니다. 지금 자세히 몰라도 됩니다.',
-          en: 'Undo: a "before" snapshot of the data. If ROLLBACK is issued, Oracle reads this snapshot and restores the deleted row. No need to know the details yet.',
+          en: 'Undo: a "before" snapshot of the data. If ROLLBACK is issued, Oracle reads this snapshot and restores the deleted rows. No need to know the details yet.',
         },
         color: 'amber',
       },
       {
         id: 'delete', phase: '⑤ 행 삭제',
-        label: { ko: '행 삭제 마킹', en: 'Mark row as deleted' },
+        label: { ko: '행 삭제 마킹', en: 'Mark rows as deleted' },
         desc: {
-          ko: 'Frank 행에 "삭제됨" 표시를 합니다. 실제 디스크 공간은 바로 비워지지 않고 나중에 정리됩니다.',
-          en: "Frank's row is marked as deleted. The actual disk space is not freed right away — it is cleaned up later.",
+          ko: '대상 행들에 "삭제됨" 표시를 합니다. 실제 디스크 공간은 바로 비워지지 않고 나중에 정리됩니다.',
+          en: 'Each row is marked as deleted. The actual disk space is not freed right away — it is cleaned up later.',
         },
         hint: {
           ko: 'delete flag: Oracle은 삭제 즉시 디스크 공간을 회수하지 않고 행에 "삭제됨" 표시만 합니다. 공간 재사용은 이후 내부 작업(예: 새 행 삽입 시)에서 처리됩니다. 지금 자세히 몰라도 됩니다.',
@@ -1229,7 +1280,10 @@ export const EXAMPLE_QUERIES: ExampleQuery[] = [
       summary: { ko: '3개 행 반환 (부서별 직무 급여 합계)', en: '3 rows (salary sum per dept × job)' },
     },
   },
-]
+  ]
+}
+
+export const EXAMPLE_QUERIES: ExampleQuery[] = buildExampleQueries(EMPLOYEES)
 
 // ── Clause demos ────────────────────────────────────────────────────────────
 

@@ -188,7 +188,7 @@ export function LandingPage({ onEnter }: Props) {
           rel="noopener noreferrer"
           className="mt-1.5 inline-flex items-center gap-1 font-mono text-[11px] text-muted-foreground/40 transition-colors hover:text-muted-foreground"
         >
-          developed by <span className="font-semibold">Woongbee</span>
+          created by <span className="font-semibold">Woongbee</span>
           <span className="text-[10px]">↗</span>
         </a>
       </footer>

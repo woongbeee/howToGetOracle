@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import { PageContainer, ChapterTitle, SectionTitle, Prose, Divider } from '../shared'
 import { SqlHighlight } from './SqlHighlight'
+import { EMPLOYEES } from './shared'
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -35,19 +36,25 @@ interface WordEntry {
   example: string
 }
 
-// ── Sample data ─────────────────────────────────────────────────────────────
+// ── Sample data (derived from shared EMPLOYEES, first 3 dept groups) ─────────
+
+// Pick up to 3 members from each of the first 3 distinct dept_ids encountered
+const _deptSample: Record<number, typeof EMPLOYEES> = {}
+for (const e of EMPLOYEES) {
+  if (Object.keys(_deptSample).length === 3 && !_deptSample[e.dept_id]) continue
+  ;(_deptSample[e.dept_id] ??= []).push(e)
+  if (_deptSample[e.dept_id].length > 3) _deptSample[e.dept_id].pop()
+}
+const _sampleEmps = Object.values(_deptSample).flat().slice(0, 9)
+const _deptKeys = Object.keys(_deptSample)
 
 // [emp_id, first_name, dept_id, salary]
-const EMP_ROWS = [
-  ['101', 'Alice',  '10', '7200'],
-  ['102', 'Bob',    '20', '5400'],
-  ['103', 'Carol',  '10', '8100'],
-  ['104', 'David',  '30', '4900'],
-  ['105', 'Eva',    '20', '6300'],
-  ['106', 'Frank',  '30', '3800'],
-  ['107', 'Grace',  '10', '9500'],
-  ['108', 'Henry',  '20', '5900'],
-]
+const EMP_ROWS = _sampleEmps.map((e) => [
+  String(e.emp_id),
+  e.first_name,
+  String(e.dept_id),
+  String(e.salary),
+])
 
 // ── Precomputed result rows ─────────────────────────────────────────────────
 
@@ -55,8 +62,8 @@ function rowNumberPartitioned(): (string | null)[][] {
   const byDept: Record<string, typeof EMP_ROWS> = {}
   for (const r of EMP_ROWS) { (byDept[r[2]] ??= []).push(r) }
   const result: (string | null)[][] = []
-  for (const dept of ['10', '20', '30']) {
-    const sorted = [...byDept[dept]].sort((a, b) => Number(b[3]) - Number(a[3]))
+  for (const dept of _deptKeys) {
+    const sorted = [...(byDept[dept] ?? [])].sort((a, b) => Number(b[3]) - Number(a[3]))
     sorted.forEach((r, i) => result.push([r[1], r[2], r[3], String(i + 1)]))
   }
   return result
@@ -102,8 +109,8 @@ function aggWindowRows(): (string | null)[][] {
   const deptGroups: Record<string, typeof EMP_ROWS> = {}
   for (const r of EMP_ROWS) (deptGroups[r[2]] ??= []).push(r)
   const result: (string | null)[][] = []
-  for (const dept of ['10', '20', '30']) {
-    const rows = deptGroups[dept]
+  for (const dept of _deptKeys) {
+    const rows = deptGroups[dept] ?? []
     const total = rows.reduce((s, r) => s + Number(r[3]), 0)
     const avg = Math.round(total / rows.length)
     const cnt = rows.length
@@ -119,8 +126,8 @@ function firstLastValueRows(): (string | null)[][] {
   const deptGroups: Record<string, typeof EMP_ROWS> = {}
   for (const r of EMP_ROWS) (deptGroups[r[2]] ??= []).push(r)
   const result: (string | null)[][] = []
-  for (const dept of ['10', '20', '30']) {
-    const rows = [...deptGroups[dept]].sort((a, b) => Number(b[3]) - Number(a[3]))
+  for (const dept of _deptKeys) {
+    const rows = [...(deptGroups[dept] ?? [])].sort((a, b) => Number(b[3]) - Number(a[3]))
     const first = rows[0][3]
     const last  = rows[rows.length - 1][3]
     for (const r of rows)
@@ -180,8 +187,8 @@ function nthValueRows(): (string | null)[][] {
   const deptGroups: Record<string, typeof EMP_ROWS> = {}
   for (const r of EMP_ROWS) (deptGroups[r[2]] ??= []).push(r)
   const result: (string | null)[][] = []
-  for (const dept of ['10', '20', '30']) {
-    const rows = [...deptGroups[dept]].sort((a, b) => Number(b[3]) - Number(a[3]))
+  for (const dept of _deptKeys) {
+    const rows = [...(deptGroups[dept] ?? [])].sort((a, b) => Number(b[3]) - Number(a[3]))
     const second = rows.length >= 2 ? rows[1][3] : null
     for (const r of rows)
       result.push([r[1], r[2], r[3], second])
@@ -524,26 +531,7 @@ const FRAME_ITEMS: FrameFuncItem[] = [
 
 // ── Color maps ─────────────────────────────────────────────────────────────
 
-const FUNC_COLOR: Record<string, { bg: string; border: string; text: string; active: string; code: string }> = {
-  'ROW_NUMBER':          { bg: 'bg-blue-50',    border: 'border-blue-200',   text: 'text-blue-800',    active: 'bg-blue-100 text-blue-700',    code: 'bg-blue-50 border-blue-100'    },
-  'RANK':                { bg: 'bg-violet-50',  border: 'border-violet-200', text: 'text-violet-800',  active: 'bg-violet-100 text-violet-700', code: 'bg-violet-50 border-violet-100' },
-  'DENSE_RANK':          { bg: 'bg-emerald-50', border: 'border-emerald-200',text: 'text-emerald-800', active: 'bg-emerald-100 text-emerald-700',code:'bg-emerald-50 border-emerald-100'},
-  'LAG':                 { bg: 'bg-orange-50',  border: 'border-orange-200', text: 'text-orange-800',  active: 'bg-orange-100 text-orange-700', code: 'bg-orange-50 border-orange-100' },
-  'LEAD':                { bg: 'bg-rose-50',    border: 'border-rose-200',   text: 'text-rose-800',    active: 'bg-rose-100 text-rose-700',    code: 'bg-rose-50 border-rose-100'    },
-  'SUM / AVG / COUNT':   { bg: 'bg-amber-50',   border: 'border-amber-200',  text: 'text-amber-800',   active: 'bg-amber-100 text-amber-700',  code: 'bg-amber-50 border-amber-100'  },
-  'NTILE':               { bg: 'bg-cyan-50',    border: 'border-cyan-200',   text: 'text-cyan-800',    active: 'bg-cyan-100 text-cyan-700',    code: 'bg-cyan-50 border-cyan-100'    },
-  'NTH_VALUE':           { bg: 'bg-teal-50',    border: 'border-teal-200',   text: 'text-teal-800',    active: 'bg-teal-100 text-teal-700',    code: 'bg-teal-50 border-teal-100'    },
-  'CUME_DIST':           { bg: 'bg-indigo-50',  border: 'border-indigo-200', text: 'text-indigo-800',  active: 'bg-indigo-100 text-indigo-700', code: 'bg-indigo-50 border-indigo-100' },
-  'PERCENT_RANK':        { bg: 'bg-violet-50',  border: 'border-violet-200', text: 'text-violet-800',  active: 'bg-violet-100 text-violet-700', code: 'bg-violet-50 border-violet-100' },
-}
-
-const FRAME_COLOR: Record<string, { bg: string; border: string; text: string; active: string; code: string }> = {
-  'UNBOUNDED PRECEDING ~ CURRENT ROW':          { bg: 'bg-indigo-50',  border: 'border-indigo-200',  text: 'text-indigo-800',  active: 'bg-indigo-100 text-indigo-700',  code: 'bg-indigo-50 border-indigo-100'  },
-  'N PRECEDING ~ N FOLLOWING':                  { bg: 'bg-teal-50',    border: 'border-teal-200',    text: 'text-teal-800',    active: 'bg-teal-100 text-teal-700',      code: 'bg-teal-50 border-teal-100'      },
-  'UNBOUNDED PRECEDING ~ UNBOUNDED FOLLOWING':  { bg: 'bg-violet-50',  border: 'border-violet-200',  text: 'text-violet-800',  active: 'bg-violet-100 text-violet-700',  code: 'bg-violet-50 border-violet-100'  },
-  'ROWS vs RANGE':                              { bg: 'bg-orange-50',  border: 'border-orange-200',  text: 'text-orange-800',  active: 'bg-orange-100 text-orange-700',  code: 'bg-orange-50 border-orange-100'  },
-  'Frame 적용 함수 정리':                        { bg: 'bg-rose-50',    border: 'border-rose-200',    text: 'text-rose-800',    active: 'bg-rose-100 text-rose-700',      code: 'bg-rose-50 border-rose-100'      },
-}
+const C = { bg: 'bg-muted/40', border: 'border-border', text: 'text-foreground/80', active: 'bg-ios-blue-light text-ios-blue-dark', code: 'bg-muted/30 border-border' }
 
 // ── ResultTable ──────────────────────────────────────────────────────────────
 
@@ -672,19 +660,13 @@ function FrameSummaryDesc({ lang }: { lang: 'ko' | 'en' }) {
 
 function DetailPanel({
   item,
-  colorMap,
   lang,
   labels,
 }: {
   item: FuncItem | FrameFuncItem
-  colorMap: Record<string, { bg: string; border: string; text: string; active: string; code: string }>
   lang: 'ko' | 'en'
   labels: { categoryLabel: string; exampleQuery: string; result: string }
 }) {
-  const s = colorMap[item.name] ?? {
-    bg: 'bg-muted/30', border: 'border-border', text: 'text-foreground',
-    active: 'bg-muted text-foreground', code: 'bg-muted/30 border-border',
-  }
   return (
     <AnimatePresence mode="wait">
       <motion.div
@@ -695,12 +677,12 @@ function DetailPanel({
         transition={{ duration: 0.18 }}
         className="flex flex-col gap-4"
       >
-        <div className={cn('rounded-xl border px-4 py-3', s.bg, s.border, s.text)}>
+        <div className={cn('rounded-xl border px-4 py-3', C.bg, C.border, C.text)}>
           <div className="mb-1 font-mono text-[10px] font-bold uppercase tracking-wider opacity-60">
             {labels.categoryLabel}
           </div>
           <div className="font-mono text-xl font-black">{item.name}</div>
-          <div className={cn('mt-1.5 inline-block rounded border px-2 py-0.5 font-mono text-[11px]', s.active)}>
+          <div className={cn('mt-1.5 inline-block rounded border px-2 py-0.5 font-mono text-[11px]', C.active)}>
             {item.signature}
           </div>
         </div>
@@ -717,7 +699,7 @@ function DetailPanel({
             {labels.exampleQuery}
           </p>
           <p className="mb-2 text-xs leading-relaxed text-foreground/70">{item.queryDesc[lang]}</p>
-          <div className={cn('rounded-xl border px-4 py-3', s.code)}>
+          <div className={cn('rounded-xl border px-4 py-3', C.code)}>
             <SqlHighlight sql={item.example} />
           </div>
         </div>
@@ -732,7 +714,7 @@ function DetailPanel({
         {item.note && (
           <>
             <Divider />
-            <div className={cn('rounded-xl border px-4 py-3 text-xs leading-relaxed', s.bg, s.border, s.text)}>
+            <div className={cn('rounded-xl border px-4 py-3 text-xs leading-relaxed', C.bg, C.border, C.text)}>
               <span className="mr-1.5 font-bold">💡</span>{item.note[lang]}
             </div>
           </>
@@ -846,7 +828,7 @@ export function WindowFuncSection({ lang }: { lang: 'ko' | 'en' }) {
   const activeFrame = FRAME_ITEMS.find((f) => f.name === openFrame)!
 
   return (
-    <PageContainer>
+    <PageContainer className="max-w-5xl">
       <ChapterTitle
         icon="📋"
         num={1}
@@ -872,7 +854,6 @@ export function WindowFuncSection({ lang }: { lang: 'ko' | 'en' }) {
       <div className="grid grid-cols-[160px_1fr] items-start gap-4">
         <div className="flex flex-col gap-1 rounded-xl border bg-muted/30 p-2">
           {FUNC_ITEMS.map((f) => {
-            const fc = FUNC_COLOR[f.name]
             const isActive = f.name === openFunc
             return (
               <button
@@ -880,7 +861,7 @@ export function WindowFuncSection({ lang }: { lang: 'ko' | 'en' }) {
                 onClick={() => setOpenFunc(f.name)}
                 className={cn(
                   'rounded-lg px-3 py-2 text-left font-mono text-xs font-bold transition-all',
-                  isActive ? fc.active : 'text-muted-foreground hover:bg-muted',
+                  isActive ? C.active : 'text-muted-foreground hover:bg-muted',
                 )}
               >
                 {f.name}
@@ -891,7 +872,6 @@ export function WindowFuncSection({ lang }: { lang: 'ko' | 'en' }) {
 
         <DetailPanel
           item={activeFunc}
-          colorMap={FUNC_COLOR}
           lang={lang}
           labels={{ categoryLabel: t.categoryLabel, exampleQuery: t.exampleQuery, result: t.result }}
         />
@@ -936,7 +916,6 @@ export function WindowFuncSection({ lang }: { lang: 'ko' | 'en' }) {
       <div className="grid grid-cols-[220px_1fr] items-start gap-4">
         <div className="flex flex-col gap-1 rounded-xl border bg-muted/30 p-2">
           {FRAME_ITEMS.map((f) => {
-            const fc = FRAME_COLOR[f.name]
             const isActive = f.name === openFrame
             return (
               <button
@@ -944,7 +923,7 @@ export function WindowFuncSection({ lang }: { lang: 'ko' | 'en' }) {
                 onClick={() => setOpenFrame(f.name)}
                 className={cn(
                   'rounded-lg px-3 py-2 text-left font-mono text-xs font-bold transition-all',
-                  isActive ? fc.active : 'text-muted-foreground hover:bg-muted',
+                  isActive ? C.active : 'text-muted-foreground hover:bg-muted',
                 )}
               >
                 {f.name}
@@ -955,7 +934,6 @@ export function WindowFuncSection({ lang }: { lang: 'ko' | 'en' }) {
 
         <DetailPanel
           item={activeFrame}
-          colorMap={FRAME_COLOR}
           lang={lang}
           labels={{ categoryLabel: t.frameCategoryLabel, exampleQuery: t.exampleQuery, result: t.result }}
         />

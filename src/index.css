@@ -58,6 +58,30 @@
   --gold-light:hsl(42 80% 80%);
 }
 
+/* ── iOS highlight palette ───────────────────────────────────────────────── */
+/* 4 semantic accent colors — used sparingly on a neutral mono base          */
+@theme {
+  /* Blue — actions, links, primary interactive */
+  --color-ios-blue:        #0A84FF;
+  --color-ios-blue-light:  #e8f3ff;
+  --color-ios-blue-dark:   #004999;
+
+  /* Teal — info, tips, secondary callouts */
+  --color-ios-teal:        #32ADE6;
+  --color-ios-teal-light:  #e5f5fc;
+  --color-ios-teal-dark:   #0a5c80;
+
+  /* Orange — warnings, caution, noteworthy */
+  --color-ios-orange:      #FF9F0A;
+  --color-ios-orange-light:#fff3e0;
+  --color-ios-orange-dark: #7a4500;
+
+  /* Red — errors, deletion, danger */
+  --color-ios-red:         #FF453A;
+  --color-ios-red-light:   #fff0ee;
+  --color-ios-red-dark:    #8a0f08;
+}
+
 * { box-sizing: border-box; }
 
 body {

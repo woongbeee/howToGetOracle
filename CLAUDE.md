@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 사용자와 상호작용하는 Dynamic Oracle 교육서. 좌측 사이드바 목차(TOC)에서 9개 챕터를 탐색하고, 각 섹션에서 개념 설명 + 인터랙티브 애니메이션 + 챕터별 시뮬레이터를 통해 Oracle 내부를 학습한다.
 
-**9개 챕터:** SQL 기본 문법 → 오라클 내부 구조·프로세스 → 인덱스 → 조인 → 옵티마이저 → 쿼리 변환 → 소트 튜닝 → 파티셔닝 → 병렬 처리
+**9개 챕터:** SQL 기본 문법 → 인덱스 → 조인 → 옵티마이저 → 쿼리 변환 → 소트 튜닝 → 파티셔닝 → 병렬 처리 → 오라클 내부 구조·프로세스
 
 ## 명령어
 
@@ -51,7 +51,6 @@ interface Props {
 | 접두사 | 컴포넌트 | 진입점 |
 |--------|----------|--------|
 | `sql-basics-` | `SqlBasicsPage` | `src/book/chapters/sql-basics/index.tsx` |
-| `internals-` | `InternalsPage` | `src/book/chapters/internals/index.tsx` |
 | `index-` | `IndexChapterPage` | `src/book/chapters/index-chapter/index.tsx` |
 | `join-` | `JoinPage` | `src/book/chapters/join/index.tsx` |
 | `optimizer-` | `OptimizerChapterPage` | `src/book/chapters/optimizer/index.tsx` |
@@ -59,11 +58,12 @@ interface Props {
 | `sort-` | `SortPage` | `src/book/chapters/sort/index.tsx` |
 | `partition-` | `PartitionPage` | `src/book/chapters/partition/index.tsx` |
 | `parallel-` | `ParallelPage` | `src/book/chapters/parallel/index.tsx` |
+| `internals-` | `InternalsPage` | `src/book/chapters/internals/index.tsx` |
 
 각 챕터 페이지는 `sectionId`를 받아 내부적으로 `if/switch`로 섹션별 콘텐츠를 분기한다.
 
 새 챕터 추가 체크리스트:
-1. `BOOK_CHAPTERS`에 챕터 항목 추가 (`color`는 `BookContent.tsx`의 `COLOR_MAP` 키 중 하나여야 함: `blue|violet|emerald|orange|cyan|rose|amber|teal`)
+1. `BOOK_CHAPTERS`에 챕터 항목 추가 (`color`는 `BookContent.tsx`의 `COLOR_MAP` 키 중 하나여야 함: `blue|violet|emerald|orange|cyan|rose|amber|teal|brand-pink|brand-navy|brand-teal|brand-orange|brand-salmon`)
 2. 챕터 페이지 컴포넌트 생성 (`src/book/chapters/`)
 3. `BookContent.tsx`의 `SectionRouter`에 접두사 분기 추가
 4. 시뮬레이터 섹션(전체 높이 레이아웃이 필요한 섹션)은 `BookContent.tsx`의 `FULLSCREEN_SECTIONS` Set에 해당 섹션 ID를 추가해야 함. 그렇지 않으면 스크롤 래퍼로 감싸져 레이아웃이 깨짐 (현재: `internals-simulator`만 등록됨)
@@ -158,8 +158,8 @@ const T = {
 콘텐츠가 많은 챕터(Index 등)는 섹션별 서브 컴포넌트를 `src/components/<챕터명>/`에 분리한다. 예: `src/components/index/` — `BTreeSection.tsx`, `BitmapSection.tsx`, `CompositeSection.tsx`, `IndexTypesOverview.tsx`. 챕터 페이지(`IndexChapterPage.tsx`)가 이를 import해 조합한다.
 
 콘텐츠가 많은 챕터는 섹션별 파일로 추가 분리된다:
-- `sql-basics/` — `SyntaxSection.tsx`, `ClausesSection.tsx`, `JoinSection.tsx`, `NullSection.tsx`, `DateSection.tsx`, `WindowFuncSection.tsx`, `FunctionsSection.tsx`, `ExecutionSection.tsx` + 공유 헬퍼(`shared.ts`, `SqlHighlight.tsx`, `EmpRow.tsx`, `MiniSimulator.tsx`)
-  - `NullSection`, `DateSection`, `WindowFuncSection`은 `T` 객체를 export하지 않고 `lang` prop만 받아 컴포넌트 내부에서 직접 이중 언어 문자열을 정의한다. `SyntaxSection`·`ClausesSection`·`JoinSection`·`ExecutionSection`은 `T` 객체를 named export한다.
+- `sql-basics/` — `SyntaxSection.tsx`, `ClausesSection.tsx`, `JoinSection.tsx`, `NullSection.tsx`, `DateSection.tsx`, `WindowFuncSection.tsx`, `FunctionsSection.tsx`, `ExecutionSection.tsx`, `MergeSection.tsx`, `RollupSection.tsx`, `PivotSection.tsx` + 공유 헬퍼(`shared.ts`, `SqlHighlight.tsx`, `EmpRow.tsx`, `MiniSimulator.tsx`)
+  - `NullSection`, `DateSection`, `WindowFuncSection`, `MergeSection`, `RollupSection`, `PivotSection`은 `T` 객체를 export하지 않고 `lang` prop만 받아 컴포넌트 내부에서 직접 이중 언어 문자열을 정의한다. `SyntaxSection`·`ClausesSection`·`ExecutionSection`은 `T` 객체를 named export한다.
 - `internals/` — `StorageSection.tsx`, `OverviewSection.tsx`, `SgaSection.tsx`, `PgaSection.tsx`, `ProcessesSection.tsx`, `SimulatorSection.tsx`, `OracleInstanceMap.tsx` + `shared.tsx`(TwoColLayout, MapPanel, TourPanel)
 
 나머지 챕터(join, optimizer, sort, partition, parallel, query-transform, index-chapter)는 `index.tsx` 단일 파일로 구성된다.
@@ -172,7 +172,7 @@ const T = {
 
 `PageContainer`, `ChapterTitle`, `SectionTitle`, `SubTitle`, `Prose`, `InfoBox`, `Table`, `ConceptGrid`, `Divider`, `SimulatorPlaceholder` 등 챕터 내 모든 공통 레이아웃 프리미티브. 새 챕터 콘텐츠 작성 시 이 컴포넌트들을 우선 사용한다.
 
-`OracleInstanceMap` (`src/book/chapters/OracleInstanceMap.tsx`) — Internals 챕터 전용 인터랙티브 인스턴스 다이어그램. `InstanceComponentId` 타입으로 강조할 컴포넌트 ID를 받는다.
+`OracleInstanceMap` (`src/book/chapters/internals/OracleInstanceMap.tsx`) — Internals 챕터 전용 인터랙티브 인스턴스 다이어그램. `InstanceComponentId` 타입으로 강조할 컴포넌트 ID를 받는다.
 
 ## 코드 스타일
 

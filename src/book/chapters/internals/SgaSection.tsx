@@ -155,7 +155,7 @@ export function SgaSection() {
       />
 
       <Table headers={[t.tableHeaderComponent, t.tableHeaderRole]} rows={t.sgaComponents} />
-      <InfoBox color="blue" icon="💡" title={t.sgaMemMgmtTitle}>{t.sgaInfo}</InfoBox>
+      <InfoBox color="info" icon="💡" title={t.sgaMemMgmtTitle}>{t.sgaInfo}</InfoBox>
 
       <Divider />
       <SubTitle>{t.bufferCacheTitle}</SubTitle>

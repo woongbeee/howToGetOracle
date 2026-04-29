@@ -65,7 +65,7 @@ function ResultTable({ parsed, t, lang, overrideResult }: {
     return (
       <div>
         <div className="mb-1.5 font-mono text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-          {t.resultTitle} — <span className="text-emerald-600">{summaryText}</span>
+          {t.resultTitle} — <span className="text-ios-teal-dark">{summaryText}</span>
         </div>
         <div className="inline-block rounded-lg border">
           <table className="text-xs">
@@ -106,7 +106,7 @@ function ResultTable({ parsed, t, lang, overrideResult }: {
           <table className="text-xs">
             <thead>
               <tr className="border-b bg-muted/60">
-                {cols.map((h) => (
+                {MERGE_COLS.map((h) => (
                   <th key={h} className="px-3 py-2 text-left font-mono font-bold text-muted-foreground whitespace-nowrap">
                     {h}
                   </th>
@@ -138,7 +138,7 @@ function ResultTable({ parsed, t, lang, overrideResult }: {
     return (
       <div>
         <div className="mb-1.5 font-mono text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-          {t.resultTitle} — <span className="text-emerald-600">{summaryText}</span>
+          {t.resultTitle} — <span className="text-ios-teal-dark">{summaryText}</span>
         </div>
         <div className="inline-block rounded-lg border">
           <table className="text-xs">
@@ -170,7 +170,7 @@ function ResultTable({ parsed, t, lang, overrideResult }: {
     return (
       <div>
         <div className="mb-1.5 font-mono text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-          {t.resultTitle} — <span className="text-amber-600">{t.updatedRows(parsed.matchedRows.length)}</span>
+          {t.resultTitle} — <span className="text-ios-orange-dark">{t.updatedRows(parsed.matchedRows.length)}</span>
         </div>
         <div className="inline-block rounded-lg border">
           <table className="text-xs">
@@ -182,17 +182,17 @@ function ResultTable({ parsed, t, lang, overrideResult }: {
               </tr>
             </thead>
             <tbody>
-              {EMPLOYEES.map((emp) => {
-                const isHit = parsed.matchedRows.some((r) => r.emp_id === emp.emp_id)
+              {parsed.matchedRows.map((emp) => {
                 const resultRow = parsed.resultRows.find((r) => r.emp_id === emp.emp_id)
                 return (
                   <EmpRow
                     key={emp.emp_id}
-                    row={isHit && resultRow ? resultRow : emp}
-                    highlighted={isHit}
+                    row={resultRow ?? emp}
+                    highlighted={true}
                     deleted={false}
                     columns={[]}
-                    original={isHit ? emp : undefined}
+                    original={emp}
+                    lang={lang}
                   />
                 )
               })}
@@ -207,7 +207,7 @@ function ResultTable({ parsed, t, lang, overrideResult }: {
     return (
       <div>
         <div className="mb-1.5 font-mono text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-          {t.resultTitle} — <span className="text-rose-600">{t.deletedRows(parsed.matchedRows.length)}</span>
+          {t.resultTitle} — <span className="text-ios-red-dark">{t.deletedRows(parsed.matchedRows.length)}</span>
         </div>
         <div className="inline-block rounded-lg border">
           <table className="text-xs">
@@ -219,18 +219,16 @@ function ResultTable({ parsed, t, lang, overrideResult }: {
               </tr>
             </thead>
             <tbody>
-              {EMPLOYEES.map((emp) => {
-                const isHit = parsed.matchedRows.some((r) => r.emp_id === emp.emp_id)
-                return (
-                  <EmpRow
-                    key={emp.emp_id}
-                    row={emp}
-                    highlighted={isHit}
-                    deleted={isHit}
-                    columns={[]}
-                  />
-                )
-              })}
+              {parsed.matchedRows.map((emp) => (
+                <EmpRow
+                  key={emp.emp_id}
+                  row={emp}
+                  highlighted={true}
+                  deleted={true}
+                  columns={[]}
+                  lang={lang}
+                />
+              ))}
             </tbody>
           </table>
         </div>
@@ -243,57 +241,58 @@ function ResultTable({ parsed, t, lang, overrideResult }: {
 
 // ── Merge panel ─────────────────────────────────────────────────────────────
 
+const MERGE_COLS = ['emp_id', 'first_name', 'dept_id', 'salary']
+
+function SimpleTable({ rows, highlightIds, strikeIds, joinKey }: {
+  rows: Record<string, unknown>[]
+  highlightIds?: unknown[]
+  strikeIds?: unknown[]
+  joinKey: string
+}) {
+  return (
+    <div className="inline-block rounded-lg border overflow-hidden">
+      <table className="text-xs">
+        <thead>
+          <tr className="border-b bg-muted/60">
+            {MERGE_COLS.map((h) => (
+              <th key={h} className="px-3 py-2 text-left font-mono font-bold text-muted-foreground whitespace-nowrap">{h}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row, i) => {
+            const id = row[joinKey]
+            const isHighlighted = highlightIds?.includes(id)
+            const isStruck = strikeIds?.includes(id)
+            return (
+              <tr key={i} className={cn('border-b last:border-0', isHighlighted ? 'bg-brand-navy-light' : (i % 2 === 0 ? 'bg-background' : 'bg-muted/20'))}>
+                {MERGE_COLS.map((c) => (
+                  <td key={c} className={cn('px-3 py-1.5 font-mono text-[11px] whitespace-nowrap', isStruck ? 'line-through text-muted-foreground/50' : 'text-foreground/80')}>
+                    {String(row[c] ?? 'NULL')}
+                  </td>
+                ))}
+              </tr>
+            )
+          })}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
 function MergePanel({ mergeData, t }: {
   mergeData: NonNullable<ExampleQuery['mergeData']>
   t: typeof T['ko']
 }) {
-  const cols = ['emp_id', 'first_name', 'dept_id', 'salary']
   const statusStyle: Record<string, string> = {
-    updated:   'bg-amber-50 border-amber-200',
-    inserted:  'bg-emerald-50 border-emerald-200',
+    updated:   'bg-ios-orange-light border-ios-orange/30',
+    inserted:  'bg-ios-teal-light border-ios-teal/30',
     unchanged: '',
   }
   const statusBadge: Record<string, { cls: string; label: string }> = {
-    updated:   { cls: 'bg-amber-100 text-amber-700',   label: 'UPDATED'   },
-    inserted:  { cls: 'bg-emerald-100 text-emerald-700', label: 'INSERTED' },
-    unchanged: { cls: 'bg-muted text-muted-foreground', label: '—'         },
-  }
-
-  function SimpleTable({ rows, highlightIds, strikeIds, joinKey }: {
-    rows: Record<string, unknown>[]
-    highlightIds?: unknown[]
-    strikeIds?: unknown[]
-    joinKey: string
-  }) {
-    return (
-      <div className="inline-block rounded-lg border overflow-hidden">
-        <table className="text-xs">
-          <thead>
-            <tr className="border-b bg-muted/60">
-              {cols.map((h) => (
-                <th key={h} className="px-3 py-2 text-left font-mono font-bold text-muted-foreground whitespace-nowrap">{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((row, i) => {
-              const id = row[joinKey]
-              const isHighlighted = highlightIds?.includes(id)
-              const isStruck = strikeIds?.includes(id)
-              return (
-                <tr key={i} className={cn('border-b last:border-0', isHighlighted ? 'bg-blue-50' : (i % 2 === 0 ? 'bg-background' : 'bg-muted/20'))}>
-                  {cols.map((c) => (
-                    <td key={c} className={cn('px-3 py-1.5 font-mono text-[11px] whitespace-nowrap', isStruck ? 'line-through text-muted-foreground/50' : 'text-foreground/80')}>
-                      {String(row[c] ?? 'NULL')}
-                    </td>
-                  ))}
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
-      </div>
-    )
+    updated:   { cls: 'bg-brand-orange/20 text-ios-orange-dark', label: 'UPDATED'  },
+    inserted:  { cls: 'bg-brand-teal/20 text-ios-teal-dark',     label: 'INSERTED' },
+    unchanged: { cls: 'bg-muted text-muted-foreground',             label: '—'        },
   }
 
   return (
@@ -326,15 +325,15 @@ function MergePanel({ mergeData, t }: {
       <div>
         <div className="mb-1.5 font-mono text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
           {t.mergeResultTitle} —{' '}
-          <span className="text-amber-600">{mergeData.matchedIds.length}개 Updated</span>
+          <span className="text-ios-orange-dark">{mergeData.matchedIds.length}개 Updated</span>
           {' · '}
-          <span className="text-emerald-600">{mergeData.insertedIds.length}개 Inserted</span>
+          <span className="text-ios-teal-dark">{mergeData.insertedIds.length}개 Inserted</span>
         </div>
         <div className="inline-block rounded-lg border overflow-hidden">
           <table className="text-xs">
             <thead>
               <tr className="border-b bg-muted/60">
-                {cols.map((h) => (
+                {MERGE_COLS.map((h) => (
                   <th key={h} className="px-3 py-2 text-left font-mono font-bold text-muted-foreground whitespace-nowrap">{h}</th>
                 ))}
                 <th className="px-3 py-2 text-left font-mono font-bold text-muted-foreground whitespace-nowrap">status</th>
@@ -346,10 +345,10 @@ function MergePanel({ mergeData, t }: {
                 const orig = mergeData.targetRows.find((r) => r[mergeData.joinKey] === row[mergeData.joinKey])
                 return (
                   <tr key={i} className={cn('border-b last:border-0 transition-colors', statusStyle[status] ?? (i % 2 === 0 ? 'bg-background' : 'bg-muted/20'))}>
-                    {cols.map((c) => {
+                    {MERGE_COLS.map((c) => {
                       const isChangedSalary = c === 'salary' && status === 'updated' && orig && orig[c] !== row[c]
                       return (
-                        <td key={c} className={cn('px-3 py-1.5 font-mono text-[11px] whitespace-nowrap', isChangedSalary ? 'font-bold text-amber-700' : 'text-foreground/80')}>
+                        <td key={c} className={cn('px-3 py-1.5 font-mono text-[11px] whitespace-nowrap', isChangedSalary ? 'font-bold text-ios-orange-dark' : 'text-foreground/80')}>
                           {String(row[c] ?? 'NULL')}
                           {isChangedSalary && (
                             <span className="ml-1.5 font-normal text-muted-foreground/60 line-through text-[10px]">
@@ -406,7 +405,7 @@ export function ExecutionSimulator({ lang, t }: { lang: 'ko' | 'en'; t: typeof T
               className={cn(
                 'rounded-md border px-3 py-1.5 font-mono text-[11px] transition-all',
                 selectedId === q.id
-                  ? 'border-blue-400 bg-blue-50 text-blue-700 font-bold shadow-sm'
+                  ? 'border-brand-navy/40 bg-brand-navy-light text-brand-navy-dark font-bold shadow-sm'
                   : 'border-border bg-muted/30 text-muted-foreground hover:bg-muted',
               )}
             >
@@ -477,21 +476,28 @@ export function ExecutionSimulator({ lang, t }: { lang: 'ko' | 'en'; t: typeof T
                       </tr>
                     </thead>
                     <tbody>
-                      {EMPLOYEES.map((emp) => {
-                        const isHighlighted = parsed.matchedRows.some((r) => r.emp_id === emp.emp_id)
-                        const resultRow = parsed.resultRows.find((r) => r.emp_id === emp.emp_id)
-                        const isDeleted = parsed.type === 'DELETE' && isHighlighted
-                        return (
-                          <EmpRow
-                            key={emp.emp_id}
-                            row={parsed.type === 'UPDATE' && resultRow ? resultRow : emp}
-                            highlighted={isHighlighted}
-                            deleted={!!isDeleted}
-                            columns={[]}
-                            original={parsed.type === 'UPDATE' && isHighlighted ? emp : undefined}
-                          />
-                        )
-                      })}
+                      {(() => {
+                        const isFiltered = parsed.type === 'UPDATE' || parsed.type === 'DELETE' || parsed.matchedRows.length < EMPLOYEES.length
+                        const displayRows = isFiltered
+                          ? EMPLOYEES.filter((e) => parsed.matchedRows.some((r) => r.emp_id === e.emp_id))
+                          : EMPLOYEES
+                        return displayRows.map((emp) => {
+                          const isHighlighted = parsed.matchedRows.some((r) => r.emp_id === emp.emp_id)
+                          const resultRow = parsed.resultRows.find((r) => r.emp_id === emp.emp_id)
+                          const isDeleted = parsed.type === 'DELETE' && isHighlighted
+                          return (
+                            <EmpRow
+                              key={emp.emp_id}
+                              row={parsed.type === 'UPDATE' && resultRow ? resultRow : emp}
+                              highlighted={isHighlighted}
+                              deleted={!!isDeleted}
+                              columns={[]}
+                              original={parsed.type === 'UPDATE' && isHighlighted ? emp : undefined}
+                              lang={lang}
+                            />
+                          )
+                        })
+                      })()}
                     </tbody>
                   </table>
                 </div>

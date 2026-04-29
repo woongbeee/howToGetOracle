@@ -199,13 +199,13 @@ function MergeSimulator({ t }: { t: typeof T['ko'] }) {
   }
 
   const stateStyle: Record<RowState, string> = {
-    updated:   'bg-amber-50 border-amber-300',
-    inserted:  'bg-emerald-50 border-emerald-300',
+    updated:   'bg-brand-orange-light border-brand-orange/40',
+    inserted:  'bg-brand-teal-light border-brand-teal/40',
     unchanged: '',
   }
   const stateBadge: Record<RowState, string> = {
-    updated:  'bg-amber-100 text-amber-700',
-    inserted: 'bg-emerald-100 text-emerald-700',
+    updated:  'bg-brand-orange/20 text-brand-orange-dark',
+    inserted: 'bg-brand-teal/20 text-brand-teal-dark',
     unchanged: '',
   }
   const stateLabelKo: Record<RowState, string> = {
@@ -234,7 +234,7 @@ function MergeSimulator({ t }: { t: typeof T['ko'] }) {
                   className={cn(
                     'rounded-lg border px-3 py-2 text-left transition-all font-mono text-xs',
                     isSelected
-                      ? 'border-blue-400 bg-blue-50 shadow-sm'
+                      ? 'border-brand-teal/50 bg-brand-teal-light shadow-sm'
                       : 'border-border bg-background hover:bg-muted/50',
                   )}
                 >
@@ -256,7 +256,7 @@ function MergeSimulator({ t }: { t: typeof T['ko'] }) {
           <div className="mt-3 flex gap-2">
             <button
               onClick={runAll}
-              className="rounded-md bg-blue-600 px-3 py-1.5 font-mono text-[11px] font-bold text-white hover:bg-blue-700 transition-colors"
+              className="rounded-md bg-brand-teal px-3 py-1.5 font-mono text-[11px] font-bold text-white hover:bg-brand-teal-dark transition-colors"
             >
               {t.runMerge}
             </button>
@@ -301,7 +301,7 @@ function MergeSimulator({ t }: { t: typeof T['ko'] }) {
                       <td className="px-3 py-1.5 font-mono text-[11px] whitespace-nowrap text-foreground/80">{row.dept_id}</td>
                       <td className={cn(
                         'px-3 py-1.5 font-mono text-[11px] whitespace-nowrap font-bold',
-                        state === 'updated' && orig?.salary !== row.salary ? 'text-amber-700' : 'text-foreground/80',
+                        state === 'updated' && orig?.salary !== row.salary ? 'text-brand-orange-dark' : 'text-foreground/80',
                       )}>
                         {row.salary.toLocaleString()}
                         {state === 'updated' && orig && orig.salary !== row.salary && (
@@ -311,8 +311,8 @@ function MergeSimulator({ t }: { t: typeof T['ko'] }) {
                         )}
                       </td>
                       <td className="px-3 py-1.5 font-mono text-[11px] whitespace-nowrap">
-                        {state === 'updated' && <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-700">UPDATED</span>}
-                        {state === 'inserted' && <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold text-emerald-700">INSERTED</span>}
+                        {state === 'updated' && <span className="rounded bg-brand-orange/20 px-1.5 py-0.5 text-[10px] font-bold text-brand-orange-dark">UPDATED</span>}
+                        {state === 'inserted' && <span className="rounded bg-brand-teal/20 px-1.5 py-0.5 text-[10px] font-bold text-brand-teal-dark">INSERTED</span>}
                         {!state && <span className="text-muted-foreground/40">—</span>}
                       </td>
                     </tr>
@@ -333,14 +333,14 @@ export function MergeSection({ lang }: { lang: 'ko' | 'en' }) {
   const t = T[lang]
 
   return (
-    <PageContainer>
+    <PageContainer className="max-w-5xl">
       <ChapterTitle icon="🔀" num={1} title={t.chapterTitle} subtitle={t.chapterSubtitle} />
 
       {/* What is MERGE */}
       <SectionTitle>{t.whatTitle}</SectionTitle>
       <Prose>{t.whatDesc}</Prose>
 
-      <InfoBox color="blue" icon="💡" title={t.usecaseTitle}>
+      <InfoBox color="tip" icon="💡" title={t.usecaseTitle}>
         <div className="flex flex-col gap-2 mt-1">
           {t.usecases.map((u, i) => (
             <div key={i} className="flex gap-2 items-start">
@@ -394,28 +394,28 @@ export function MergeSection({ lang }: { lang: 'ko' | 'en' }) {
       {/* ON column restriction */}
       <SectionTitle>{t.onColumnTitle}</SectionTitle>
       <Prose>{t.onColumnDesc}</Prose>
-      <InfoBox color="violet" icon="🔍">
+      <InfoBox color="info" icon="🔍">
         <span>{t.onColumnWhy}</span>
       </InfoBox>
 
-      <div className="mb-3 text-[11px] font-mono font-bold text-rose-600 flex items-center gap-1.5">
-        <span className="rounded bg-rose-100 px-2 py-0.5">{t.onColumnBadLabel}</span>
+      <div className="mb-3 text-[11px] font-mono font-bold text-ios-red-dark flex items-center gap-1.5">
+        <span className="rounded bg-ios-red-light px-2 py-0.5">{t.onColumnBadLabel}</span>
       </div>
-      <div className="mb-5 rounded-xl border border-rose-200 overflow-hidden">
-        <div className="border-b border-rose-200 bg-rose-50 px-4 py-2">
-          <span className="font-mono text-[10px] text-rose-400 uppercase tracking-widest">SQL — Error</span>
+      <div className="mb-5 rounded-xl border border-ios-red/30 overflow-hidden">
+        <div className="border-b border-ios-red/30 bg-ios-red-light px-4 py-2">
+          <span className="font-mono text-[10px] text-ios-red-dark uppercase tracking-widest">SQL — Error</span>
         </div>
         <div className="p-4">
           <SqlHighlight sql={ON_COLUMN_BAD_SQL} />
         </div>
       </div>
 
-      <div className="mb-3 text-[11px] font-mono font-bold text-emerald-600 flex items-center gap-1.5">
-        <span className="rounded bg-emerald-100 px-2 py-0.5">{t.onColumnGoodLabel}</span>
+      <div className="mb-3 text-[11px] font-mono font-bold text-ios-teal-dark flex items-center gap-1.5">
+        <span className="rounded bg-ios-teal-light px-2 py-0.5">{t.onColumnGoodLabel}</span>
       </div>
-      <div className="mb-6 rounded-xl border border-emerald-200 overflow-hidden">
-        <div className="border-b border-emerald-200 bg-emerald-50 px-4 py-2">
-          <span className="font-mono text-[10px] text-emerald-500 uppercase tracking-widest">SQL — Correct</span>
+      <div className="mb-6 rounded-xl border border-ios-teal/30 overflow-hidden">
+        <div className="border-b border-ios-teal/30 bg-ios-teal-light px-4 py-2">
+          <span className="font-mono text-[10px] text-ios-teal-dark uppercase tracking-widest">SQL — Correct</span>
         </div>
         <div className="p-4">
           <SqlHighlight sql={ON_COLUMN_GOOD_SQL} />
@@ -440,7 +440,7 @@ export function MergeSection({ lang }: { lang: 'ko' | 'en' }) {
       <Divider />
 
       {/* Notes */}
-      <InfoBox color="amber" icon="⚠️" title={t.noteTitle}>
+      <InfoBox color="warning" icon="⚠️" title={t.noteTitle}>
         <ul className="flex flex-col gap-1 mt-1 list-disc list-inside">
           {t.noteItems.map((item, i) => (
             <li key={i}>{item}</li>

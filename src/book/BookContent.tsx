@@ -21,14 +21,19 @@ interface Props {
 }
 
 const COLOR_MAP: Record<string, { text: string; border: string; bg: string; dot: string }> = {
-  blue:   { text: 'text-blue-600',   border: 'border-blue-200',   bg: 'bg-blue-50',   dot: 'bg-blue-400' },
-  violet: { text: 'text-violet-600', border: 'border-violet-200', bg: 'bg-violet-50', dot: 'bg-violet-400' },
-  emerald:{ text: 'text-emerald-600',border: 'border-emerald-200',bg: 'bg-emerald-50',dot: 'bg-emerald-400' },
-  orange: { text: 'text-orange-600', border: 'border-orange-200', bg: 'bg-orange-50', dot: 'bg-orange-400' },
-  cyan:   { text: 'text-cyan-600',   border: 'border-cyan-200',   bg: 'bg-cyan-50',   dot: 'bg-cyan-400' },
-  rose:   { text: 'text-rose-600',   border: 'border-rose-200',   bg: 'bg-rose-50',   dot: 'bg-rose-400' },
-  amber:  { text: 'text-amber-600',  border: 'border-amber-200',  bg: 'bg-amber-50',  dot: 'bg-amber-400' },
-  teal:   { text: 'text-teal-600',   border: 'border-teal-200',   bg: 'bg-teal-50',   dot: 'bg-teal-400' },
+  blue:         { text: 'text-blue-600',          border: 'border-blue-200',          bg: 'bg-blue-50',          dot: 'bg-blue-400' },
+  violet:       { text: 'text-violet-600',        border: 'border-violet-200',        bg: 'bg-violet-50',        dot: 'bg-violet-400' },
+  emerald:      { text: 'text-emerald-600',       border: 'border-emerald-200',       bg: 'bg-emerald-50',       dot: 'bg-emerald-400' },
+  orange:       { text: 'text-orange-600',        border: 'border-orange-200',        bg: 'bg-orange-50',        dot: 'bg-orange-400' },
+  cyan:         { text: 'text-cyan-600',          border: 'border-cyan-200',          bg: 'bg-cyan-50',          dot: 'bg-cyan-400' },
+  rose:         { text: 'text-rose-600',          border: 'border-rose-200',          bg: 'bg-rose-50',          dot: 'bg-rose-400' },
+  amber:        { text: 'text-amber-600',         border: 'border-amber-200',         bg: 'bg-amber-50',         dot: 'bg-amber-400' },
+  teal:         { text: 'text-teal-600',          border: 'border-teal-200',          bg: 'bg-teal-50',          dot: 'bg-teal-400' },
+  'brand-pink': { text: 'text-brand-pink-dark',   border: 'border-brand-pink/30',     bg: 'bg-brand-pink-light', dot: 'bg-brand-pink' },
+  'brand-navy': { text: 'text-brand-navy-dark',   border: 'border-brand-navy/25',     bg: 'bg-brand-navy-light', dot: 'bg-brand-navy' },
+  'brand-teal': { text: 'text-brand-teal-dark',   border: 'border-brand-teal/30',     bg: 'bg-brand-teal-light', dot: 'bg-brand-teal' },
+  'brand-orange':{ text: 'text-brand-orange-dark',border: 'border-brand-orange/30',   bg: 'bg-brand-orange-light',dot: 'bg-brand-orange' },
+  'brand-salmon':{ text: 'text-brand-salmon-dark',border: 'border-brand-salmon/30',   bg: 'bg-brand-salmon-light',dot: 'bg-brand-salmon' },
 }
 
 // Sections that use full-height fixed layouts (no scroll wrapper)

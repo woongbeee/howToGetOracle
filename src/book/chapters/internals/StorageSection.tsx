@@ -474,7 +474,7 @@ export function StorageSection() {
           <div className="mt-3">
             <Table headers={[lang === 'ko' ? '항목' : 'Item', lang === 'ko' ? '설명' : 'Description']} rows={t.blockDetail} />
           </div>
-          <InfoBox color="blue" icon="💡" title={lang === 'ko' ? 'Buffer Cache와의 관계' : 'Relationship with Buffer Cache'}>
+          <InfoBox color="info" icon="💡" title={lang === 'ko' ? 'Buffer Cache와의 관계' : 'Relationship with Buffer Cache'}>
             {t.blockNote}
           </InfoBox>
         </div>
@@ -546,7 +546,7 @@ export function StorageSection() {
         headers={[lang === 'ko' ? 'Tablespace' : 'Tablespace', lang === 'ko' ? '용도' : 'Purpose']}
         rows={t.tablespaceTable}
       />
-      <InfoBox color="orange" icon="📁" title={lang === 'ko' ? '논리 vs 물리' : 'Logical vs Physical'}>
+      <InfoBox color="warning" icon="📁" title={lang === 'ko' ? '논리 vs 물리' : 'Logical vs Physical'}>
         {t.tablespaceNote}
       </InfoBox>
 
@@ -560,7 +560,7 @@ export function StorageSection() {
           <InsertFlowDiagram />
         </div>
         <div className="flex items-center">
-          <InfoBox color="blue" icon="🔑" title={t.infoTitle}>
+          <InfoBox color="info" icon="🔑" title={t.infoTitle}>
             {t.infoBody}
           </InfoBox>
         </div>

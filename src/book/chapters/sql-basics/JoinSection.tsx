@@ -5,6 +5,7 @@ import {
   PageContainer, ChapterTitle, Prose, InfoBox, SectionTitle, SubTitle,
 } from '../shared'
 import { SqlHighlight } from './SqlHighlight'
+import { useSimulationStore } from '@/store/simulationStore'
 
 // ── Types ──────────────────────────────────────────────────────────────────
 interface JoinRow {
@@ -17,7 +18,7 @@ interface JoinRow {
 }
 
 type JoinType = 'inner' | 'left' | 'right' | 'full' | 'cross'
-type PageTab = 'join' | 'selfjoin' | 'hierarchy'
+type PageTab = 'join' | 'self join' | 'hierarchy'
 
 interface JoinAnimRow extends JoinRow {
   empIdx:  number | null
@@ -45,9 +46,8 @@ const DEPARTMENTS: Array<{ dept_id: number; dept_name: string; location: string 
   { dept_id: 40, dept_name: 'Marketing',   location: 'Daegu'   },
 ]
 
-// Self-join data: employees with manager_id
 const EMP_ORG: Array<{ emp_id: number; first_name: string; dept_id: number; manager_id: number | null }> = [
-  { emp_id: 100, first_name: 'King',    dept_id: 10, manager_id: null },
+  { emp_id: 100, first_name: 'King',   dept_id: 10, manager_id: null },
   { emp_id: 101, first_name: 'Alice',  dept_id: 10, manager_id: 100 },
   { emp_id: 102, first_name: 'Bob',    dept_id: 20, manager_id: 100 },
   { emp_id: 103, first_name: 'Carol',  dept_id: 10, manager_id: 101 },
@@ -56,7 +56,8 @@ const EMP_ORG: Array<{ emp_id: number; first_name: string; dept_id: number; mana
   { emp_id: 106, first_name: 'Frank',  dept_id: 30, manager_id: 101 },
 ]
 
-// Hierarchy node for CONNECT BY
+// ── Types ──────────────────────────────────────────────────────────────────
+
 interface HierNode {
   emp_id: number
   first_name: string
@@ -67,29 +68,23 @@ interface HierNode {
 
 function buildHierarchy(startId: number | null, maxLevel: number): HierNode[] {
   const result: HierNode[] = []
-  function traverse(mgr: number | null, lvl: number, pathSoFar: string) {
-    if (lvl > maxLevel) return
-    const children = EMP_ORG.filter((e) => e.manager_id === mgr)
-    for (const child of children) {
-      const newPath = pathSoFar ? `${pathSoFar}/${child.first_name}` : child.first_name
-      result.push({ emp_id: child.emp_id, first_name: child.first_name, manager_id: child.manager_id, level: lvl, path: newPath })
-      traverse(child.emp_id, lvl + 1, newPath)
+
+  function pushNode(e: typeof EMP_ORG[number], lvl: number, pathSoFar: string) {
+    const path = pathSoFar ? `${pathSoFar}/${e.first_name}` : e.first_name
+    result.push({ emp_id: e.emp_id, first_name: e.first_name, manager_id: e.manager_id, level: lvl, path })
+    if (lvl < maxLevel) {
+      EMP_ORG.filter((c) => c.manager_id === e.emp_id).forEach((c) => pushNode(c, lvl + 1, path))
     }
   }
+
   if (startId === null) {
-    // start from root (manager_id is null)
     const root = EMP_ORG.find((e) => e.manager_id === null)
-    if (root) {
-      result.push({ emp_id: root.emp_id, first_name: root.first_name, manager_id: null, level: 1, path: root.first_name })
-      traverse(root.emp_id, 2, root.first_name)
-    }
+    if (root) pushNode(root, 1, '')
   } else {
-    const startNode = EMP_ORG.find((e) => e.emp_id === startId)
-    if (startNode) {
-      result.push({ emp_id: startNode.emp_id, first_name: startNode.first_name, manager_id: startNode.manager_id, level: 1, path: startNode.first_name })
-      traverse(startNode.emp_id, 2, startNode.first_name)
-    }
+    const start = EMP_ORG.find((e) => e.emp_id === startId)
+    if (start) pushNode(start, 1, '')
   }
+
   return result
 }
 
@@ -101,12 +96,11 @@ const JOIN_SQL: Record<JoinType, string> = {
   cross: 'SELECT e.emp_id, e.first_name,\n       d.dept_name, d.location\nFROM   employees   e\nCROSS JOIN departments d',
 }
 
-const JOIN_COLOR: Record<JoinType, { bg: string; border: string; text: string; badge: string; dot: string }> = {
-  inner: { bg: 'bg-blue-50',   border: 'border-blue-200',   text: 'text-blue-700',   badge: 'bg-blue-100 text-blue-700',   dot: 'bg-blue-400'   },
-  left:  { bg: 'bg-violet-50', border: 'border-violet-200', text: 'text-violet-700', badge: 'bg-violet-100 text-violet-700', dot: 'bg-violet-400' },
-  right: { bg: 'bg-orange-50', border: 'border-orange-200', text: 'text-orange-700', badge: 'bg-orange-100 text-orange-700', dot: 'bg-orange-400' },
-  full:  { bg: 'bg-amber-50',  border: 'border-amber-200',  text: 'text-amber-700',  badge: 'bg-amber-100 text-amber-700',  dot: 'bg-amber-400'  },
-  cross: { bg: 'bg-rose-50',   border: 'border-rose-200',   text: 'text-rose-700',   badge: 'bg-rose-100 text-rose-700',   dot: 'bg-rose-400'   },
+const C = {
+  bg:     'bg-muted/40',
+  border: 'border-border',
+  text:   'text-foreground/80',
+  badge:  'bg-ios-blue-light text-ios-blue-dark',
 }
 
 // ── Translation ────────────────────────────────────────────────────────────
@@ -122,11 +116,11 @@ const T = {
       { key: 'hierarchy', label: '계층형 질의' },
     ],
     joinTypes: [
-      { key: 'inner',       icon: '⟕',  color: 'blue',    title: 'INNER JOIN',        desc: '양쪽 테이블 모두에서 조건을 만족하는 행만 반환합니다. 가장 일반적인 JOIN입니다.' },
-      { key: 'left',        icon: '⟕',  color: 'violet',  title: 'LEFT OUTER JOIN',   desc: '왼쪽 테이블의 모든 행 + 오른쪽 테이블에서 조건에 맞는 행. 오른쪽 테이블에 조건을 만족하는 행이 없으면 NULL.' },
-      { key: 'right',       icon: '⟖',  color: 'orange',  title: 'RIGHT OUTER JOIN',  desc: '오른쪽 테이블의 모든 행 + 왼쪽 테이블에서 조건에 맞는 행. 왼쪽 테이블에 조건을 만족하는 행이 없으면 NULL.' },
-      { key: 'full',        icon: '⟗',  color: 'amber',   title: 'FULL OUTER JOIN',   desc: '양쪽 테이블의 모든 행. 조건을 만족하지 않는 쪽은 NULL로 채웁니다.' },
-      { key: 'cross',       icon: '×',   color: 'rose',    title: 'CROSS JOIN',        desc: '모든 행의 조합(CARTESIAN JOIN)을 반환합니다. ON 절이 없습니다.' },
+      { key: 'inner', icon: '⟕', title: 'INNER JOIN',       desc: '양쪽 테이블 모두에서 조건을 만족하는 행만 반환합니다. 가장 일반적인 JOIN입니다.' },
+      { key: 'left',  icon: '⟕', title: 'LEFT OUTER JOIN',  desc: '왼쪽 테이블의 모든 행 + 오른쪽 테이블에서 조건에 맞는 행. 오른쪽 테이블에 조건을 만족하는 행이 없으면 NULL.' },
+      { key: 'right', icon: '⟖', title: 'RIGHT OUTER JOIN', desc: '오른쪽 테이블의 모든 행 + 왼쪽 테이블에서 조건에 맞는 행. 왼쪽 테이블에 조건을 만족하는 행이 없으면 NULL.' },
+      { key: 'full',  icon: '⟗', title: 'FULL OUTER JOIN',  desc: '양쪽 테이블의 모든 행. 조건을 만족하지 않는 쪽은 NULL로 채웁니다.' },
+      { key: 'cross', icon: '×',  title: 'CROSS JOIN',       desc: '모든 행의 조합(CARTESIAN JOIN)을 반환합니다. ON 절이 없습니다.' },
     ],
     joinQueryDesc: {
       inner: 'employees(직원) 테이블과 departments(부서) 테이블에서 dept_id(부서 번호)가 같은 행을 찾습니다.',
@@ -157,12 +151,12 @@ const T = {
     hierSubtitle: 'CONNECT BY로 부모-자식 관계를 재귀적으로 탐색합니다.',
     hierIntro: 'Oracle의 CONNECT BY 절은 부모-자식 관계를 가진 데이터를 계층 구조로 탐색합니다. 셀프 조인과 달리 몇 단계가 되더라도 하나의 쿼리로 표현할 수 있어 조직도, 카테고리 트리, BOM(Bill of Materials) 등에 자주 사용됩니다.',
     hierClauses: [
-      { clause: 'START WITH', desc: '계층 탐색을 시작할 루트 조건을 지정합니다. 이 조건을 만족하는 행이 LEVEL = 1이 됩니다.' },
-      { clause: 'CONNECT BY PRIOR', desc: '부모-자식 관계를 정의합니다. PRIOR 키워드가 붙은 컬럼이 "현재 행의 부모"를 참조합니다.' },
-      { clause: 'LEVEL', desc: '현재 행의 깊이(계층 레벨)를 나타내는 의사 컬럼(Pseudocolumn)입니다. 루트가 1, 자식이 2, 손자가 3...' },
+      { clause: 'START WITH',        desc: '계층 탐색을 시작할 루트 조건을 지정합니다. 이 조건을 만족하는 행이 LEVEL = 1이 됩니다.' },
+      { clause: 'CONNECT BY PRIOR',  desc: '부모-자식 관계를 정의합니다. PRIOR 키워드가 붙은 컬럼이 "현재 행의 부모"를 참조합니다.' },
+      { clause: 'LEVEL',             desc: '현재 행의 깊이(계층 레벨)를 나타내는 의사 컬럼(Pseudocolumn)입니다. 루트가 1, 자식이 2, 손자가 3...' },
       { clause: 'SYS_CONNECT_BY_PATH', desc: '루트에서 현재 행까지의 경로를 문자열로 반환합니다. SYS_CONNECT_BY_PATH(col, \'/\') 형태로 사용합니다.' },
-      { clause: 'CONNECT_BY_ROOT', desc: '현재 행이 속한 계층의 루트 값을 반환합니다.' },
-      { clause: 'NOCYCLE', desc: '순환 참조가 있는 데이터에서도 오류 없이 실행되도록 합니다. CONNECT_BY_ISCYCLE로 순환 여부를 확인할 수 있습니다.' },
+      { clause: 'CONNECT_BY_ROOT',   desc: '현재 행이 속한 계층의 루트 값을 반환합니다.' },
+      { clause: 'NOCYCLE',           desc: '순환 참조가 있는 데이터에서도 오류 없이 실행되도록 합니다. CONNECT_BY_ISCYCLE로 순환 여부를 확인할 수 있습니다.' },
     ],
     hierSqlBasic: 'SELECT emp_id,\n       LPAD(\' \', (LEVEL-1)*4) || first_name AS name,\n       manager_id,\n       LEVEL\nFROM   employees\nSTART WITH manager_id IS NULL\nCONNECT BY PRIOR emp_id = manager_id',
     hierSqlPath: 'SELECT emp_id,\n       LPAD(\' \', (LEVEL-1)*4) || first_name AS name,\n       LEVEL,\n       SYS_CONNECT_BY_PATH(first_name, \'/\') AS path\nFROM   employees\nSTART WITH manager_id IS NULL\nCONNECT BY PRIOR emp_id = manager_id',
@@ -187,11 +181,11 @@ const T = {
       { key: 'hierarchy', label: 'Hierarchical Query' },
     ],
     joinTypes: [
-      { key: 'inner',       icon: '⟕',  color: 'blue',    title: 'INNER JOIN',        desc: 'Returns only rows with matching values in both tables. The most common join type.' },
-      { key: 'left',        icon: '⟕',  color: 'violet',  title: 'LEFT OUTER JOIN',   desc: 'All rows from the left table, plus matching rows from the right. Non-matching right rows become NULL.' },
-      { key: 'right',       icon: '⟖',  color: 'orange',  title: 'RIGHT OUTER JOIN',  desc: 'All rows from the right table, plus matching rows from the left. Non-matching left rows become NULL.' },
-      { key: 'full',        icon: '⟗',  color: 'amber',   title: 'FULL OUTER JOIN',   desc: 'All rows from both tables. Non-matching rows on either side are filled with NULL.' },
-      { key: 'cross',       icon: '×',   color: 'rose',    title: 'CROSS JOIN',        desc: 'Returns every combination of rows (Cartesian product). No ON clause.' },
+      { key: 'inner', icon: '⟕', title: 'INNER JOIN',       desc: 'Returns only rows with matching values in both tables. The most common join type.' },
+      { key: 'left',  icon: '⟕', title: 'LEFT OUTER JOIN',  desc: 'All rows from the left table, plus matching rows from the right. Non-matching right rows become NULL.' },
+      { key: 'right', icon: '⟖', title: 'RIGHT OUTER JOIN', desc: 'All rows from the right table, plus matching rows from the left. Non-matching left rows become NULL.' },
+      { key: 'full',  icon: '⟗', title: 'FULL OUTER JOIN',  desc: 'All rows from both tables. Non-matching rows on either side are filled with NULL.' },
+      { key: 'cross', icon: '×',  title: 'CROSS JOIN',       desc: 'Returns every combination of rows (Cartesian product). No ON clause.' },
     ],
     joinQueryDesc: {
       inner: 'Finds rows where dept_id matches in both the employees table and the departments table.',
@@ -211,7 +205,7 @@ const T = {
     selfJoinUseCases: 'Common Self Join Use Cases',
     useCases: [
       { icon: '👥', title: 'Employee-Manager', desc: 'Look up the manager\'s name from the same employees table using manager_id.' },
-      { icon: '🗂️', title: 'Category Tree', desc: 'Find parent categories in a categories table using parent_id.' },
+      { icon: '🗂️', title: 'Category Tree',   desc: 'Find parent categories in a categories table using parent_id.' },
       { icon: '📍', title: 'Region Hierarchy', desc: 'Look up parent regions in a regions table using parent_region_id.' },
     ],
     selfJoinSqlDesc: 'The same employees table is aliased as e (employee) and m (manager). The condition e.manager_id = m.emp_id links each employee to their manager. King has a NULL manager_id and is excluded from the INNER JOIN result.',
@@ -222,12 +216,12 @@ const T = {
     hierSubtitle: 'Recursively traverse parent-child relationships with CONNECT BY.',
     hierIntro: 'Oracle\'s CONNECT BY clause traverses data with parent-child relationships as a tree structure. Unlike self joins, any depth of hierarchy can be expressed in a single query — making it ideal for org charts, category trees, and BOMs (Bill of Materials).',
     hierClauses: [
-      { clause: 'START WITH', desc: 'Specifies the root condition to begin hierarchy traversal. Rows matching this condition get LEVEL = 1.' },
-      { clause: 'CONNECT BY PRIOR', desc: 'Defines the parent-child relationship. The column with PRIOR refers to the current row\'s parent.' },
-      { clause: 'LEVEL', desc: 'A pseudocolumn representing the depth of the current row in the hierarchy. Root = 1, children = 2, grandchildren = 3...' },
+      { clause: 'START WITH',        desc: 'Specifies the root condition to begin hierarchy traversal. Rows matching this condition get LEVEL = 1.' },
+      { clause: 'CONNECT BY PRIOR',  desc: 'Defines the parent-child relationship. The column with PRIOR refers to the current row\'s parent.' },
+      { clause: 'LEVEL',             desc: 'A pseudocolumn representing the depth of the current row in the hierarchy. Root = 1, children = 2, grandchildren = 3...' },
       { clause: 'SYS_CONNECT_BY_PATH', desc: 'Returns the path from the root to the current row as a string. Used as SYS_CONNECT_BY_PATH(col, \'/\').' },
-      { clause: 'CONNECT_BY_ROOT', desc: 'Returns the root value of the hierarchy that the current row belongs to.' },
-      { clause: 'NOCYCLE', desc: 'Prevents errors when the data contains cycles. Use CONNECT_BY_ISCYCLE to identify cyclic rows.' },
+      { clause: 'CONNECT_BY_ROOT',   desc: 'Returns the root value of the hierarchy that the current row belongs to.' },
+      { clause: 'NOCYCLE',           desc: 'Prevents errors when the data contains cycles. Use CONNECT_BY_ISCYCLE to identify cyclic rows.' },
     ],
     hierSqlBasic: 'SELECT emp_id,\n       LPAD(\' \', (LEVEL-1)*4) || first_name AS name,\n       manager_id,\n       LEVEL\nFROM   employees\nSTART WITH manager_id IS NULL\nCONNECT BY PRIOR emp_id = manager_id',
     hierSqlPath: 'SELECT emp_id,\n       LPAD(\' \', (LEVEL-1)*4) || first_name AS name,\n       LEVEL,\n       SYS_CONNECT_BY_PATH(first_name, \'/\') AS path\nFROM   employees\nSTART WITH manager_id IS NULL\nCONNECT BY PRIOR emp_id = manager_id',
@@ -282,18 +276,20 @@ function buildAnimRows(type: JoinType): JoinAnimRow[] {
     })
     return rows
   }
+
   if (type === 'right') {
     const rows: JoinAnimRow[] = []
     DEPARTMENTS.forEach((d, di) => {
-      const emps = EMPLOYEES.map((e, i) => ({ e, i })).filter(({ e }) => e.dept_id === d.dept_id)
-      if (emps.length > 0) {
-        emps.forEach(({ e, i: ei }) => rows.push({ emp_id: e.emp_id, first_name: e.first_name, dept_id: d.dept_id, dept_name: d.dept_name, location: d.location, _side: 'both', empIdx: ei, deptIdx: di }))
+      const matched = EMPLOYEES.map((e, i) => ({ e, i })).filter(({ e }) => e.dept_id === d.dept_id)
+      if (matched.length > 0) {
+        matched.forEach(({ e, i: ei }) => rows.push({ emp_id: e.emp_id, first_name: e.first_name, dept_id: d.dept_id, dept_name: d.dept_name, location: d.location, _side: 'both', empIdx: ei, deptIdx: di }))
       } else {
         rows.push({ emp_id: null, first_name: null, dept_id: d.dept_id, dept_name: d.dept_name, location: d.location, _side: 'right', empIdx: null, deptIdx: di })
       }
     })
     return rows
   }
+
   const rows: JoinAnimRow[] = []
   const matchedDi = new Set<number>()
   EMPLOYEES.forEach((e, ei) => {
@@ -318,10 +314,10 @@ function buildAnimRows(type: JoinType): JoinAnimRow[] {
 
 // ── JoinAnimator ────────────────────────────────────────────────────────────
 
-function JoinAnimator({ type, lang, joinRowCount, queryDesc }: { type: JoinType; lang: 'ko' | 'en'; joinRowCount: (n: number) => string; queryDesc: string }) {
-  const animRows   = buildAnimRows(type)
-  const c          = JOIN_COLOR[type]
-  const isCross    = type === 'cross'
+function JoinAnimator({ type, joinRowCount, queryDesc }: { type: JoinType; joinRowCount: (n: number) => string; queryDesc: string }) {
+  const lang = useSimulationStore((s) => s.lang)
+  const animRows = buildAnimRows(type)
+  const isCross  = type === 'cross'
 
   const [visibleCount, setVisibleCount] = useState(0)
   const [playing, setPlaying]           = useState(false)
@@ -345,12 +341,11 @@ function JoinAnimator({ type, lang, joinRowCount, queryDesc }: { type: JoinType;
       const t = setTimeout(() => setPlaying(false), 0)
       return () => clearTimeout(t)
     }
-    const delay = isCross ? 200 : 700
-    timerRef.current = setTimeout(() => setVisibleCount((v) => v + 1), delay)
+    timerRef.current = setTimeout(() => setVisibleCount((v) => v + 1), isCross ? 200 : 700)
     return () => { if (timerRef.current) clearTimeout(timerRef.current) }
   }, [playing, visibleCount, animRows.length, isCross])
 
-  const currentRow = playing && visibleCount < animRows.length ? animRows[visibleCount] : null
+  const currentRow    = playing && visibleCount < animRows.length ? animRows[visibleCount] : null
   const activeEmpIdx  = currentRow?.empIdx  ?? null
   const activeDeptIdx = currentRow?.deptIdx ?? null
 
@@ -358,9 +353,9 @@ function JoinAnimator({ type, lang, joinRowCount, queryDesc }: { type: JoinType;
   const doneDeptIdxs = new Set(animRows.slice(0, visibleCount).map((r) => r.deptIdx).filter((x): x is number => x !== null))
 
   const ROW_COL: Record<JoinAnimRow['_side'], string> = {
-    both:  'bg-emerald-50 border-emerald-200',
-    left:  'bg-violet-50 border-violet-200',
-    right: 'bg-orange-50 border-orange-200',
+    both:  'bg-ios-teal-light',
+    left:  'bg-ios-blue-light',
+    right: 'bg-muted/50',
   }
 
   return (
@@ -369,7 +364,7 @@ function JoinAnimator({ type, lang, joinRowCount, queryDesc }: { type: JoinType;
         <SqlHighlight sql={JOIN_SQL[type]} />
       </div>
 
-      <div className={cn('rounded-lg border px-3 py-2 text-[12px] leading-relaxed', c.border, c.bg, c.text)}>
+      <div className={cn('rounded-lg border px-3 py-2 text-[12px] leading-relaxed', C.border, C.bg, C.text)}>
         {queryDesc}
       </div>
 
@@ -381,7 +376,7 @@ function JoinAnimator({ type, lang, joinRowCount, queryDesc }: { type: JoinType;
             'rounded-lg border px-4 py-1.5 font-mono text-xs font-bold transition-all',
             playing
               ? 'border-border bg-muted text-muted-foreground cursor-not-allowed'
-              : `${c.border} ${c.bg} ${c.text} hover:brightness-95`,
+              : `${C.border} ${C.bg} ${C.text} hover:brightness-95`,
           )}
         >
           {playing ? (lang === 'ko' ? '▶ 실행 중...' : '▶ Running...') : (lang === 'ko' ? '▶ 조인 시작' : '▶ Start Join')}
@@ -415,7 +410,7 @@ function JoinAnimator({ type, lang, joinRowCount, queryDesc }: { type: JoinType;
           </button>
         )}
         {visibleCount > 0 && (
-          <span className={cn('ml-auto font-mono text-[11px]', c.text)}>
+          <span className={cn('ml-auto font-mono text-[11px]', C.text)}>
             {joinRowCount(visibleCount)}
           </span>
         )}
@@ -424,7 +419,7 @@ function JoinAnimator({ type, lang, joinRowCount, queryDesc }: { type: JoinType;
       <div className="mt-3 grid grid-cols-[1fr_auto_1fr] items-start gap-2">
         {/* LEFT: EMPLOYEES */}
         <div>
-          <p className="mb-1 font-mono text-[10px] font-bold text-violet-600">EMPLOYEES</p>
+          <p className="mb-1 font-mono text-[10px] font-bold text-ios-blue-dark">EMPLOYEES</p>
           <div className="overflow-hidden rounded-lg border text-xs">
             <table className="w-full">
               <thead>
@@ -451,8 +446,8 @@ function JoinAnimator({ type, lang, joinRowCount, queryDesc }: { type: JoinType;
                     >
                       <td className={cn('px-2 py-1 font-mono text-[10px]', isActive ? 'font-bold text-yellow-800' : 'text-foreground/80')}>{e.emp_id}</td>
                       <td className={cn('px-2 py-1 font-mono text-[10px]', isActive ? 'font-bold text-yellow-800' : 'text-foreground/80')}>{e.first_name}</td>
-                      <td className={cn('px-2 py-1 font-mono text-[10px] font-bold', e.dept_id === null ? 'italic text-muted-foreground/40' : isActive ? 'text-yellow-900' : 'text-violet-700')}>
-                        {e.dept_id === null ? 'NULL' : e.dept_id}
+                      <td className={cn('px-2 py-1 font-mono text-[10px] font-bold', e.dept_id === null ? 'italic text-muted-foreground/40' : isActive ? 'text-foreground' : 'text-ios-blue-dark')}>
+                        {e.dept_id ?? 'NULL'}
                       </td>
                     </motion.tr>
                   )
@@ -469,7 +464,7 @@ function JoinAnimator({ type, lang, joinRowCount, queryDesc }: { type: JoinType;
             <motion.div
               animate={playing ? { opacity: [0.3, 1, 0.3] } : { opacity: 1 }}
               transition={{ duration: 0.6, repeat: playing ? Infinity : 0 }}
-              className={cn('font-mono text-base font-bold', c.text)}
+              className={cn('font-mono text-base font-bold', C.text)}
             >
               →
             </motion.div>
@@ -479,7 +474,7 @@ function JoinAnimator({ type, lang, joinRowCount, queryDesc }: { type: JoinType;
 
         {/* RIGHT: DEPARTMENTS */}
         <div>
-          <p className="mb-1 font-mono text-[10px] font-bold text-orange-600">DEPARTMENTS</p>
+          <p className="mb-1 font-mono text-[10px] font-bold text-muted-foreground">DEPARTMENTS</p>
           <div className="overflow-hidden rounded-lg border text-xs">
             <table className="w-full">
               <thead>
@@ -504,7 +499,7 @@ function JoinAnimator({ type, lang, joinRowCount, queryDesc }: { type: JoinType;
                       transition={{ duration: 0.2 }}
                       className="border-b last:border-0"
                     >
-                      <td className={cn('px-2 py-1 font-mono text-[10px] font-bold', isActive ? 'text-yellow-900' : 'text-orange-700')}>{d.dept_id}</td>
+                      <td className={cn('px-2 py-1 font-mono text-[10px] font-bold', isActive ? 'text-foreground' : 'text-foreground/70')}>{d.dept_id}</td>
                       <td className={cn('px-2 py-1 font-mono text-[10px]', isActive ? 'font-bold text-yellow-800' : 'text-foreground/80')}>{d.dept_name}</td>
                       <td className={cn('px-2 py-1 font-mono text-[10px]', isActive ? 'font-bold text-yellow-800' : 'text-foreground/80')}>{d.location}</td>
                     </motion.tr>
@@ -528,8 +523,8 @@ function JoinAnimator({ type, lang, joinRowCount, queryDesc }: { type: JoinType;
                 {(['emp_id', 'first_name', 'dept_id', 'dept_name', 'location'] as const).map((h) => (
                   <th key={h} className={cn(
                     'whitespace-nowrap px-2 py-1.5 text-left font-mono text-[10px] font-bold',
-                    h === 'dept_id' ? 'text-violet-600'
-                    : h === 'dept_name' || h === 'location' ? 'text-orange-600'
+                    h === 'dept_id' ? 'text-ios-blue-dark'
+                    : h === 'dept_name' || h === 'location' ? 'text-foreground/60'
                     : 'text-muted-foreground',
                   )}>{h}</th>
                 ))}
@@ -541,16 +536,15 @@ function JoinAnimator({ type, lang, joinRowCount, queryDesc }: { type: JoinType;
                   <motion.tr
                     key={i}
                     initial={{ opacity: 0, y: -6, backgroundColor: '#fef08a' }}
-                    animate={{ opacity: 1, y: 0,  backgroundColor: row._side === 'both' ? '#f0fdf4' : row._side === 'left' ? '#f5f3ff' : '#fff7ed' }}
+                    animate={{ opacity: 1, y: 0,  backgroundColor: row._side === 'both' ? '#e5f5fc' : row._side === 'left' ? '#e8f3ff' : '#f4f4f5' }}
                     transition={{ duration: 0.3 }}
                     className={cn('border-b last:border-0', ROW_COL[row._side])}
                   >
                     {(['emp_id', 'first_name', 'dept_id', 'dept_name', 'location'] as const).map((col) => {
-                      const val    = row[col]
-                      const isNull = val === null
+                      const val = row[col]
                       return (
-                        <td key={col} className={cn('px-2 py-1 font-mono text-[10px]', isNull ? 'italic text-muted-foreground/40' : 'text-foreground/80')}>
-                          {isNull ? 'NULL' : String(val)}
+                        <td key={col} className={cn('px-2 py-1 font-mono text-[10px]', val === null ? 'italic text-muted-foreground/40' : 'text-foreground/80')}>
+                          {val ?? 'NULL'}
                         </td>
                       )
                     })}
@@ -568,9 +562,9 @@ function JoinAnimator({ type, lang, joinRowCount, queryDesc }: { type: JoinType;
 
         {visibleCount > 0 && (
           <div className="mt-1.5 flex flex-wrap gap-3 font-mono text-[10px] text-muted-foreground">
-            <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-sm bg-emerald-200" />{lang === 'ko' ? '양쪽 일치' : 'Both match'}</span>
-            {(type === 'left' || type === 'full') && <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-sm bg-violet-200" />{lang === 'ko' ? '왼쪽만' : 'Left only'}</span>}
-            {(type === 'right' || type === 'full') && <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-sm bg-orange-200" />{lang === 'ko' ? '오른쪽만' : 'Right only'}</span>}
+            <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-sm bg-ios-teal/40" />{lang === 'ko' ? '양쪽 일치' : 'Both match'}</span>
+            {(type === 'left' || type === 'full') && <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-sm bg-ios-blue/30" />{lang === 'ko' ? '왼쪽만' : 'Left only'}</span>}
+            {(type === 'right' || type === 'full') && <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-sm bg-muted-foreground/20" />{lang === 'ko' ? '오른쪽만' : 'Right only'}</span>}
           </div>
         )}
       </div>
@@ -582,20 +576,19 @@ function JoinAnimator({ type, lang, joinRowCount, queryDesc }: { type: JoinType;
 
 type SelfJoinMode = 'inner' | 'left'
 
-function SelfJoinPage({ lang, t }: { lang: 'ko' | 'en'; t: typeof T['ko'] }) {
+function SelfJoinPage() {
+  const lang = useSimulationStore((s) => s.lang)
+  const t    = T[lang]
   const [mode, setMode] = useState<SelfJoinMode>('inner')
+
+  const mgrMap = new Map(EMP_ORG.map((e) => [e.emp_id, e.first_name]))
 
   const innerRows = EMP_ORG
     .filter((e) => e.manager_id !== null)
-    .map((e) => {
-      const mgr = EMP_ORG.find((m) => m.emp_id === e.manager_id)
-      return { emp_id: e.emp_id, emp_name: e.first_name, manager_id: e.manager_id, manager_name: mgr?.first_name ?? null }
-    })
+    .map((e) => ({ emp_id: e.emp_id, emp_name: e.first_name, manager_id: e.manager_id, manager_name: mgrMap.get(e.manager_id!) ?? null }))
 
-  const leftRows = EMP_ORG.map((e) => {
-    const mgr = e.manager_id !== null ? EMP_ORG.find((m) => m.emp_id === e.manager_id) : undefined
-    return { emp_id: e.emp_id, emp_name: e.first_name, manager_id: e.manager_id ?? null, manager_name: mgr?.first_name ?? null }
-  })
+  const leftRows = EMP_ORG
+    .map((e) => ({ emp_id: e.emp_id, emp_name: e.first_name, manager_id: e.manager_id, manager_name: e.manager_id != null ? (mgrMap.get(e.manager_id) ?? null) : null }))
 
   const rows = mode === 'inner' ? innerRows : leftRows
 
@@ -646,7 +639,7 @@ LEFT OUTER JOIN employees m
               <tr className="border-b bg-muted/60">
                 {['emp_id', 'first_name', 'manager_id'].map((h) => (
                   <th key={h} className={cn('px-3 py-1.5 text-left font-mono text-[10px] font-bold',
-                    h === 'emp_id' ? 'text-blue-600' : h === 'manager_id' ? 'text-violet-600' : 'text-muted-foreground'
+                    h === 'emp_id' ? 'text-ios-blue-dark' : h === 'manager_id' ? 'text-ios-teal-dark' : 'text-muted-foreground'
                   )}>{h}</th>
                 ))}
               </tr>
@@ -654,10 +647,10 @@ LEFT OUTER JOIN employees m
             <tbody>
               {EMP_ORG.map((e) => (
                 <tr key={e.emp_id} className="border-b last:border-0 hover:bg-muted/30">
-                  <td className="px-3 py-1 font-mono text-[11px] text-blue-700 font-bold">{e.emp_id}</td>
+                  <td className="px-3 py-1 font-mono text-[11px] text-ios-blue-dark font-bold">{e.emp_id}</td>
                   <td className="px-3 py-1 font-mono text-[11px] text-foreground/80">{e.first_name}</td>
-                  <td className={cn('px-3 py-1 font-mono text-[11px]', e.manager_id === null ? 'italic text-muted-foreground/40' : 'text-violet-700 font-bold')}>
-                    {e.manager_id === null ? 'NULL' : e.manager_id}
+                  <td className={cn('px-3 py-1 font-mono text-[11px]', e.manager_id === null ? 'italic text-muted-foreground/40' : 'text-ios-teal-dark font-bold')}>
+                    {e.manager_id ?? 'NULL'}
                   </td>
                 </tr>
               ))}
@@ -675,7 +668,7 @@ LEFT OUTER JOIN employees m
             className={cn(
               'rounded-lg border px-4 py-1.5 font-mono text-xs font-bold transition-all',
               mode === m
-                ? 'border-blue-300 bg-blue-50 text-blue-700'
+                ? 'border-ios-blue/30 bg-ios-blue-light text-ios-blue-dark'
                 : 'border-border bg-card text-muted-foreground hover:bg-muted/40',
             )}
           >
@@ -690,7 +683,7 @@ LEFT OUTER JOIN employees m
           <div className="rounded-lg border bg-muted/60 px-3 py-2.5">
             <SqlHighlight sql={mode === 'inner' ? innerSql : leftSql} />
           </div>
-          <div className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-[12px] leading-relaxed text-blue-700">
+          <div className="rounded-lg border border-ios-blue/20 bg-ios-blue-light px-3 py-2 text-[12px] leading-relaxed text-ios-blue-dark">
             {mode === 'inner' ? t.selfJoinSqlDesc : t.selfJoinLeftDesc}
           </div>
         </div>
@@ -703,8 +696,8 @@ LEFT OUTER JOIN employees m
                 <tr className="border-b bg-muted/60">
                   {['emp_id', 'emp_name', 'manager_id', 'manager_name'].map((h) => (
                     <th key={h} className={cn('px-3 py-1.5 text-left font-mono text-[10px] font-bold',
-                      h === 'emp_id' ? 'text-blue-600'
-                      : h === 'manager_id' ? 'text-violet-600'
+                      h === 'emp_id'       ? 'text-blue-600'
+                      : h === 'manager_id'   ? 'text-violet-600'
                       : h === 'manager_name' ? 'text-emerald-600'
                       : 'text-muted-foreground'
                     )}>{h}</th>
@@ -713,14 +706,14 @@ LEFT OUTER JOIN employees m
               </thead>
               <tbody>
                 {rows.map((r) => (
-                  <tr key={r.emp_id} className={cn('border-b last:border-0', r.manager_name === null ? 'bg-violet-50' : '')}>
-                    <td className="px-3 py-1 font-mono text-[11px] text-blue-700 font-bold">{r.emp_id}</td>
+                  <tr key={r.emp_id} className={cn('border-b last:border-0', r.manager_name === null ? 'bg-muted/30' : '')}>
+                    <td className="px-3 py-1 font-mono text-[11px] text-ios-blue-dark font-bold">{r.emp_id}</td>
                     <td className="px-3 py-1 font-mono text-[11px] text-foreground/80">{r.emp_name}</td>
                     <td className={cn('px-3 py-1 font-mono text-[11px]', r.manager_id === null ? 'italic text-muted-foreground/40' : 'text-violet-700 font-bold')}>
-                      {r.manager_id === null ? 'NULL' : r.manager_id}
+                      {r.manager_id ?? 'NULL'}
                     </td>
-                    <td className={cn('px-3 py-1 font-mono text-[11px]', r.manager_name === null ? 'italic text-muted-foreground/40' : 'text-emerald-700')}>
-                      {r.manager_name === null ? 'NULL' : r.manager_name}
+                    <td className={cn('px-3 py-1 font-mono text-[11px]', r.manager_name === null ? 'italic text-muted-foreground/40' : 'text-foreground/80')}>
+                      {r.manager_name ?? 'NULL'}
                     </td>
                   </tr>
                 ))}
@@ -735,7 +728,7 @@ LEFT OUTER JOIN employees m
         </div>
       </div>
 
-      <InfoBox color="blue" icon="💡" title={lang === 'ko' ? '셀프 조인 포인트' : 'Self Join Key Points'}>
+      <InfoBox color="tip" icon="💡" title={lang === 'ko' ? '셀프 조인 포인트' : 'Self Join Key Points'}>
         {t.selfJoinNote}
       </InfoBox>
     </div>
@@ -746,15 +739,16 @@ LEFT OUTER JOIN employees m
 
 type HierTab = 'basic' | 'path'
 
-function OrgTree({ startId, lang }: { startId: number | null; lang: 'ko' | 'en' }) {
+function OrgTree({ startId }: { startId: number | null }) {
+  const lang = useSimulationStore((s) => s.lang)
   const nodes = buildHierarchy(startId, 5)
   if (nodes.length === 0) return null
 
   const levelColors = [
-    'border-amber-300 bg-amber-50 text-amber-800',
-    'border-blue-300 bg-blue-50 text-blue-800',
-    'border-emerald-300 bg-emerald-50 text-emerald-800',
-    'border-violet-300 bg-violet-50 text-violet-800',
+    'border-border bg-card text-foreground/80',
+    'border-ios-blue/20 bg-ios-blue-light text-ios-blue-dark',
+    'border-ios-teal/20 bg-ios-teal-light text-ios-teal-dark',
+    'border-border bg-muted/60 text-foreground/60',
   ]
 
   return (
@@ -779,11 +773,14 @@ function OrgTree({ startId, lang }: { startId: number | null; lang: 'ko' | 'en' 
   )
 }
 
-function HierarchyPage({ lang, t }: { lang: 'ko' | 'en'; t: typeof T['ko'] }) {
+function HierarchyPage() {
+  const lang = useSimulationStore((s) => s.lang)
+  const t    = T[lang]
   const [hierTab, setHierTab] = useState<HierTab>('basic')
   const [startId, setStartId] = useState<number | null>(null)
 
   const hierNodes = buildHierarchy(startId, 5)
+  const resultIds = new Set(hierNodes.map((n) => n.emp_id))
 
   const startOptions: Array<{ label: string; id: number | null }> = [
     { label: t.allHierarchy, id: null },
@@ -810,14 +807,14 @@ function HierarchyPage({ lang, t }: { lang: 'ko' | 'en'; t: typeof T['ko'] }) {
           <table className="w-full text-xs">
             <thead>
               <tr className="border-b bg-muted/60">
-                <th className="px-3 py-2 text-left font-mono text-[10px] font-bold text-cyan-600 whitespace-nowrap">Keyword</th>
+                <th className="px-3 py-2 text-left font-mono text-[10px] font-bold text-ios-teal-dark whitespace-nowrap">Keyword</th>
                 <th className="px-3 py-2 text-left font-mono text-[10px] font-bold text-muted-foreground">{lang === 'ko' ? '설명' : 'Description'}</th>
               </tr>
             </thead>
             <tbody>
               {t.hierClauses.map((row, i) => (
                 <tr key={i} className="border-b last:border-0 hover:bg-muted/30">
-                  <td className="px-3 py-2 font-mono text-[11px] font-bold text-cyan-700 whitespace-nowrap">{row.clause}</td>
+                  <td className="px-3 py-2 font-mono text-[11px] font-bold text-ios-teal-dark whitespace-nowrap">{row.clause}</td>
                   <td className="px-3 py-2 font-mono text-[11px] text-foreground/80 leading-relaxed">{row.desc}</td>
                 </tr>
               ))}
@@ -836,7 +833,7 @@ function HierarchyPage({ lang, t }: { lang: 'ko' | 'en'; t: typeof T['ko'] }) {
               className={cn(
                 'rounded-lg border px-4 py-1.5 font-mono text-xs font-bold transition-all',
                 hierTab === tab
-                  ? 'border-cyan-300 bg-cyan-50 text-cyan-700'
+                  ? 'border-ios-teal/30 bg-ios-teal-light text-ios-teal-dark'
                   : 'border-border bg-card text-muted-foreground hover:bg-muted/40',
               )}
             >
@@ -851,7 +848,7 @@ function HierarchyPage({ lang, t }: { lang: 'ko' | 'en'; t: typeof T['ko'] }) {
             <div className="rounded-lg border bg-muted/60 px-3 py-2.5">
               <SqlHighlight sql={hierTab === 'basic' ? t.hierSqlBasic : t.hierSqlPath} />
             </div>
-            <div className="rounded-lg border border-cyan-200 bg-cyan-50 px-3 py-2 text-[12px] leading-relaxed text-cyan-700">
+            <div className="rounded-lg border border-ios-teal/20 bg-ios-teal-light px-3 py-2 text-[12px] leading-relaxed text-ios-teal-dark">
               {hierTab === 'basic' ? t.hierDescBasic : t.hierDescPath}
             </div>
           </div>
@@ -877,42 +874,88 @@ function HierarchyPage({ lang, t }: { lang: 'ko' | 'en'; t: typeof T['ko'] }) {
             </div>
 
             <div className="rounded-xl border bg-card p-4">
-              <OrgTree startId={startId} lang={lang} />
+              <OrgTree startId={startId} />
             </div>
 
-            {/* Result table for path tab */}
-            {hierTab === 'path' && (
+            {/* Source table + Result table side by side */}
+            <div className="grid grid-cols-2 gap-3">
+              {/* Source table */}
               <div className="overflow-x-auto rounded-lg border bg-card text-xs">
+                <div className="border-b bg-muted/40 px-3 py-1.5 font-mono text-[10px] font-bold text-muted-foreground">
+                  employees
+                </div>
                 <table className="w-full">
                   <thead>
                     <tr className="border-b bg-muted/60">
-                      {['emp_id', 'first_name', t.hierLevelLabel, t.hierPathLabel].map((h) => (
+                      {['name', 'emp_id', 'manager_id'].map((h) => (
                         <th key={h} className="px-3 py-1.5 text-left font-mono text-[10px] font-bold text-muted-foreground whitespace-nowrap">{h}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
-                    {hierNodes.map((node) => (
-                      <tr key={node.emp_id} className="border-b last:border-0 hover:bg-muted/30">
-                        <td className="px-3 py-1 font-mono text-[11px] text-blue-700 font-bold">{node.emp_id}</td>
-                        <td className="px-3 py-1 font-mono text-[11px] text-foreground/80">{node.first_name}</td>
-                        <td className="px-3 py-1 font-mono text-[11px] text-cyan-700 font-bold">{node.level}</td>
-                        <td className="px-3 py-1 font-mono text-[11px] text-emerald-700">/{node.path}</td>
+                    {EMP_ORG.map((emp) => (
+                      <tr key={emp.emp_id} className={cn('border-b last:border-0', resultIds.has(emp.emp_id) ? 'bg-cyan-50/60 dark:bg-cyan-950/20' : 'opacity-40')}>
+                        <td className="px-3 py-1.5 font-mono text-[11px] font-bold text-foreground/90">{emp.first_name}</td>
+                        <td className="px-3 py-1.5 font-mono text-[11px] text-ios-blue-dark font-bold">{emp.emp_id}</td>
+                        <td className="px-3 py-1.5 font-mono text-[11px] text-foreground/60">{emp.manager_id ?? 'NULL'}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
-            )}
+
+              {/* Result table */}
+              <div className="overflow-x-auto rounded-lg border bg-card text-xs">
+                <div className="border-b bg-muted/40 px-3 py-1.5 font-mono text-[10px] font-bold text-muted-foreground">
+                  {lang === 'ko' ? '쿼리 결과' : 'Query Result'}
+                </div>
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b bg-muted/60">
+                      {hierTab === 'basic'
+                        ? ['emp_id', 'name (LPAD)', 'manager_id', t.hierLevelLabel].map((h) => (
+                            <th key={h} className="px-3 py-1.5 text-left font-mono text-[10px] font-bold text-muted-foreground whitespace-nowrap">{h}</th>
+                          ))
+                        : ['emp_id', 'name (LPAD)', t.hierLevelLabel, t.hierPathLabel].map((h) => (
+                            <th key={h} className="px-3 py-1.5 text-left font-mono text-[10px] font-bold text-muted-foreground whitespace-nowrap">{h}</th>
+                          ))
+                      }
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {hierNodes.map((node) => (
+                      <tr key={node.emp_id} className="border-b last:border-0 hover:bg-muted/30">
+                        <td className="px-3 py-1.5 font-mono text-[11px] text-ios-blue-dark font-bold">{node.emp_id}</td>
+                        <td className="py-1.5 pl-3 pr-4 font-mono text-[11px] whitespace-pre">
+                          <span className="text-ios-teal/60">{' '.repeat((node.level - 1) * 4)}</span>
+                          <span className="font-bold text-foreground/90">{node.first_name}</span>
+                        </td>
+                        {hierTab === 'basic' ? (
+                          <>
+                            <td className="px-3 py-1.5 font-mono text-[11px] text-foreground/60">{node.manager_id ?? 'NULL'}</td>
+                            <td className="px-3 py-1.5 font-mono text-[11px] text-ios-teal-dark font-bold">{node.level}</td>
+                          </>
+                        ) : (
+                          <>
+                            <td className="px-3 py-1.5 font-mono text-[11px] text-ios-teal-dark font-bold">{node.level}</td>
+                            <td className="px-3 py-1.5 font-mono text-[11px] text-foreground/60">/{node.path}</td>
+                          </>
+                        )}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
       <div className="flex flex-col gap-3">
-        <InfoBox color="blue" icon="↕" title={lang === 'ko' ? 'PRIOR 방향 주의' : 'PRIOR Direction'}>
+        <InfoBox color="tip" icon="↕" title={lang === 'ko' ? 'PRIOR 방향 주의' : 'PRIOR Direction'}>
           {t.hierPriorNote}
         </InfoBox>
-        <InfoBox color="blue" icon="💡" title={lang === 'ko' ? 'Oracle vs 표준 SQL' : 'Oracle vs Standard SQL'}>
+        <InfoBox color="tip" icon="💡" title={lang === 'ko' ? 'Oracle vs 표준 SQL' : 'Oracle vs Standard SQL'}>
           {t.hierNote}
         </InfoBox>
       </div>
@@ -922,10 +965,11 @@ function HierarchyPage({ lang, t }: { lang: 'ko' | 'en'; t: typeof T['ko'] }) {
 
 // ── JoinSection ─────────────────────────────────────────────────────────────
 
-export function JoinSection({ lang, t }: { lang: 'ko' | 'en'; t: typeof T['ko'] }) {
+export function JoinSection() {
+  const lang = useSimulationStore((s) => s.lang)
+  const t    = T[lang]
   const [activeJoin, setActiveJoin] = useState<JoinType>('inner')
   const [pageTab, setPageTab]       = useState<PageTab>('join')
-  const c = JOIN_COLOR[activeJoin]
 
   return (
     <PageContainer className="max-w-6xl">
@@ -942,7 +986,7 @@ export function JoinSection({ lang, t }: { lang: 'ko' | 'en'; t: typeof T['ko'] 
               className={cn(
                 'rounded-lg border px-4 py-1.5 font-mono text-xs font-bold transition-all',
                 isActive
-                  ? 'border-emerald-300 bg-emerald-50 text-emerald-700'
+                  ? 'border-ios-blue/30 bg-ios-blue-light text-ios-blue-dark'
                   : 'border-border bg-card text-muted-foreground hover:bg-muted/40',
               )}
             >
@@ -967,9 +1011,8 @@ export function JoinSection({ lang, t }: { lang: 'ko' | 'en'; t: typeof T['ko'] 
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-[280px_1fr] lg:items-start">
               {/* LEFT: JOIN type selector */}
               <div className="flex flex-col gap-2">
-                {(t.joinTypes as Array<{ key: string; icon: string; color: string; title: string; desc: string }>).map((jt) => {
+                {(t.joinTypes as Array<{ key: string; icon: string; title: string; desc: string }>).map((jt) => {
                   const jk = jt.key as JoinType
-                  const jc = JOIN_COLOR[jk]
                   const isActive = activeJoin === jk
                   return (
                     <button
@@ -977,28 +1020,28 @@ export function JoinSection({ lang, t }: { lang: 'ko' | 'en'; t: typeof T['ko'] 
                       onClick={() => setActiveJoin(jk)}
                       className={cn(
                         'flex items-start gap-3 rounded-xl border p-3 text-left transition-all',
-                        isActive ? `${jc.bg} ${jc.border} shadow-sm` : 'border-border bg-card hover:bg-muted/40',
+                        isActive ? `${C.bg} ${C.border} shadow-sm` : 'border-border bg-card hover:bg-muted/40',
                       )}
                     >
-                      <div className={cn('mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-sm font-bold', isActive ? jc.badge : 'bg-muted text-muted-foreground')}>
+                      <div className={cn('mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-sm font-bold', isActive ? C.badge : 'bg-muted text-muted-foreground')}>
                         {jt.icon}
                       </div>
                       <div className="min-w-0">
-                        <div className={cn('font-mono text-xs font-bold', isActive ? jc.text : 'text-foreground/70')}>
+                        <div className={cn('font-mono text-xs font-bold', isActive ? C.text : 'text-foreground/70')}>
                           {jt.title}
                         </div>
-                        <div className={cn('mt-0.5 text-[11px] leading-snug', isActive ? jc.text + '/80' : 'text-muted-foreground')}>
+                        <div className={cn('mt-0.5 text-[11px] leading-snug', isActive ? 'text-foreground/70' : 'text-muted-foreground')}>
                           {jt.desc}
                         </div>
                       </div>
-                      {isActive && <span className={cn('ml-auto mt-0.5 shrink-0 text-xs', jc.text)}>◀</span>}
+                      {isActive && <span className={cn('ml-auto mt-0.5 shrink-0 text-xs', C.text)}>◀</span>}
                     </button>
                   )
                 })}
               </div>
 
               {/* RIGHT: animation simulator */}
-              <div className={cn('rounded-xl border p-4 shadow-sm transition-colors', c.bg, c.border)}>
+              <div className={cn('rounded-xl border p-4 shadow-sm transition-colors', C.bg, C.border)}>
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={activeJoin}
@@ -1009,7 +1052,6 @@ export function JoinSection({ lang, t }: { lang: 'ko' | 'en'; t: typeof T['ko'] 
                   >
                     <JoinAnimator
                       type={activeJoin}
-                      lang={lang}
                       joinRowCount={t.joinRowCount}
                       queryDesc={t.joinQueryDesc[activeJoin]}
                     />
@@ -1019,17 +1061,17 @@ export function JoinSection({ lang, t }: { lang: 'ko' | 'en'; t: typeof T['ko'] 
             </div>
 
             <div className="flex flex-col gap-3">
-              <InfoBox color="blue" icon="💡" title={t.ansiTitle}>
+              <InfoBox color="tip" icon="💡" title={t.ansiTitle}>
                 {t.ansiDesc}
               </InfoBox>
-              <InfoBox color="blue" icon="💡" title={t.oracleTipTitle}>
+              <InfoBox color="tip" icon="💡" title={t.oracleTipTitle}>
                 {t.oracleTip}
               </InfoBox>
             </div>
           </motion.div>
         )}
 
-        {pageTab === 'selfjoin' && (
+        {pageTab === 'self join' && (
           <motion.div
             key="selfjoin"
             initial={{ opacity: 0, y: 8 }}
@@ -1037,7 +1079,7 @@ export function JoinSection({ lang, t }: { lang: 'ko' | 'en'; t: typeof T['ko'] 
             exit={{ opacity: 0, y: -6 }}
             transition={{ duration: 0.2 }}
           >
-            <SelfJoinPage lang={lang} t={t} />
+            <SelfJoinPage />
           </motion.div>
         )}
 
@@ -1049,7 +1091,7 @@ export function JoinSection({ lang, t }: { lang: 'ko' | 'en'; t: typeof T['ko'] 
             exit={{ opacity: 0, y: -6 }}
             transition={{ duration: 0.2 }}
           >
-            <HierarchyPage lang={lang} t={t} />
+            <HierarchyPage />
           </motion.div>
         )}
       </AnimatePresence>

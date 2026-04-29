@@ -411,15 +411,7 @@ const FUNC_ITEMS: FuncItem[] = [
   },
 ]
 
-const ITEM_COLOR: Record<string, { bg: string; border: string; text: string; active: string; code: string }> = {
-  'SYSDATE':        { bg: 'bg-blue-50',   border: 'border-blue-200',   text: 'text-blue-800',   active: 'bg-blue-100 text-blue-700',    code: 'bg-blue-50 border-blue-100'    },
-  'SYSTIMESTAMP':   { bg: 'bg-cyan-50',   border: 'border-cyan-200',   text: 'text-cyan-800',   active: 'bg-cyan-100 text-cyan-700',    code: 'bg-cyan-50 border-cyan-100'    },
-  'ADD_MONTHS':     { bg: 'bg-violet-50', border: 'border-violet-200', text: 'text-violet-800', active: 'bg-violet-100 text-violet-700', code: 'bg-violet-50 border-violet-100' },
-  'MONTHS_BETWEEN': { bg: 'bg-emerald-50',border: 'border-emerald-200',text: 'text-emerald-800',active: 'bg-emerald-100 text-emerald-700',code:'bg-emerald-50 border-emerald-100'},
-  'TRUNC (날짜)':   { bg: 'bg-orange-50', border: 'border-orange-200', text: 'text-orange-800', active: 'bg-orange-100 text-orange-700', code: 'bg-orange-50 border-orange-100' },
-  'TO_DATE':        { bg: 'bg-rose-50',   border: 'border-rose-200',   text: 'text-rose-800',   active: 'bg-rose-100 text-rose-700',    code: 'bg-rose-50 border-rose-100'    },
-  'TO_CHAR (날짜)': { bg: 'bg-amber-50',  border: 'border-amber-200',  text: 'text-amber-800',  active: 'bg-amber-100 text-amber-700',   code: 'bg-amber-50 border-amber-100'  },
-}
+const C = { bg: 'bg-muted/40', border: 'border-border', text: 'text-foreground/80', active: 'bg-ios-blue-light text-ios-blue-dark', code: 'bg-muted/30 border-border' }
 
 // ── ResultTable ──────────────────────────────────────────────────────────────
 
@@ -556,7 +548,6 @@ export function DateSection({ lang }: { lang: 'ko' | 'en' }) {
   const [openItem, setOpenItem] = useState<string>(FUNC_ITEMS[0].name)
   const [tzModalOpen, setTzModalOpen] = useState(false)
   const item = FUNC_ITEMS.find((f) => f.name === openItem)!
-  const s = ITEM_COLOR[item.name]
 
   return (
     <PageContainer className="max-w-6xl">
@@ -571,7 +562,6 @@ export function DateSection({ lang }: { lang: 'ko' | 'en' }) {
         {/* LEFT: 함수 목록 */}
         <div className="flex flex-col gap-1 rounded-xl border bg-muted/30 p-2">
           {FUNC_ITEMS.map((f) => {
-            const fc = ITEM_COLOR[f.name]
             const isActive = f.name === openItem
             return (
               <button
@@ -579,7 +569,7 @@ export function DateSection({ lang }: { lang: 'ko' | 'en' }) {
                 onClick={() => setOpenItem(f.name)}
                 className={cn(
                   'rounded-lg px-3 py-2 text-left font-mono text-xs font-bold transition-all',
-                  isActive ? fc.active : 'text-muted-foreground hover:bg-muted',
+                  isActive ? C.active : 'text-muted-foreground hover:bg-muted',
                 )}
               >
                 {f.name}
@@ -599,12 +589,12 @@ export function DateSection({ lang }: { lang: 'ko' | 'en' }) {
             className="flex min-w-0 flex-col gap-4"
           >
             {/* 헤더 */}
-            <div className={cn('rounded-xl border px-4 py-3', s.bg, s.border, s.text)}>
+            <div className={cn('rounded-xl border px-4 py-3', C.bg, C.border, C.text)}>
               <div className="mb-1 font-mono text-[10px] font-bold uppercase tracking-wider opacity-60">
                 {t.categoryLabel}
               </div>
               <div className="font-mono text-xl font-black">{item.name}</div>
-              <div className={cn('mt-1.5 inline-block rounded border px-2 py-0.5 font-mono text-[11px]', s.active)}>
+              <div className={cn('mt-1.5 inline-block rounded border px-2 py-0.5 font-mono text-[11px]', C.active)}>
                 {item.signature}
               </div>
             </div>
@@ -620,7 +610,7 @@ export function DateSection({ lang }: { lang: 'ko' | 'en' }) {
                     label={lang === 'ko' ? '타임존이란?' : 'What is a Timezone?'}
                     title={lang === 'ko' ? '타임존이란?' : 'What is a Timezone?'}
                     icon="🌏"
-                    color="cyan"
+                    color="info"
                     open={tzModalOpen}
                     onOpen={() => setTzModalOpen(true)}
                     onClose={() => setTzModalOpen(false)}
@@ -633,7 +623,7 @@ export function DateSection({ lang }: { lang: 'ko' | 'en' }) {
 
             {/* DUAL 설명 InfoBox (SYSDATE 항목에만) */}
             {item.dualInfo && (
-              <InfoBox color="blue" icon="🗄️" title={t.dualBoxTitle}>
+              <InfoBox color="tip" icon="🗄️" title={t.dualBoxTitle}>
                 {item.dualInfo[lang]}
               </InfoBox>
             )}
@@ -643,7 +633,7 @@ export function DateSection({ lang }: { lang: 'ko' | 'en' }) {
               <p className="mb-1.5 font-mono text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
                 {t.exampleQuery}
               </p>
-              <div className={cn('rounded-xl border px-4 py-3', s.code)}>
+              <div className={cn('rounded-xl border px-4 py-3', C.code)}>
                 <SqlHighlight sql={item.example} />
               </div>
             </div>
@@ -662,7 +652,7 @@ export function DateSection({ lang }: { lang: 'ko' | 'en' }) {
                 <p className="mb-1.5 font-mono text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
                   {lang === 'ko' ? 'SYSDATE ↔ TIMESTAMP 변환' : 'SYSDATE ↔ TIMESTAMP Conversion'}
                 </p>
-                <div className={cn('rounded-xl border px-4 py-3 mb-3', s.code)}>
+                <div className={cn('rounded-xl border px-4 py-3 mb-3', C.code)}>
                   <SqlHighlight sql={item.castExample.sql} />
                 </div>
                 <ResultTable headers={item.castExample.headers} rows={item.castExample.rows} />
@@ -680,7 +670,7 @@ export function DateSection({ lang }: { lang: 'ko' | 'en' }) {
                 <p className="mb-1.5 font-mono text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
                   {t.arith2Title}
                 </p>
-                <div className={cn('mb-3 rounded-xl border px-4 py-3', s.code)}>
+                <div className={cn('mb-3 rounded-xl border px-4 py-3', C.code)}>
                   <SqlHighlight sql={
                     "-- 두 SYSTIMESTAMP 값 사이의 경과 시간 측정\nSELECT ts_end - ts_start                              AS diff_interval,\n       EXTRACT(MINUTE FROM ts_end - ts_start)          AS diff_min,\n       EXTRACT(SECOND FROM ts_end - ts_start)          AS diff_sec\nFROM (\n  SELECT SYSTIMESTAMP                          AS ts_start,\n         SYSTIMESTAMP + INTERVAL '0:2:35.847' MINUTE TO SECOND AS ts_end\n  FROM DUAL\n)"
                   } />
@@ -700,7 +690,7 @@ export function DateSection({ lang }: { lang: 'ko' | 'en' }) {
                   <div className="mb-3 rounded-xl border bg-card px-4 py-3">
                     <Prose>{item.tzConvert.desc[lang]}</Prose>
                   </div>
-                  <div className={cn('mb-3 rounded-xl border px-4 py-3', s.code)}>
+                  <div className={cn('mb-3 rounded-xl border px-4 py-3', C.code)}>
                     <SqlHighlight sql={item.tzConvert.example} />
                   </div>
                   <ResultTable headers={item.tzConvert.resultHeaders} rows={item.tzConvert.resultRows} />
@@ -711,7 +701,7 @@ export function DateSection({ lang }: { lang: 'ko' | 'en' }) {
                     <p className="mb-1.5 font-mono text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
                       {block.title[lang]}
                     </p>
-                    <div className={cn('overflow-x-auto rounded-xl border px-4 py-3', s.code)}>
+                    <div className={cn('overflow-x-auto rounded-xl border px-4 py-3', C.code)}>
                       <table className="w-full text-xs">
                         <tbody>
                           {block.lines.map((line, i) => (
@@ -741,14 +731,14 @@ export function DateSection({ lang }: { lang: 'ko' | 'en' }) {
 
             {/* vs 비교 노트 */}
             {item.vsNote && (
-              <InfoBox color="orange" icon="⚡" title={t.vsTitle}>
+              <InfoBox color="warning" icon="⚡" title={t.vsTitle}>
                 {item.vsNote[lang]}
               </InfoBox>
             )}
 
             {/* NLS 설명 InfoBox (SYSDATE 항목에만) */}
             {item.nlsNote && (
-              <InfoBox color="violet" icon="🌐" title={t.nlsBoxTitle}>
+              <InfoBox color="info" icon="🌐" title={t.nlsBoxTitle}>
                 <span style={{ whiteSpace: 'pre-line' }}>{item.nlsNote[lang]}</span>
               </InfoBox>
             )}
@@ -757,7 +747,7 @@ export function DateSection({ lang }: { lang: 'ko' | 'en' }) {
             {item.note && (
               <>
                 <Divider />
-                <div className={cn('rounded-xl border px-4 py-3 text-xs leading-relaxed', s.bg, s.border, s.text)}>
+                <div className={cn('rounded-xl border px-4 py-3 text-xs leading-relaxed', C.bg, C.border, C.text)}>
                   <span className="mr-1.5 font-bold">💡</span>{item.note[lang]}
                 </div>
               </>

@@ -110,7 +110,7 @@ export function ParallelPage({ sectionId }: { sectionId: string }) {
             headers={[lang === 'ko' ? '방법' : 'Method', lang === 'ko' ? '구문' : 'Syntax', lang === 'ko' ? '설명' : 'Description']}
             rows={t.dopTable}
           />
-          <InfoBox color="blue" icon="💡" title={lang === 'ko' ? 'DOP 설정 권장사항' : 'DOP Recommendation'}>
+          <InfoBox color="info" icon="💡" title={lang === 'ko' ? 'DOP 설정 권장사항' : 'DOP Recommendation'}>
             {t.dopInfo}
           </InfoBox>
         </>

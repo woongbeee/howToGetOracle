@@ -1,7 +1,7 @@
 import { useSimulationStore } from '@/store/simulationStore'
 import { SyntaxSection, SyntaxT } from './SyntaxSection'
 import { ClausesSection, ClausesT } from './ClausesSection'
-import { JoinSection, JoinT } from './JoinSection'
+import { JoinSection } from './JoinSection'
 import { NullSection } from './NullSection'
 import { DateSection } from './DateSection'
 import { WindowFuncSection } from './WindowFuncSection'
@@ -19,7 +19,7 @@ export function SqlBasicsPage({ sectionId }: Props) {
 
   if (sectionId === 'sql-basics-syntax')     return <SyntaxSection lang={lang} t={SyntaxT[lang]} />
   if (sectionId === 'sql-basics-clauses')    return <ClausesSection lang={lang} t={ClausesT[lang]} />
-  if (sectionId === 'sql-basics-join')       return <JoinSection lang={lang} t={JoinT[lang]} />
+  if (sectionId === 'sql-basics-join')       return <JoinSection />
   if (sectionId === 'sql-basics-null')       return <NullSection lang={lang} />
   if (sectionId === 'sql-basics-date')       return <DateSection lang={lang} />
   if (sectionId === 'sql-basics-windowFunc') return <WindowFuncSection lang={lang} />

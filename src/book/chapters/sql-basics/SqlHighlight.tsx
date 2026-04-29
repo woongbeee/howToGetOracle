@@ -50,8 +50,8 @@ export function SqlHighlight({ sql, activeClause }: { sql: string; activeClause?
             className={cn(
               'rounded px-0.5 font-bold transition-all duration-200',
               isActive
-                ? 'bg-orange-300 text-orange-900'
-                : 'text-blue-600',
+                ? 'bg-ios-orange-light text-ios-orange-dark ring-1 ring-ios-orange/40'
+                : 'text-ios-blue',
             )}
           >
             {p.text}

@@ -4,6 +4,7 @@ import {
   PageContainer, ChapterTitle, SectionTitle, SubTitle, Prose, InfoBox, Divider,
 } from '../shared'
 import { SqlHighlight } from './SqlHighlight'
+import { EMPLOYEES } from './shared'
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -13,26 +14,21 @@ type Tab = 'pivot' | 'unpivot'
 
 interface EmpRow { first_name: string; dept_id: number; job_title: string; salary: number }
 
-const EMPS: EmpRow[] = [
-  { first_name: 'Alice',  dept_id: 10, job_title: 'Engineer', salary: 7200 },
-  { first_name: 'Bob',    dept_id: 20, job_title: 'Analyst',  salary: 5400 },
-  { first_name: 'Carol',  dept_id: 10, job_title: 'Engineer', salary: 8100 },
-  { first_name: 'David',  dept_id: 30, job_title: 'Support',  salary: 4900 },
-  { first_name: 'Eva',    dept_id: 20, job_title: 'Analyst',  salary: 6300 },
-  { first_name: 'Frank',  dept_id: 30, job_title: 'Support',  salary: 3800 },
-  { first_name: 'Grace',  dept_id: 10, job_title: 'Lead',     salary: 9500 },
-  { first_name: 'Henry',  dept_id: 20, job_title: 'Analyst',  salary: 5900 },
-]
+const EMPS: EmpRow[] = EMPLOYEES
+  .filter((e) => [60, 80, 100].includes(e.dept_id))
+  .slice(0, 12)
+  .map((e) => ({ first_name: e.first_name, dept_id: e.dept_id, job_title: e.job_title, salary: e.salary }))
 
 // ── PIVOT computation ──────────────────────────────────────────────────────
 
-interface PivotRow { dept_id: number; Engineer: number | null; Analyst: number | null; Support: number | null; Lead: number | null }
+type PivotJob = 'IT Prog' | 'Sales Rep' | 'Accountant' | 'Finance Mgr'
+interface PivotRow { dept_id: number; 'IT Prog': number | null; 'Sales Rep': number | null; 'Accountant': number | null; 'Finance Mgr': number | null }
 
 function computePivot(): PivotRow[] {
   const depts = [...new Set(EMPS.map((e) => e.dept_id))].sort((a, b) => a - b)
-  const pivotJobs = ['Engineer', 'Analyst', 'Support', 'Lead'] as const
+  const pivotJobs: PivotJob[] = ['IT Prog', 'Sales Rep', 'Accountant', 'Finance Mgr']
   return depts.map((dept) => {
-    const row: PivotRow = { dept_id: dept, Engineer: null, Analyst: null, Support: null, Lead: null }
+    const row: PivotRow = { dept_id: dept, 'IT Prog': null, 'Sales Rep': null, 'Accountant': null, 'Finance Mgr': null }
     for (const job of pivotJobs) {
       const rows = EMPS.filter((e) => e.dept_id === dept && e.job_title === job)
       row[job] = rows.length > 0 ? rows.reduce((s, r) => s + r.salary, 0) : null
@@ -47,7 +43,7 @@ interface UnpivotRow { dept_id: number; job_title: string; total_sal: number }
 
 function computeUnpivot(): UnpivotRow[] {
   const pivotRows = computePivot()
-  const jobs = ['Engineer', 'Analyst', 'Support', 'Lead'] as const
+  const jobs: PivotJob[] = ['IT Prog', 'Sales Rep', 'Accountant', 'Finance Mgr']
   const result: UnpivotRow[] = []
   for (const row of pivotRows) {
     for (const job of jobs) {
@@ -65,14 +61,15 @@ const PIVOT_SQL = `SELECT *
 FROM (
   SELECT dept_id, job_title, salary
   FROM   employees
+  WHERE  dept_id IN (60, 80, 100)
 )
 PIVOT (
   SUM(salary)
   FOR job_title IN (
-    'Engineer' AS Engineer,
-    'Analyst'  AS Analyst,
-    'Support'  AS Support,
-    'Lead'     AS Lead
+    'IT Prog'     AS "IT Prog",
+    'Sales Rep'   AS "Sales Rep",
+    'Accountant'  AS "Accountant",
+    'Finance Mgr' AS "Finance Mgr"
   )
 )
 ORDER BY dept_id`
@@ -80,20 +77,21 @@ ORDER BY dept_id`
 const UNPIVOT_SQL = `SELECT dept_id, job_title, total_sal
 FROM (
   SELECT dept_id,
-         SUM(CASE WHEN job_title = 'Engineer' THEN salary END) AS Engineer,
-         SUM(CASE WHEN job_title = 'Analyst'  THEN salary END) AS Analyst,
-         SUM(CASE WHEN job_title = 'Support'  THEN salary END) AS Support,
-         SUM(CASE WHEN job_title = 'Lead'     THEN salary END) AS Lead
+         SUM(CASE WHEN job_title = 'IT Prog'     THEN salary END) AS "IT Prog",
+         SUM(CASE WHEN job_title = 'Sales Rep'   THEN salary END) AS "Sales Rep",
+         SUM(CASE WHEN job_title = 'Accountant'  THEN salary END) AS "Accountant",
+         SUM(CASE WHEN job_title = 'Finance Mgr' THEN salary END) AS "Finance Mgr"
   FROM   employees
+  WHERE  dept_id IN (60, 80, 100)
   GROUP BY dept_id
 )
 UNPIVOT (
   total_sal
   FOR job_title IN (
-    Engineer AS 'Engineer',
-    Analyst  AS 'Analyst',
-    Support  AS 'Support',
-    Lead     AS 'Lead'
+    "IT Prog"     AS 'IT Prog',
+    "Sales Rep"   AS 'Sales Rep',
+    "Accountant"  AS 'Accountant',
+    "Finance Mgr" AS 'Finance Mgr'
   )
 )
 ORDER BY dept_id, job_title`
@@ -162,7 +160,7 @@ function SqlBlock({ sql }: { sql: string }) {
 
 function PivotTable() {
   const rows = computePivot()
-  const pivotCols = ['Engineer', 'Analyst', 'Support', 'Lead'] as const
+  const pivotCols: PivotJob[] = ['IT Prog', 'Sales Rep', 'Accountant', 'Finance Mgr']
   return (
     <div className="inline-block rounded-lg border overflow-hidden">
       <table className="text-xs">
@@ -193,7 +191,7 @@ function PivotTable() {
 
 function UnpivotTable() {
   const rows = computeUnpivot()
-  const DEPT_COLOR: Record<number, string> = { 10: 'bg-blue-50', 20: 'bg-violet-50', 30: 'bg-orange-50' }
+  const DEPT_COLOR: Record<number, string> = { 60: 'bg-ios-blue-light', 80: 'bg-ios-teal-light', 100: 'bg-muted/40' }
   return (
     <div className="inline-block rounded-lg border overflow-hidden">
       <table className="text-xs">
@@ -229,13 +227,10 @@ export function PivotSection({ lang }: { lang: 'ko' | 'en' }) {
     { id: 'unpivot', label: t.tabUnpivot },
   ]
 
-  const tabColor: Record<Tab, string> = {
-    pivot:   'border-emerald-400 bg-emerald-50 text-emerald-700',
-    unpivot: 'border-rose-400 bg-rose-50 text-rose-700',
-  }
+  const tabActiveClass = 'border-ios-orange/40 bg-ios-orange-light text-ios-orange-dark'
 
   return (
-    <PageContainer>
+    <PageContainer className="max-w-5xl">
       <ChapterTitle icon="🔄" num={1} title={t.chapterTitle} subtitle={t.chapterSubtitle} />
 
       {/* Tab bar */}
@@ -246,7 +241,7 @@ export function PivotSection({ lang }: { lang: 'ko' | 'en' }) {
             onClick={() => setTab(tb.id)}
             className={cn(
               'rounded-md border px-4 py-1.5 font-mono text-[11px] font-bold transition-all',
-              tab === tb.id ? tabColor[tb.id] + ' shadow-sm' : 'border-border bg-muted/30 text-muted-foreground hover:bg-muted',
+              tab === tb.id ? tabActiveClass + ' shadow-sm' : 'border-border bg-muted/30 text-muted-foreground hover:bg-muted',
             )}
           >
             {tb.label}
@@ -259,7 +254,7 @@ export function PivotSection({ lang }: { lang: 'ko' | 'en' }) {
         <>
           <SectionTitle>{t.pivotTitle}</SectionTitle>
           <Prose>{t.pivotDesc}</Prose>
-          <InfoBox color="emerald" icon="🔄" title="">
+          <InfoBox color="tip" icon="🔄" title="">
             {t.pivotInfo}
           </InfoBox>
 
@@ -292,7 +287,7 @@ export function PivotSection({ lang }: { lang: 'ko' | 'en' }) {
           <div className="mb-4">
             <PivotTable />
           </div>
-          <InfoBox color="amber" icon="💡">
+          <InfoBox color="tip" icon="💡">
             {t.pivotInfo}
           </InfoBox>
         </>
@@ -303,7 +298,7 @@ export function PivotSection({ lang }: { lang: 'ko' | 'en' }) {
         <>
           <SectionTitle>{t.unpivotTitle}</SectionTitle>
           <Prose>{t.unpivotDesc}</Prose>
-          <InfoBox color="rose" icon="↩️" title="">
+          <InfoBox color="tip" icon="↩️" title="">
             {t.unpivotInfo}
           </InfoBox>
 
@@ -354,7 +349,7 @@ export function PivotSection({ lang }: { lang: 'ko' | 'en' }) {
             </table>
           </div>
 
-          <InfoBox color="amber" icon="💡">
+          <InfoBox color="tip" icon="💡">
             {t.unpivotNullTip}
           </InfoBox>
         </>
