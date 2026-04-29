@@ -116,6 +116,29 @@ const FUNC_ITEMS: FuncItem[] = [
       en: 'NVL2 is Oracle-specific. In standard SQL, the equivalent is CASE WHEN expr IS NULL THEN … ELSE … END.',
     },
   },
+  {
+    name: 'COALESCE',
+    signature: 'COALESCE(expr1, expr2, …)',
+    desc: {
+      ko: '인자 목록을 왼쪽에서 오른쪽으로 순서대로 평가하여 처음으로 NULL이 아닌 값을 반환합니다. 모든 인자가 NULL이면 NULL을 반환합니다. ANSI 표준 함수이므로 Oracle 외 다른 데이터베이스에서도 동일하게 사용할 수 있습니다.\n\nNVL은 인자가 2개로 고정되어 있지만 COALESCE는 인자를 3개 이상 나열할 수 있습니다. 여러 컬럼 중 첫 번째 유효값을 골라야 하는 상황에서 NVL을 중첩하는 대신 COALESCE 하나로 간결하게 표현할 수 있습니다.',
+      en: 'Evaluates arguments left to right and returns the first non-NULL value. Returns NULL if all arguments are NULL. COALESCE is an ANSI standard function and works identically across Oracle and other databases.\n\nUnlike NVL which is limited to two arguments, COALESCE accepts any number. When you need the first valid value across multiple columns, COALESCE replaces nested NVL calls with a single, readable expression.',
+    },
+    example:
+      "-- 여러 fallback 컬럼 중 첫 번째 유효값 선택\nSELECT first_name,\n       manager_id,\n       dept_id,\n       COALESCE(manager_id, dept_id, 0) AS fallback_id\nFROM   employees",
+    tables: {
+      resultHeaders: ['first_name', 'manager_id', 'dept_id', 'fallback_id'],
+      resultRows: EMP_ROWS.map((r) => {
+        const mgr   = r[4] === 'null' ? null : r[4]
+        const dept  = r[2]
+        const fb    = mgr ?? dept ?? '0'
+        return [r[1], r[4] === 'null' ? 'null' : r[4], r[2], fb]
+      }),
+    },
+    note: {
+      ko: 'NVL(NVL(a, b), c)처럼 중첩 NVL을 써야 하는 상황은 COALESCE(a, b, c)로 대체할 수 있습니다. 가독성이 높고 표준 SQL이므로 신규 코드에서는 COALESCE를 권장합니다.',
+      en: 'Nested NVL calls like NVL(NVL(a, b), c) can be replaced by COALESCE(a, b, c). COALESCE is more readable and portable — prefer it in new code.',
+    },
+  },
 ]
 
 const C = { bg: 'bg-muted/40', border: 'border-border', text: 'text-foreground/80', active: 'bg-ios-blue-light text-ios-blue-dark', code: 'bg-muted/30 border-border' }

@@ -417,8 +417,8 @@ const C = { bg: 'bg-muted/40', border: 'border-border', text: 'text-foreground/8
 
 function ResultTable({ headers, rows }: { headers: string[]; rows: string[][] }) {
   return (
-    <div className="inline-block rounded-lg border text-xs">
-      <table className="w-auto">
+    <div className="overflow-x-auto rounded-lg border text-xs">
+      <table className="w-max min-w-full">
         <thead>
           <tr className="border-b bg-muted/60">
             {headers.map((h) => (
@@ -623,7 +623,7 @@ export function DateSection({ lang }: { lang: 'ko' | 'en' }) {
 
             {/* DUAL 설명 InfoBox (SYSDATE 항목에만) */}
             {item.dualInfo && (
-              <InfoBox color="tip" icon="🗄️" title={t.dualBoxTitle}>
+              <InfoBox variant="note" lang={lang}>
                 {item.dualInfo[lang]}
               </InfoBox>
             )}
@@ -731,14 +731,14 @@ export function DateSection({ lang }: { lang: 'ko' | 'en' }) {
 
             {/* vs 비교 노트 */}
             {item.vsNote && (
-              <InfoBox color="warning" icon="⚡" title={t.vsTitle}>
+              <InfoBox variant="warning" lang={lang}>
                 {item.vsNote[lang]}
               </InfoBox>
             )}
 
             {/* NLS 설명 InfoBox (SYSDATE 항목에만) */}
             {item.nlsNote && (
-              <InfoBox color="info" icon="🌐" title={t.nlsBoxTitle}>
+              <InfoBox variant="tip" lang={lang}>
                 <span style={{ whiteSpace: 'pre-line' }}>{item.nlsNote[lang]}</span>
               </InfoBox>
             )}

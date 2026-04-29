@@ -44,7 +44,7 @@ export function PgaSection() {
       <SectionTitle>{t.pgaTitle}</SectionTitle>
       <Prose>{t.pgaDesc}</Prose>
       <ConceptGrid items={t.pgaItems} />
-      <InfoBox color="tip" icon="🔐" title={t.pgaSgaVsTitle}>{t.pgaSgaVsDesc}</InfoBox>
+      <InfoBox variant="note" lang={lang}>{t.pgaSgaVsDesc}</InfoBox>
     </TwoColLayout>
   )
 }

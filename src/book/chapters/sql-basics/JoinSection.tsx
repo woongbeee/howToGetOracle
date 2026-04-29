@@ -18,7 +18,7 @@ interface JoinRow {
 }
 
 type JoinType = 'inner' | 'left' | 'right' | 'full' | 'cross'
-type PageTab = 'join' | 'self join' | 'hierarchy'
+type PageTab = 'join' | 'hierarchy'
 
 interface JoinAnimRow extends JoinRow {
   empIdx:  number | null
@@ -55,8 +55,6 @@ const EMP_ORG: Array<{ emp_id: number; first_name: string; dept_id: number; mana
   { emp_id: 105, first_name: 'Eva',    dept_id: 20, manager_id: 102 },
   { emp_id: 106, first_name: 'Frank',  dept_id: 30, manager_id: 101 },
 ]
-
-// ── Types ──────────────────────────────────────────────────────────────────
 
 interface HierNode {
   emp_id: number
@@ -103,6 +101,14 @@ const C = {
   badge:  'bg-ios-blue-light text-ios-blue-dark',
 }
 
+const JOIN_COLOR: Record<JoinType, { border: string; bg: string; text: string; badge: string }> = {
+  inner: { border: 'border-emerald-400', bg: 'bg-emerald-50',  text: 'text-emerald-800', badge: 'bg-emerald-100 text-emerald-700' },
+  left:  { border: 'border-blue-400',    bg: 'bg-blue-50',     text: 'text-blue-800',    badge: 'bg-blue-100 text-blue-700' },
+  right: { border: 'border-violet-400',  bg: 'bg-violet-50',   text: 'text-violet-800',  badge: 'bg-violet-100 text-violet-700' },
+  full:  { border: 'border-amber-400',   bg: 'bg-amber-50',    text: 'text-amber-800',   badge: 'bg-amber-100 text-amber-700' },
+  cross: { border: 'border-rose-400',    bg: 'bg-rose-50',     text: 'text-rose-800',    badge: 'bg-rose-100 text-rose-700' },
+}
+
 // ── Translation ────────────────────────────────────────────────────────────
 
 const T = {
@@ -112,7 +118,6 @@ const T = {
     joinIntro: 'JOIN은 서로 다른 테이블의 행을 결합 조건(ON 절)에 따라 연결해 결과 집합을 만듭니다. 결합 방식에 따라 INNER, LEFT OUTER, RIGHT OUTER, FULL OUTER, CROSS JOIN으로 나뉩니다.',
     pageTabs: [
       { key: 'join',      label: 'JOIN 종류' },
-      { key: 'selfjoin',  label: '셀프 조인' },
       { key: 'hierarchy', label: '계층형 질의' },
     ],
     joinTypes: [
@@ -134,19 +139,6 @@ const T = {
     ansiDesc: 'ANSI(American National Standards Institute)는 미국 국가 표준 협회로, SQL의 공통 문법 표준을 정의합니다. INNER JOIN, LEFT OUTER JOIN 같은 JOIN 문법은 ANSI SQL 표준에 포함되어 있어 Oracle, MySQL, PostgreSQL 등 대부분의 데이터베이스에서 동일하게 동작합니다.',
     oracleTip: 'Oracle에서는 ANSI JOIN 외에 (+) 표기법으로 OUTER JOIN을 표현할 수 있습니다. WHERE e.dept_id = d.dept_id(+) 는 LEFT OUTER JOIN과 동일합니다. 신규 코드에서는 ANSI 표준 JOIN을 권장합니다.',
     oracleTipTitle: 'Oracle (+) 구문',
-    selfJoinTitle: '셀프 조인 (Self Join)',
-    selfJoinSubtitle: '같은 테이블을 두 번 참조해 행과 행 사이의 관계를 표현합니다.',
-    selfJoinIntro: '셀프 조인은 하나의 테이블을 서로 다른 별칭(alias)으로 두 번 참조해 테이블 내부의 관계를 표현하는 기법입니다. 대표적인 사용 사례는 직원-관리자 계층 구조를 같은 테이블 안에서 조회하는 것입니다.',
-    selfJoinUseCases: '셀프 조인 대표 사용 사례',
-    useCases: [
-      { icon: '👥', title: '직원-관리자 구조', desc: '같은 employees 테이블에서 직원의 manager_id로 관리자 이름을 조회합니다.' },
-      { icon: '🗂️', title: '카테고리 계층', desc: 'categories 테이블에서 parent_id로 상위 카테고리를 조회합니다.' },
-      { icon: '📍', title: '지역 계층', desc: 'regions 테이블에서 parent_region_id로 상위 지역을 찾습니다.' },
-    ],
-    selfJoinSqlDesc: '같은 employees 테이블을 e(직원)와 m(관리자) 두 가지 별칭으로 참조합니다. e.manager_id = m.emp_id 조건으로 각 직원의 관리자를 찾습니다. King은 manager_id가 NULL이므로 INNER JOIN 결과에서 제외됩니다.',
-    selfJoinLeftDesc: 'LEFT OUTER JOIN을 사용하면 관리자가 없는 최상위 직원(King)도 결과에 포함됩니다. manager_name은 NULL로 표시됩니다.',
-    selfJoinResultTitle: '결과',
-    selfJoinNote: '셀프 조인은 일반 JOIN과 동일한 문법을 사용하며, 테이블 별칭만 다르게 지정합니다. 깊은 계층 구조(3단계 이상)가 필요하다면 CONNECT BY(계층형 질의)를 사용하는 것이 더 효율적입니다.',
     hierTitle: '계층형 질의 (Hierarchical Query)',
     hierSubtitle: 'CONNECT BY로 부모-자식 관계를 재귀적으로 탐색합니다.',
     hierIntro: 'Oracle의 CONNECT BY 절은 부모-자식 관계를 가진 데이터를 계층 구조로 탐색합니다. 셀프 조인과 달리 몇 단계가 되더라도 하나의 쿼리로 표현할 수 있어 조직도, 카테고리 트리, BOM(Bill of Materials) 등에 자주 사용됩니다.',
@@ -177,7 +169,6 @@ const T = {
     joinIntro: 'JOIN connects rows from different tables based on a condition in the ON clause. The join type determines which rows are included in the result.',
     pageTabs: [
       { key: 'join',      label: 'JOIN Types' },
-      { key: 'selfjoin',  label: 'Self Join' },
       { key: 'hierarchy', label: 'Hierarchical Query' },
     ],
     joinTypes: [
@@ -199,19 +190,6 @@ const T = {
     ansiDesc: 'ANSI (American National Standards Institute) defines common SQL syntax standards. JOIN syntax such as INNER JOIN and LEFT OUTER JOIN is part of the ANSI SQL standard, meaning it works the same way across most databases including Oracle, MySQL, and PostgreSQL.',
     oracleTip: 'Oracle also supports the (+) notation for OUTER JOINs in addition to ANSI syntax. WHERE e.dept_id = d.dept_id(+) is equivalent to a LEFT OUTER JOIN. ANSI standard JOIN syntax is recommended for new code.',
     oracleTipTitle: 'Oracle (+) Syntax',
-    selfJoinTitle: 'Self Join',
-    selfJoinSubtitle: 'Reference the same table twice under different aliases to express row-to-row relationships.',
-    selfJoinIntro: 'A self join references the same table twice using different aliases to express relationships within the table itself. The most common use case is querying an employee-manager hierarchy stored in a single table.',
-    selfJoinUseCases: 'Common Self Join Use Cases',
-    useCases: [
-      { icon: '👥', title: 'Employee-Manager', desc: 'Look up the manager\'s name from the same employees table using manager_id.' },
-      { icon: '🗂️', title: 'Category Tree',   desc: 'Find parent categories in a categories table using parent_id.' },
-      { icon: '📍', title: 'Region Hierarchy', desc: 'Look up parent regions in a regions table using parent_region_id.' },
-    ],
-    selfJoinSqlDesc: 'The same employees table is aliased as e (employee) and m (manager). The condition e.manager_id = m.emp_id links each employee to their manager. King has a NULL manager_id and is excluded from the INNER JOIN result.',
-    selfJoinLeftDesc: 'Using LEFT OUTER JOIN includes the top-level employee (King) who has no manager. manager_name appears as NULL.',
-    selfJoinResultTitle: 'Result',
-    selfJoinNote: 'A self join uses the same syntax as a regular join — the only difference is that both sides reference the same table. For deeper hierarchies (3+ levels), CONNECT BY (hierarchical query) is more efficient.',
     hierTitle: 'Hierarchical Query (CONNECT BY)',
     hierSubtitle: 'Recursively traverse parent-child relationships with CONNECT BY.',
     hierIntro: 'Oracle\'s CONNECT BY clause traverses data with parent-child relationships as a tree structure. Unlike self joins, any depth of hierarchy can be expressed in a single query — making it ideal for org charts, category trees, and BOMs (Bill of Materials).',
@@ -572,206 +550,9 @@ function JoinAnimator({ type, joinRowCount, queryDesc }: { type: JoinType; joinR
   )
 }
 
-// ── SelfJoinPage ─────────────────────────────────────────────────────────────
-
-type SelfJoinMode = 'inner' | 'left'
-
-function SelfJoinPage() {
-  const lang = useSimulationStore((s) => s.lang)
-  const t    = T[lang]
-  const [mode, setMode] = useState<SelfJoinMode>('inner')
-
-  const mgrMap = new Map(EMP_ORG.map((e) => [e.emp_id, e.first_name]))
-
-  const innerRows = EMP_ORG
-    .filter((e) => e.manager_id !== null)
-    .map((e) => ({ emp_id: e.emp_id, emp_name: e.first_name, manager_id: e.manager_id, manager_name: mgrMap.get(e.manager_id!) ?? null }))
-
-  const leftRows = EMP_ORG
-    .map((e) => ({ emp_id: e.emp_id, emp_name: e.first_name, manager_id: e.manager_id, manager_name: e.manager_id != null ? (mgrMap.get(e.manager_id) ?? null) : null }))
-
-  const rows = mode === 'inner' ? innerRows : leftRows
-
-  const innerSql = `SELECT e.emp_id,
-       e.first_name  AS emp_name,
-       m.first_name  AS manager_name
-FROM   employees e
-INNER JOIN employees m
-  ON e.manager_id = m.emp_id`
-
-  const leftSql = `SELECT e.emp_id,
-       e.first_name  AS emp_name,
-       m.first_name  AS manager_name
-FROM   employees e
-LEFT OUTER JOIN employees m
-  ON e.manager_id = m.emp_id`
-
-  return (
-    <div className="flex flex-col gap-6">
-      <div>
-        <SectionTitle>{t.selfJoinTitle}</SectionTitle>
-        <SubTitle>{t.selfJoinSubtitle}</SubTitle>
-        <Prose>{t.selfJoinIntro}</Prose>
-      </div>
-
-      {/* Use cases */}
-      <div>
-        <p className="mb-3 font-mono text-xs font-bold text-muted-foreground">{t.selfJoinUseCases}</p>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-          {t.useCases.map((uc) => (
-            <div key={uc.title} className="rounded-xl border border-border bg-card p-3 flex gap-3 items-start">
-              <span className="text-lg">{uc.icon}</span>
-              <div>
-                <div className="font-mono text-xs font-bold text-foreground">{uc.title}</div>
-                <div className="mt-0.5 text-[11px] leading-snug text-muted-foreground">{uc.desc}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Data table */}
-      <div>
-        <p className="mb-2 font-mono text-[10px] font-bold text-muted-foreground">EMPLOYEES</p>
-        <div className="overflow-x-auto rounded-lg border bg-card text-xs">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b bg-muted/60">
-                {['emp_id', 'first_name', 'manager_id'].map((h) => (
-                  <th key={h} className={cn('px-3 py-1.5 text-left font-mono text-[10px] font-bold',
-                    h === 'emp_id' ? 'text-ios-blue-dark' : h === 'manager_id' ? 'text-ios-teal-dark' : 'text-muted-foreground'
-                  )}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {EMP_ORG.map((e) => (
-                <tr key={e.emp_id} className="border-b last:border-0 hover:bg-muted/30">
-                  <td className="px-3 py-1 font-mono text-[11px] text-ios-blue-dark font-bold">{e.emp_id}</td>
-                  <td className="px-3 py-1 font-mono text-[11px] text-foreground/80">{e.first_name}</td>
-                  <td className={cn('px-3 py-1 font-mono text-[11px]', e.manager_id === null ? 'italic text-muted-foreground/40' : 'text-ios-teal-dark font-bold')}>
-                    {e.manager_id ?? 'NULL'}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* Join mode toggle */}
-      <div className="flex gap-2">
-        {(['inner', 'left'] as SelfJoinMode[]).map((m) => (
-          <button
-            key={m}
-            onClick={() => setMode(m)}
-            className={cn(
-              'rounded-lg border px-4 py-1.5 font-mono text-xs font-bold transition-all',
-              mode === m
-                ? 'border-ios-blue/30 bg-ios-blue-light text-ios-blue-dark'
-                : 'border-border bg-card text-muted-foreground hover:bg-muted/40',
-            )}
-          >
-            {m === 'inner' ? 'INNER JOIN' : 'LEFT OUTER JOIN'}
-          </button>
-        ))}
-      </div>
-
-      {/* SQL + result */}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <div className="flex flex-col gap-3">
-          <div className="rounded-lg border bg-muted/60 px-3 py-2.5">
-            <SqlHighlight sql={mode === 'inner' ? innerSql : leftSql} />
-          </div>
-          <div className="rounded-lg border border-ios-blue/20 bg-ios-blue-light px-3 py-2 text-[12px] leading-relaxed text-ios-blue-dark">
-            {mode === 'inner' ? t.selfJoinSqlDesc : t.selfJoinLeftDesc}
-          </div>
-        </div>
-
-        <div>
-          <p className="mb-2 font-mono text-[10px] font-bold text-muted-foreground">{t.selfJoinResultTitle}</p>
-          <div className="overflow-x-auto rounded-lg border bg-card text-xs">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b bg-muted/60">
-                  {['emp_id', 'emp_name', 'manager_id', 'manager_name'].map((h) => (
-                    <th key={h} className={cn('px-3 py-1.5 text-left font-mono text-[10px] font-bold',
-                      h === 'emp_id'       ? 'text-blue-600'
-                      : h === 'manager_id'   ? 'text-violet-600'
-                      : h === 'manager_name' ? 'text-emerald-600'
-                      : 'text-muted-foreground'
-                    )}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((r) => (
-                  <tr key={r.emp_id} className={cn('border-b last:border-0', r.manager_name === null ? 'bg-muted/30' : '')}>
-                    <td className="px-3 py-1 font-mono text-[11px] text-ios-blue-dark font-bold">{r.emp_id}</td>
-                    <td className="px-3 py-1 font-mono text-[11px] text-foreground/80">{r.emp_name}</td>
-                    <td className={cn('px-3 py-1 font-mono text-[11px]', r.manager_id === null ? 'italic text-muted-foreground/40' : 'text-violet-700 font-bold')}>
-                      {r.manager_id ?? 'NULL'}
-                    </td>
-                    <td className={cn('px-3 py-1 font-mono text-[11px]', r.manager_name === null ? 'italic text-muted-foreground/40' : 'text-foreground/80')}>
-                      {r.manager_name ?? 'NULL'}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          {mode === 'left' && (
-            <div className="mt-1.5 flex gap-3 font-mono text-[10px] text-muted-foreground">
-              <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-sm bg-violet-200" />{lang === 'ko' ? '관리자 없음 (최상위)' : 'No manager (top-level)'}</span>
-            </div>
-          )}
-        </div>
-      </div>
-
-      <InfoBox color="tip" icon="💡" title={lang === 'ko' ? '셀프 조인 포인트' : 'Self Join Key Points'}>
-        {t.selfJoinNote}
-      </InfoBox>
-    </div>
-  )
-}
-
 // ── HierarchyPage ─────────────────────────────────────────────────────────────
 
 type HierTab = 'basic' | 'path'
-
-function OrgTree({ startId }: { startId: number | null }) {
-  const lang = useSimulationStore((s) => s.lang)
-  const nodes = buildHierarchy(startId, 5)
-  if (nodes.length === 0) return null
-
-  const levelColors = [
-    'border-border bg-card text-foreground/80',
-    'border-ios-blue/20 bg-ios-blue-light text-ios-blue-dark',
-    'border-ios-teal/20 bg-ios-teal-light text-ios-teal-dark',
-    'border-border bg-muted/60 text-foreground/60',
-  ]
-
-  return (
-    <div className="flex flex-col gap-1">
-      {nodes.map((node) => (
-        <div
-          key={node.emp_id}
-          className="flex items-center gap-2"
-          style={{ paddingLeft: `${(node.level - 1) * 20}px` }}
-        >
-          {node.level > 1 && <span className="font-mono text-[10px] text-muted-foreground/50">└</span>}
-          <div className={cn('flex items-center gap-2 rounded-lg border px-2.5 py-1 font-mono text-[11px]', levelColors[(node.level - 1) % levelColors.length])}>
-            <span className="font-bold">{node.first_name}</span>
-            <span className="text-[9px] opacity-60">#{node.emp_id}</span>
-            <span className="rounded bg-white/50 px-1 text-[9px] font-bold">
-              {lang === 'ko' ? `레벨 ${node.level}` : `LVL ${node.level}`}
-            </span>
-          </div>
-        </div>
-      ))}
-    </div>
-  )
-}
 
 function HierarchyPage() {
   const lang = useSimulationStore((s) => s.lang)
@@ -853,7 +634,7 @@ function HierarchyPage() {
             </div>
           </div>
 
-          {/* Interactive tree */}
+          {/* Right column: start buttons → query result → source table */}
           <div className="flex flex-col gap-3">
             <div className="flex flex-wrap items-center gap-2">
               <span className="font-mono text-[10px] text-muted-foreground">{t.startFrom}:</span>
@@ -873,89 +654,82 @@ function HierarchyPage() {
               ))}
             </div>
 
-            <div className="rounded-xl border bg-card p-4">
-              <OrgTree startId={startId} />
+            {/* Query result table */}
+            <div className="overflow-x-auto rounded-lg border bg-card text-xs">
+              <div className="border-b bg-muted/40 px-3 py-1.5 font-mono text-[10px] font-bold text-muted-foreground">
+                {lang === 'ko' ? '쿼리 결과' : 'Query Result'}
+              </div>
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b bg-muted/60">
+                    {hierTab === 'basic'
+                      ? ['emp_id', 'name (LPAD)', 'manager_id', t.hierLevelLabel].map((h) => (
+                          <th key={h} className="px-3 py-1.5 text-left font-mono text-[10px] font-bold text-muted-foreground whitespace-nowrap">{h}</th>
+                        ))
+                      : ['emp_id', 'name (LPAD)', t.hierLevelLabel, t.hierPathLabel].map((h) => (
+                          <th key={h} className="px-3 py-1.5 text-left font-mono text-[10px] font-bold text-muted-foreground whitespace-nowrap">{h}</th>
+                        ))
+                    }
+                  </tr>
+                </thead>
+                <tbody>
+                  {hierNodes.map((node) => (
+                    <tr key={node.emp_id} className="border-b last:border-0 hover:bg-muted/30">
+                      <td className="px-3 py-1.5 font-mono text-[11px] text-ios-blue-dark font-bold">{node.emp_id}</td>
+                      <td className="py-1.5 pl-3 pr-4 font-mono text-[11px] whitespace-pre">
+                        <span className="text-ios-teal/60">{' '.repeat((node.level - 1) * 4)}</span>
+                        <span className="font-bold text-foreground/90">{node.first_name}</span>
+                      </td>
+                      {hierTab === 'basic' ? (
+                        <>
+                          <td className="px-3 py-1.5 font-mono text-[11px] text-foreground/60">{node.manager_id ?? 'NULL'}</td>
+                          <td className="px-3 py-1.5 font-mono text-[11px] text-ios-teal-dark font-bold">{node.level}</td>
+                        </>
+                      ) : (
+                        <>
+                          <td className="px-3 py-1.5 font-mono text-[11px] text-ios-teal-dark font-bold">{node.level}</td>
+                          <td className="px-3 py-1.5 font-mono text-[11px] text-foreground/60">/{node.path}</td>
+                        </>
+                      )}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
 
-            {/* Source table + Result table side by side */}
-            <div className="grid grid-cols-2 gap-3">
-              {/* Source table */}
-              <div className="overflow-x-auto rounded-lg border bg-card text-xs">
-                <div className="border-b bg-muted/40 px-3 py-1.5 font-mono text-[10px] font-bold text-muted-foreground">
-                  employees
-                </div>
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b bg-muted/60">
-                      {['name', 'emp_id', 'manager_id'].map((h) => (
-                        <th key={h} className="px-3 py-1.5 text-left font-mono text-[10px] font-bold text-muted-foreground whitespace-nowrap">{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {EMP_ORG.map((emp) => (
-                      <tr key={emp.emp_id} className={cn('border-b last:border-0', resultIds.has(emp.emp_id) ? 'bg-cyan-50/60 dark:bg-cyan-950/20' : 'opacity-40')}>
-                        <td className="px-3 py-1.5 font-mono text-[11px] font-bold text-foreground/90">{emp.first_name}</td>
-                        <td className="px-3 py-1.5 font-mono text-[11px] text-ios-blue-dark font-bold">{emp.emp_id}</td>
-                        <td className="px-3 py-1.5 font-mono text-[11px] text-foreground/60">{emp.manager_id ?? 'NULL'}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+            {/* Source table */}
+            <div className="overflow-x-auto rounded-lg border bg-card text-xs">
+              <div className="border-b bg-muted/40 px-3 py-1.5 font-mono text-[10px] font-bold text-muted-foreground">
+                employees
               </div>
-
-              {/* Result table */}
-              <div className="overflow-x-auto rounded-lg border bg-card text-xs">
-                <div className="border-b bg-muted/40 px-3 py-1.5 font-mono text-[10px] font-bold text-muted-foreground">
-                  {lang === 'ko' ? '쿼리 결과' : 'Query Result'}
-                </div>
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b bg-muted/60">
-                      {hierTab === 'basic'
-                        ? ['emp_id', 'name (LPAD)', 'manager_id', t.hierLevelLabel].map((h) => (
-                            <th key={h} className="px-3 py-1.5 text-left font-mono text-[10px] font-bold text-muted-foreground whitespace-nowrap">{h}</th>
-                          ))
-                        : ['emp_id', 'name (LPAD)', t.hierLevelLabel, t.hierPathLabel].map((h) => (
-                            <th key={h} className="px-3 py-1.5 text-left font-mono text-[10px] font-bold text-muted-foreground whitespace-nowrap">{h}</th>
-                          ))
-                      }
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {hierNodes.map((node) => (
-                      <tr key={node.emp_id} className="border-b last:border-0 hover:bg-muted/30">
-                        <td className="px-3 py-1.5 font-mono text-[11px] text-ios-blue-dark font-bold">{node.emp_id}</td>
-                        <td className="py-1.5 pl-3 pr-4 font-mono text-[11px] whitespace-pre">
-                          <span className="text-ios-teal/60">{' '.repeat((node.level - 1) * 4)}</span>
-                          <span className="font-bold text-foreground/90">{node.first_name}</span>
-                        </td>
-                        {hierTab === 'basic' ? (
-                          <>
-                            <td className="px-3 py-1.5 font-mono text-[11px] text-foreground/60">{node.manager_id ?? 'NULL'}</td>
-                            <td className="px-3 py-1.5 font-mono text-[11px] text-ios-teal-dark font-bold">{node.level}</td>
-                          </>
-                        ) : (
-                          <>
-                            <td className="px-3 py-1.5 font-mono text-[11px] text-ios-teal-dark font-bold">{node.level}</td>
-                            <td className="px-3 py-1.5 font-mono text-[11px] text-foreground/60">/{node.path}</td>
-                          </>
-                        )}
-                      </tr>
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b bg-muted/60">
+                    {['name', 'emp_id', 'manager_id'].map((h) => (
+                      <th key={h} className="px-3 py-1.5 text-left font-mono text-[10px] font-bold text-muted-foreground whitespace-nowrap">{h}</th>
                     ))}
-                  </tbody>
-                </table>
-              </div>
+                  </tr>
+                </thead>
+                <tbody>
+                  {EMP_ORG.map((emp) => (
+                    <tr key={emp.emp_id} className={cn('border-b last:border-0', resultIds.has(emp.emp_id) ? 'bg-cyan-50/60 dark:bg-cyan-950/20' : 'opacity-40')}>
+                      <td className="px-3 py-1.5 font-mono text-[11px] font-bold text-foreground/90">{emp.first_name}</td>
+                      <td className="px-3 py-1.5 font-mono text-[11px] text-ios-blue-dark font-bold">{emp.emp_id}</td>
+                      <td className="px-3 py-1.5 font-mono text-[11px] text-foreground/60">{emp.manager_id ?? 'NULL'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
       </div>
 
       <div className="flex flex-col gap-3">
-        <InfoBox color="tip" icon="↕" title={lang === 'ko' ? 'PRIOR 방향 주의' : 'PRIOR Direction'}>
+        <InfoBox variant="warning" lang={lang}>
           {t.hierPriorNote}
         </InfoBox>
-        <InfoBox color="tip" icon="💡" title={lang === 'ko' ? 'Oracle vs 표준 SQL' : 'Oracle vs Standard SQL'}>
+        <InfoBox variant="tip" lang={lang}>
           {t.hierNote}
         </InfoBox>
       </div>
@@ -1006,7 +780,7 @@ export function JoinSection() {
             transition={{ duration: 0.2 }}
             className="flex flex-col gap-6"
           >
-            <Prose>{t.joinIntro}</Prose>
+            <Prose className="pt-[10px]">{t.joinIntro}</Prose>
 
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-[280px_1fr] lg:items-start">
               {/* LEFT: JOIN type selector */}
@@ -1019,22 +793,24 @@ export function JoinSection() {
                       key={jk}
                       onClick={() => setActiveJoin(jk)}
                       className={cn(
-                        'flex items-start gap-3 rounded-xl border p-3 text-left transition-all',
-                        isActive ? `${C.bg} ${C.border} shadow-sm` : 'border-border bg-card hover:bg-muted/40',
+                        'flex items-start gap-3 rounded-xl border-2 p-3 text-left transition-all',
+                        isActive
+                          ? `${JOIN_COLOR[jk].bg} ${JOIN_COLOR[jk].border} shadow-sm`
+                          : 'border-border bg-card hover:bg-muted/40',
                       )}
                     >
-                      <div className={cn('mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-sm font-bold', isActive ? C.badge : 'bg-muted text-muted-foreground')}>
+                      <div className={cn('mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-sm font-bold', isActive ? JOIN_COLOR[jk].badge : 'bg-muted text-muted-foreground')}>
                         {jt.icon}
                       </div>
                       <div className="min-w-0">
-                        <div className={cn('font-mono text-xs font-bold', isActive ? C.text : 'text-foreground/70')}>
+                        <div className={cn('font-mono text-xs font-bold', isActive ? JOIN_COLOR[jk].text : 'text-foreground/70')}>
                           {jt.title}
                         </div>
                         <div className={cn('mt-0.5 text-[11px] leading-snug', isActive ? 'text-foreground/70' : 'text-muted-foreground')}>
                           {jt.desc}
                         </div>
                       </div>
-                      {isActive && <span className={cn('ml-auto mt-0.5 shrink-0 text-xs', C.text)}>◀</span>}
+                      {isActive && <span className={cn('ml-auto mt-0.5 shrink-0 text-xs', JOIN_COLOR[jk].text)}>◀</span>}
                     </button>
                   )
                 })}
@@ -1061,25 +837,13 @@ export function JoinSection() {
             </div>
 
             <div className="flex flex-col gap-3">
-              <InfoBox color="tip" icon="💡" title={t.ansiTitle}>
+              <InfoBox variant="note" lang={lang}>
                 {t.ansiDesc}
               </InfoBox>
-              <InfoBox color="tip" icon="💡" title={t.oracleTipTitle}>
+              <InfoBox variant="tip" lang={lang}>
                 {t.oracleTip}
               </InfoBox>
             </div>
-          </motion.div>
-        )}
-
-        {pageTab === 'self join' && (
-          <motion.div
-            key="selfjoin"
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -6 }}
-            transition={{ duration: 0.2 }}
-          >
-            <SelfJoinPage />
           </motion.div>
         )}
 

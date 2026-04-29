@@ -103,7 +103,7 @@ export function SortPage({ sectionId }: { sectionId: string }) {
             headers={[lang === 'ko' ? '소트 유형' : 'Sort Type', lang === 'ko' ? '특징' : 'Description', lang === 'ko' ? '발생 조건' : 'Condition', lang === 'ko' ? '성능' : 'Performance']}
             rows={t.memTable}
           />
-          <InfoBox color="info" icon="💡" title="PGA_AGGREGATE_TARGET">
+          <InfoBox variant="tip" lang={lang}>
             {t.memInfo}
           </InfoBox>
         </>

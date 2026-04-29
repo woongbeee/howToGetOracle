@@ -132,7 +132,7 @@ export function JoinPage({ sectionId }: { sectionId: string }) {
           <SectionTitle>{t.hashTitle}</SectionTitle>
           <Prose>{t.hashDesc}</Prose>
           <Table headers={[lang === 'ko' ? '항목' : 'Item', lang === 'ko' ? '설명' : 'Description']} rows={t.hashTable} />
-          <InfoBox color="info" icon="💡" title={lang === 'ko' ? '빌드 입력 선택' : 'Build Input Selection'}>
+          <InfoBox variant="tip" lang={lang}>
             {t.hashInfo}
           </InfoBox>
           <Divider />

@@ -6,15 +6,11 @@ import { SqlHighlight } from './SqlHighlight'
 
 // ── MiniSimulatorTable ─────────────────────────────────────────────────────
 
-export function MiniSimulatorTable({ sql, lang }: { sql: string; lang?: 'ko' | 'en' }) {
+export function MiniSimulatorTable({ sql }: { sql: string; lang?: 'ko' | 'en' }) {
   const ALL_COLS: Array<keyof Employee> = ['emp_id', 'first_name', 'last_name', 'dept_id', 'salary', 'job_title', 'manager_id']
   const parsed = parseAndExecute(sql, EMPLOYEES)
 
   function displayVal(emp: Employee, col: keyof Employee): string {
-    if (lang === 'ko') {
-      if (col === 'first_name') return emp.first_name_ko
-      if (col === 'last_name') return emp.last_name_ko
-    }
     return String(emp[col] ?? 'NULL')
   }
 

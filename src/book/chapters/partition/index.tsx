@@ -104,7 +104,7 @@ export function PartitionPage({ sectionId }: { sectionId: string }) {
         <>
           <SectionTitle>{t.pruningTitle}</SectionTitle>
           <Prose>{t.pruningDesc}</Prose>
-          <InfoBox color="info" icon="💡" title={lang === 'ko' ? 'Static vs Dynamic Pruning' : 'Static vs Dynamic Pruning'}>
+          <InfoBox variant="tip" lang={lang}>
             {t.pruningInfo}
           </InfoBox>
           <Divider />

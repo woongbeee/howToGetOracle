@@ -153,7 +153,7 @@ export function QueryTransformPage({ sectionId }: { sectionId: string }) {
             {lang === 'ko' ? '변환 후' : 'After'}
           </div>
           <CodeBlock code={t.unnestAfter} />
-          <InfoBox color="info" icon="✓" title={lang === 'ko' ? '효과' : 'Effect'}>
+          <InfoBox variant="summary" lang={lang}>
             {lang === 'ko'
               ? '조인으로 변환 후 CBO는 Nested Loop, Hash, Sort-Merge 중 최적의 조인 방법을 자유롭게 선택할 수 있습니다.'
               : 'After converting to a join, the CBO can freely choose the optimal join method: Nested Loop, Hash, or Sort-Merge.'}
@@ -184,7 +184,7 @@ export function QueryTransformPage({ sectionId }: { sectionId: string }) {
           <Divider />
           <SectionTitle>{t.transitiveTitle}</SectionTitle>
           <Prose>{t.transitiveDesc}</Prose>
-          <InfoBox color="tip" icon="💡" title="Example">
+          <InfoBox variant="note" lang={lang}>
             <code className="font-mono text-[11px]">
               {lang === 'ko'
                 ? 'e.department_id = d.department_id AND d.department_id = 90\n→ 자동으로 e.department_id = 90 추가'

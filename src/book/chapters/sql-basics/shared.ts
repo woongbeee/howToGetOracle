@@ -7,8 +7,6 @@ export interface Employee {
   emp_id: number
   first_name: string
   last_name: string
-  first_name_ko: string
-  last_name_ko: string
   dept_id: number
   salary: number
   job_title: string
@@ -115,15 +113,13 @@ const JOB_TITLE_MAP: Record<string, string> = {
 const _hrEmpTable = HR_SCHEMA.find((t) => t.name === 'EMPLOYEES')!
 
 export const EMPLOYEES: Employee[] = _hrEmpTable.rows.map((r) => ({
-  emp_id:        r['EMPLOYEE_ID']    as number,
-  first_name:    r['FIRST_NAME']    as string,
-  last_name:     r['LAST_NAME']     as string,
-  first_name_ko: r['FIRST_NAME_KO'] as string,
-  last_name_ko:  r['LAST_NAME_KO']  as string,
-  dept_id:       r['DEPARTMENT_ID'] as number,
-  salary:        r['SALARY']        as number,
-  job_title:     JOB_TITLE_MAP[r['JOB_ID'] as string] ?? (r['JOB_ID'] as string),
-  manager_id:    r['MANAGER_ID']    as number | null,
+  emp_id:     r['EMPLOYEE_ID']  as number,
+  first_name: r['FIRST_NAME']  as string,
+  last_name:  r['LAST_NAME']   as string,
+  dept_id:    r['DEPARTMENT_ID'] as number,
+  salary:     r['SALARY']      as number,
+  job_title:  JOB_TITLE_MAP[r['JOB_ID'] as string] ?? (r['JOB_ID'] as string),
+  manager_id: r['MANAGER_ID']  as number | null,
 }))
 
 export const EMP_COLS: Array<keyof Employee> = ['emp_id', 'first_name', 'last_name', 'dept_id', 'salary', 'job_title', 'manager_id']
@@ -341,15 +337,13 @@ export const DELETE_STEPS: ExecStep[] = [
 
 // ── Color helpers ──────────────────────────────────────────────────────────
 
-const IOS_STEP = { bg: 'bg-ios-blue-light', text: 'text-ios-blue-dark', border: 'border-ios-blue/20', dot: 'bg-ios-blue' }
-
 export const STEP_COLOR: Record<string, { bg: string; text: string; border: string; dot: string }> = {
-  violet:  IOS_STEP,
-  orange:  IOS_STEP,
-  blue:    IOS_STEP,
-  emerald: IOS_STEP,
-  rose:    IOS_STEP,
-  amber:   IOS_STEP,
+  violet:  { bg: 'bg-violet-50',         text: 'text-violet-800',       border: 'border-violet-200',       dot: 'bg-violet-400' },
+  orange:  { bg: 'bg-ios-orange-light',  text: 'text-ios-orange-dark',  border: 'border-ios-orange/25',   dot: 'bg-ios-orange' },
+  blue:    { bg: 'bg-ios-blue-light',    text: 'text-ios-blue-dark',    border: 'border-ios-blue/20',     dot: 'bg-ios-blue' },
+  emerald: { bg: 'bg-ios-green-light',   text: 'text-ios-green-dark',   border: 'border-ios-green/20',    dot: 'bg-ios-green' },
+  rose:    { bg: 'bg-ios-red-light',     text: 'text-ios-red-dark',     border: 'border-ios-red/20',      dot: 'bg-ios-red' },
+  amber:   { bg: 'bg-amber-50',          text: 'text-amber-800',        border: 'border-amber-200',        dot: 'bg-amber-400' },
 }
 
 export const CLAUSE_COLOR: Record<string, string> = {

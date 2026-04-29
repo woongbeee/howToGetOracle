@@ -8,14 +8,12 @@ export function EmpRow({
   deleted,
   columns,
   original,
-  lang,
 }: {
   row: Employee
   highlighted: boolean
   deleted: boolean
   columns: string[]
   original?: Employee
-  lang?: 'ko' | 'en'
 }) {
   const cols: Array<keyof Employee> =
     columns.length === 0
@@ -23,10 +21,6 @@ export function EmpRow({
       : (columns as Array<keyof Employee>)
 
   function displayVal(emp: Employee, col: keyof Employee): string {
-    if (lang === 'ko') {
-      if (col === 'first_name') return emp.first_name_ko
-      if (col === 'last_name') return emp.last_name_ko
-    }
     return String(emp[col] ?? 'NULL')
   }
 

@@ -160,7 +160,7 @@ export function OptimizerChapterPage({ sectionId }: { sectionId: string }) {
         <>
           <SectionTitle>{t.planTitle}</SectionTitle>
           <Prose>{t.planDesc}</Prose>
-          <InfoBox color="info" icon="💡" title="OPTIMIZER_MODE">
+          <InfoBox variant="tip" lang={lang}>
             {t.planInfo}
           </InfoBox>
         </>

@@ -107,7 +107,7 @@ export function ClausesSection({ lang, t }: { lang: 'ko' | 'en'; t: typeof T['ko
           </>
         }
         bottomContent={
-          <InfoBox color="tip" icon="💡" title={lang === 'ko' ? '더 알아보기' : 'Advanced'}>
+          <InfoBox variant="tip" lang={lang}>
             {t.groupByAliasTip}
           </InfoBox>
         }
@@ -123,7 +123,7 @@ export function ClausesSection({ lang, t }: { lang: 'ko' | 'en'; t: typeof T['ko
           <>
             <SectionTitle>{t.havingTitle}</SectionTitle>
             <Prose>{t.havingDesc}</Prose>
-            <InfoBox color="tip" icon="💡" title={lang === 'ko' ? '더 알아보기' : 'Advanced'}>
+            <InfoBox variant="tip" lang={lang}>
               {t.havingTip}
             </InfoBox>
           </>

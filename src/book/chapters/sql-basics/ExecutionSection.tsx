@@ -192,7 +192,6 @@ function ResultTable({ parsed, t, lang, overrideResult }: {
                     deleted={false}
                     columns={[]}
                     original={emp}
-                    lang={lang}
                   />
                 )
               })}
@@ -226,7 +225,6 @@ function ResultTable({ parsed, t, lang, overrideResult }: {
                   highlighted={true}
                   deleted={true}
                   columns={[]}
-                  lang={lang}
                 />
               ))}
             </tbody>
@@ -493,7 +491,6 @@ export function ExecutionSimulator({ lang, t }: { lang: 'ko' | 'en'; t: typeof T
                               deleted={!!isDeleted}
                               columns={[]}
                               original={parsed.type === 'UPDATE' && isHighlighted ? emp : undefined}
-                              lang={lang}
                             />
                           )
                         })

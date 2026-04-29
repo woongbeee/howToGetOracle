@@ -80,6 +80,11 @@
   --color-ios-red:         #FF453A;
   --color-ios-red-light:   #fff0ee;
   --color-ios-red-dark:    #8a0f08;
+
+  /* Green — usage, practical examples, "when to use" */
+  --color-ios-green:       #30D158;
+  --color-ios-green-light: #e6f9ed;
+  --color-ios-green-dark:  #0a5c22;
 }
 
 * { box-sizing: border-box; }

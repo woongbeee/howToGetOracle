@@ -57,20 +57,57 @@ export function Prose({ children, className }: { children: ReactNode; className?
   )
 }
 
-export function InfoBox({ color = 'tip', icon, title, children }: {
-  color?: 'info' | 'tip' | 'warning' | 'danger'
+type InfoVariant = 'tip' | 'note' | 'warning' | 'usage' | 'summary' | 'danger'
+type InfoColor   = 'info' | 'tip' | 'warning' | 'danger'
+
+interface VariantDef {
+  color: string
+  icon:  string
+  ko:    string
+  en:    string
+}
+
+const VARIANT_DEFS: Record<InfoVariant, VariantDef> = {
+  tip:     { color: 'bg-ios-teal-light   border-ios-teal/20   text-ios-teal-dark',   icon: '💡', ko: '더 알아보기',        en: 'Advanced' },
+  note:    { color: 'bg-ios-blue-light   border-ios-blue/20   text-ios-blue-dark',   icon: '📌', ko: '참고',              en: 'Note' },
+  warning: { color: 'bg-ios-orange-light border-ios-orange/25 text-ios-orange-dark', icon: '⚠️', ko: '주의',              en: 'Caution' },
+  usage:   { color: 'bg-ios-green-light  border-ios-green/20  text-ios-green-dark',  icon: '🛠️', ko: '어디서 사용할까?',   en: 'When to Use' },
+  summary: { color: 'bg-ios-blue-light   border-ios-blue/20   text-ios-blue-dark',   icon: '📐', ko: '핵심 정리',          en: 'Summary' },
+  danger:  { color: 'bg-ios-red-light    border-ios-red/20    text-ios-red-dark',    icon: '🚨', ko: '위험',              en: 'Danger' },
+}
+
+const LEGACY_COLOR: Record<InfoColor, string> = {
+  info:    'bg-ios-blue-light border-ios-blue/20 text-ios-blue-dark',
+  tip:     'bg-ios-teal-light border-ios-teal/20 text-ios-teal-dark',
+  warning: 'bg-ios-orange-light border-ios-orange/25 text-ios-orange-dark',
+  danger:  'bg-ios-red-light border-ios-red/20 text-ios-red-dark',
+}
+
+export function InfoBox({ variant, lang, color, icon, title, children }: {
+  variant?: InfoVariant
+  lang?: 'ko' | 'en'
+  color?: InfoColor
   icon?: string
   title?: string
   children: ReactNode
 }) {
-  const styles: Record<string, string> = {
-    info:    'bg-ios-blue-light border-ios-blue/20 text-ios-blue-dark',
-    tip:     'bg-ios-teal-light border-ios-teal/20 text-ios-teal-dark',
-    warning: 'bg-ios-orange-light border-ios-orange/25 text-ios-orange-dark',
-    danger:  'bg-ios-red-light border-ios-red/20 text-ios-red-dark',
+  if (variant) {
+    const def = VARIANT_DEFS[variant]
+    const l   = lang ?? 'ko'
+    return (
+      <div className={cn('mt-4 mb-4 rounded-lg border p-4', def.color)}>
+        <div className="mb-1.5 flex items-center gap-1.5 font-mono text-xs font-bold uppercase tracking-wider">
+          <span>{def.icon}</span>
+          {def[l]}
+        </div>
+        <div className="text-xs leading-relaxed">{children}</div>
+      </div>
+    )
   }
+
+  const colorClass = LEGACY_COLOR[color ?? 'tip']
   return (
-    <div className={cn('mb-4 rounded-lg border p-4', styles[color])}>
+    <div className={cn('mt-4 mb-4 rounded-lg border p-4', colorClass)}>
       {title && (
         <div className="mb-1.5 flex items-center gap-1.5 font-mono text-xs font-bold uppercase tracking-wider">
           {icon && <span>{icon}</span>}

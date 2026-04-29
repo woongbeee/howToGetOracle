@@ -254,7 +254,7 @@ export function PivotSection({ lang }: { lang: 'ko' | 'en' }) {
         <>
           <SectionTitle>{t.pivotTitle}</SectionTitle>
           <Prose>{t.pivotDesc}</Prose>
-          <InfoBox color="tip" icon="🔄" title="">
+          <InfoBox variant="summary" lang={lang}>
             {t.pivotInfo}
           </InfoBox>
 
@@ -287,7 +287,7 @@ export function PivotSection({ lang }: { lang: 'ko' | 'en' }) {
           <div className="mb-4">
             <PivotTable />
           </div>
-          <InfoBox color="tip" icon="💡">
+          <InfoBox variant="note" lang={lang}>
             {t.pivotInfo}
           </InfoBox>
         </>
@@ -298,7 +298,7 @@ export function PivotSection({ lang }: { lang: 'ko' | 'en' }) {
         <>
           <SectionTitle>{t.unpivotTitle}</SectionTitle>
           <Prose>{t.unpivotDesc}</Prose>
-          <InfoBox color="tip" icon="↩️" title="">
+          <InfoBox variant="summary" lang={lang}>
             {t.unpivotInfo}
           </InfoBox>
 
@@ -349,7 +349,7 @@ export function PivotSection({ lang }: { lang: 'ko' | 'en' }) {
             </table>
           </div>
 
-          <InfoBox color="tip" icon="💡">
+          <InfoBox variant="tip" lang={lang}>
             {t.unpivotNullTip}
           </InfoBox>
         </>

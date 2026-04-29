@@ -82,55 +82,6 @@ function computeCube(): CubeRow[] {
 
 // ── GROUPING SETS computation ──────────────────────────────────────────────
 
-interface GroupingSetsRow {
-  dept_id: number | null
-  job_title: string | null
-  total_sal: number
-  cnt: number
-  _set: string
-}
-
-function computeGroupingSets(): GroupingSetsRow[] {
-  const result: GroupingSetsRow[] = []
-  const depts = [...new Set(EMPS.map((e) => e.dept_id))].sort((a, b) => a - b)
-  const jobs  = [...new Set(EMPS.map((e) => e.job_title))].sort()
-  // (dept_id) 집계
-  for (const dept of depts) {
-    const rows = EMPS.filter((e) => e.dept_id === dept)
-    result.push({ dept_id: dept, job_title: null, total_sal: rows.reduce((s, r) => s + r.salary, 0), cnt: rows.length, _set: 'dept' })
-  }
-  // (job_title) 집계
-  for (const job of jobs) {
-    const rows = EMPS.filter((e) => e.job_title === job)
-    result.push({ dept_id: null, job_title: job, total_sal: rows.reduce((s, r) => s + r.salary, 0), cnt: rows.length, _set: 'job' })
-  }
-  return result
-}
-
-// ── GROUPING() function computation ───────────────────────────────────────
-
-interface GroupingFnRow {
-  dept_id: number | null
-  job_title: string | null
-  total_sal: number
-  cnt: number
-  grp_dept: number   // GROUPING(dept_id)
-  grp_job: number    // GROUPING(job_title)
-  _level: 'detail' | 'subtotal' | 'grand'
-}
-
-function computeGroupingFn(): GroupingFnRow[] {
-  const rollup = computeRollup()
-  return rollup.map((r) => ({
-    dept_id:   r.dept_id,
-    job_title: r.job_title,
-    total_sal: r.total_sal,
-    cnt:       r.cnt,
-    grp_dept:  r.dept_id   === null ? 1 : 0,
-    grp_job:   r.job_title === null ? 1 : 0,
-    _level:    r._level,
-  }))
-}
 
 // ── SQL strings ────────────────────────────────────────────────────────────
 
@@ -428,6 +379,218 @@ const LEVEL_STYLE: Record<string, { row: string; badge: string; label: { ko: str
   grand:    { row: 'bg-ios-orange/10',    badge: 'bg-ios-orange/25 text-ios-orange-dark font-semibold', label: { ko: '총계', en: 'Grand' } },
 }
 
+// ── CUBE step data ─────────────────────────────────────────────────────────
+
+interface CubeStepRow {
+  dept_id:   number | null
+  job_title: string | null
+  total_sal: number
+  cnt:       number
+  _grouping: string
+  _key:      string
+  _new:      boolean
+}
+
+const CUBE_STEPS: { rows: CubeStepRow[] }[] = (() => {
+  const depts = [...new Set(EMPS.map((e) => e.dept_id))].sort((a, b) => a - b)
+  const jobs  = [...new Set(EMPS.map((e) => e.job_title))].sort()
+
+  const rawRows: CubeStepRow[] = EMPS.map((e, i) => ({
+    dept_id: e.dept_id, job_title: e.job_title, total_sal: e.salary, cnt: 1,
+    _grouping: 'detail', _key: `raw-${i}`, _new: false,
+  }))
+
+  const detailRows: CubeStepRow[] = []
+  for (const dept of depts) {
+    for (const job of jobs) {
+      const rows = EMPS.filter((e) => e.dept_id === dept && e.job_title === job)
+      if (rows.length === 0) continue
+      detailRows.push({ dept_id: dept, job_title: job, total_sal: rows.reduce((s, r) => s + r.salary, 0), cnt: rows.length, _grouping: 'dept+job', _key: `d-${dept}-${job}`, _new: true })
+    }
+  }
+
+  const withDeptSub: CubeStepRow[] = [
+    ...detailRows.map((r) => ({ ...r, _new: false })),
+    ...depts.map((dept) => {
+      const rows = EMPS.filter((e) => e.dept_id === dept)
+      return { dept_id: dept, job_title: null, total_sal: rows.reduce((s, r) => s + r.salary, 0), cnt: rows.length, _grouping: 'dept', _key: `sd-${dept}`, _new: true }
+    }),
+  ]
+
+  const withJobSub: CubeStepRow[] = [
+    ...withDeptSub.map((r) => ({ ...r, _new: false })),
+    ...jobs.map((job) => {
+      const rows = EMPS.filter((e) => e.job_title === job)
+      return { dept_id: null, job_title: job, total_sal: rows.reduce((s, r) => s + r.salary, 0), cnt: rows.length, _grouping: 'job', _key: `sj-${job}`, _new: true }
+    }),
+  ]
+
+  const withGrand: CubeStepRow[] = [
+    ...withJobSub.map((r) => ({ ...r, _new: false })),
+    { dept_id: null, job_title: null, total_sal: EMPS.reduce((s, r) => s + r.salary, 0), cnt: EMPS.length, _grouping: 'grand', _key: 'grand', _new: true },
+  ]
+
+  return [
+    { rows: rawRows },
+    { rows: detailRows },
+    { rows: withDeptSub },
+    { rows: withJobSub },
+    { rows: withGrand },
+  ]
+})()
+
+const CUBE_STEP_META = {
+  ko: [
+    { label: 'Step 0', desc: '원본 상세 데이터', groupKey: '없음 (개별 행)' },
+    { label: 'Step 1', desc: 'GROUP BY (dept_id, job_title) 상세', groupKey: '(dept_id, job_title)' },
+    { label: 'Step 2', desc: 'dept_id 소계 행 추가', groupKey: '(dept_id)' },
+    { label: 'Step 3', desc: 'job_title 소계 행 추가', groupKey: '(job_title)' },
+    { label: 'Step 4', desc: '전체 총계 행 추가', groupKey: '()' },
+  ],
+  en: [
+    { label: 'Step 0', desc: 'Raw detail rows', groupKey: 'none (individual rows)' },
+    { label: 'Step 1', desc: 'GROUP BY (dept_id, job_title) detail', groupKey: '(dept_id, job_title)' },
+    { label: 'Step 2', desc: 'dept_id subtotal rows added', groupKey: '(dept_id)' },
+    { label: 'Step 3', desc: 'job_title subtotal rows added', groupKey: '(job_title)' },
+    { label: 'Step 4', desc: 'Grand total row added', groupKey: '()' },
+  ],
+}
+
+const CUBE_GROUPING_STYLE: Record<string, { row: string; badge: string; label: { ko: string; en: string } }> = {
+  'detail':   { row: '',                    badge: 'bg-muted text-muted-foreground',                          label: { ko: '원본',     en: 'Raw' } },
+  'dept+job': { row: '',                    badge: 'bg-muted text-muted-foreground',                          label: { ko: '상세',     en: 'Detail' } },
+  'dept':     { row: 'bg-ios-orange-light', badge: 'bg-ios-orange/15 text-ios-orange-dark',                   label: { ko: '부서 소계', en: 'Dept sub' } },
+  'job':      { row: 'bg-ios-teal-light',   badge: 'bg-ios-teal/15 text-ios-teal-dark',                       label: { ko: '직무 소계', en: 'Job sub' } },
+  'grand':    { row: 'bg-ios-orange/10',    badge: 'bg-ios-orange/25 text-ios-orange-dark font-semibold',     label: { ko: '총계',     en: 'Grand' } },
+}
+
+// ── GROUPING SETS step data ────────────────────────────────────────────────
+
+interface GSStepRow {
+  dept_id:   number | null
+  job_title: string | null
+  total_sal: number
+  cnt:       number
+  _set:      string
+  _key:      string
+  _new:      boolean
+}
+
+const GS_STEPS: { rows: GSStepRow[] }[] = (() => {
+  const depts = [...new Set(EMPS.map((e) => e.dept_id))].sort((a, b) => a - b)
+  const jobs  = [...new Set(EMPS.map((e) => e.job_title))].sort()
+
+  const rawRows: GSStepRow[] = EMPS.map((e, i) => ({
+    dept_id: e.dept_id, job_title: e.job_title, total_sal: e.salary, cnt: 1,
+    _set: 'raw', _key: `raw-${i}`, _new: false,
+  }))
+
+  const deptRows: GSStepRow[] = depts.map((dept) => {
+    const rows = EMPS.filter((e) => e.dept_id === dept)
+    return { dept_id: dept, job_title: null, total_sal: rows.reduce((s, r) => s + r.salary, 0), cnt: rows.length, _set: 'dept', _key: `d-${dept}`, _new: true }
+  })
+
+  const withJob: GSStepRow[] = [
+    ...deptRows.map((r) => ({ ...r, _new: false })),
+    ...jobs.map((job) => {
+      const rows = EMPS.filter((e) => e.job_title === job)
+      return { dept_id: null, job_title: job, total_sal: rows.reduce((s, r) => s + r.salary, 0), cnt: rows.length, _set: 'job', _key: `j-${job}`, _new: true }
+    }),
+  ]
+
+  return [
+    { rows: rawRows },
+    { rows: deptRows },
+    { rows: withJob },
+  ]
+})()
+
+const GS_STEP_META = {
+  ko: [
+    { label: 'Step 0', desc: '원본 상세 데이터', groupKey: '없음 (개별 행)' },
+    { label: 'Step 1', desc: 'GROUP BY (dept_id) 집계', groupKey: '(dept_id)' },
+    { label: 'Step 2', desc: 'GROUP BY (job_title) 집계 추가', groupKey: '(job_title)' },
+  ],
+  en: [
+    { label: 'Step 0', desc: 'Raw detail rows', groupKey: 'none (individual rows)' },
+    { label: 'Step 1', desc: 'GROUP BY (dept_id) aggregated', groupKey: '(dept_id)' },
+    { label: 'Step 2', desc: 'GROUP BY (job_title) added', groupKey: '(job_title)' },
+  ],
+}
+
+const GS_SET_STYLE: Record<string, { row: string; badge: string; label: { ko: string; en: string } }> = {
+  raw:  { row: '',                    badge: 'bg-muted text-muted-foreground',        label: { ko: '원본',    en: 'Raw' } },
+  dept: { row: 'bg-ios-orange-light', badge: 'bg-ios-orange/15 text-ios-orange-dark', label: { ko: '부서별',  en: 'By dept' } },
+  job:  { row: 'bg-ios-teal-light',   badge: 'bg-ios-teal/15 text-ios-teal-dark',     label: { ko: '직무별',  en: 'By job' } },
+}
+
+// ── GROUPING() step data ───────────────────────────────────────────────────
+
+interface GrpFnStepRow {
+  dept_id:   number | null
+  job_title: string | null
+  total_sal: number
+  cnt:       number
+  grp_dept:  number
+  grp_job:   number
+  _level:    'detail' | 'subtotal' | 'grand'
+  _key:      string
+  _new:      boolean
+}
+
+const GRPFN_STEPS: { rows: GrpFnStepRow[] }[] = (() => {
+  const depts = [...new Set(EMPS.map((e) => e.dept_id))].sort((a, b) => a - b)
+
+  const rawRows: GrpFnStepRow[] = EMPS.map((e, i) => ({
+    dept_id: e.dept_id, job_title: e.job_title, total_sal: e.salary, cnt: 1,
+    grp_dept: 0, grp_job: 0, _level: 'detail', _key: `raw-${i}`, _new: false,
+  }))
+
+  const detailRows: GrpFnStepRow[] = []
+  for (const dept of depts) {
+    const deptRows = EMPS.filter((e) => e.dept_id === dept)
+    const jobs = [...new Set(deptRows.map((e) => e.job_title))].sort()
+    for (const job of jobs) {
+      const rows = deptRows.filter((e) => e.job_title === job)
+      detailRows.push({ dept_id: dept, job_title: job, total_sal: rows.reduce((s, r) => s + r.salary, 0), cnt: rows.length, grp_dept: 0, grp_job: 0, _level: 'detail', _key: `d-${dept}-${job}`, _new: true })
+    }
+  }
+
+  const withSubtotals: GrpFnStepRow[] = []
+  for (const dept of depts) {
+    const dRows = EMPS.filter((e) => e.dept_id === dept)
+    withSubtotals.push(...detailRows.filter((r) => r.dept_id === dept).map((r) => ({ ...r, _new: false })))
+    withSubtotals.push({ dept_id: dept, job_title: null, total_sal: dRows.reduce((s, r) => s + r.salary, 0), cnt: dRows.length, grp_dept: 0, grp_job: 1, _level: 'subtotal' as const, _key: `s-${dept}`, _new: true })
+  }
+
+  const withGrand: GrpFnStepRow[] = [
+    ...withSubtotals.map((r) => ({ ...r, _new: false })),
+    { dept_id: null, job_title: null, total_sal: EMPS.reduce((s, r) => s + r.salary, 0), cnt: EMPS.length, grp_dept: 1, grp_job: 1, _level: 'grand' as const, _key: 'grand', _new: true },
+  ]
+
+  return [
+    { rows: rawRows },
+    { rows: detailRows },
+    { rows: withSubtotals },
+    { rows: withGrand },
+  ]
+})()
+
+const GRPFN_STEP_META = {
+  ko: [
+    { label: 'Step 0', desc: '원본 상세 데이터', groupKey: '없음 (개별 행)' },
+    { label: 'Step 1', desc: 'GROUP BY (dept_id, job_title) 상세 — GROUPING()=0,0', groupKey: '(dept_id, job_title)' },
+    { label: 'Step 2', desc: 'dept_id 소계 — grp_job=1', groupKey: '(dept_id)' },
+    { label: 'Step 3', desc: '전체 총계 — grp_dept=1, grp_job=1', groupKey: '()' },
+  ],
+  en: [
+    { label: 'Step 0', desc: 'Raw detail rows', groupKey: 'none (individual rows)' },
+    { label: 'Step 1', desc: 'GROUP BY (dept_id, job_title) detail — GROUPING()=0,0', groupKey: '(dept_id, job_title)' },
+    { label: 'Step 2', desc: 'dept_id subtotal — grp_job=1', groupKey: '(dept_id)' },
+    { label: 'Step 3', desc: 'Grand total — grp_dept=1, grp_job=1', groupKey: '()' },
+  ],
+}
+
 function RollupAnimator({ lang }: { lang: 'ko' | 'en' }) {
   const [step, setStep] = useState(0)
   const meta = STEP_META[lang]
@@ -580,6 +743,397 @@ function RollupAnimator({ lang }: { lang: 'ko' | 'en' }) {
   )
 }
 
+// ── CubeAnimator ──────────────────────────────────────────────────────────
+
+function CubeAnimator({ lang }: { lang: 'ko' | 'en' }) {
+  const [step, setStep] = useState(0)
+  const meta = CUBE_STEP_META[lang]
+  const { rows } = CUBE_STEPS[step]
+  const isLast = step === CUBE_STEPS.length - 1
+
+  const levelBadges = {
+    ko: ['dept+job 상세', 'dept 소계', 'job 소계', '전체 총계'],
+    en: ['dept+job detail', 'dept subtotal', 'job subtotal', 'grand total'],
+  }
+
+  return (
+    <div className="mb-6 rounded-xl border overflow-hidden">
+      <div className="border-b bg-muted/40 px-4 py-3 flex items-center justify-between gap-4">
+        <div>
+          <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+            {lang === 'ko' ? 'CUBE 단계별 시뮬레이터' : 'CUBE Step-by-Step Simulator'}
+          </span>
+          <p className="mt-0.5 font-mono text-[11px] text-muted-foreground/70">
+            GROUP BY CUBE(dept_id, job_title)
+          </p>
+        </div>
+        <div className="flex gap-1.5 shrink-0 flex-wrap justify-end">
+          {meta.map((m, i) => (
+            <button
+              key={i}
+              onClick={() => setStep(i)}
+              className={cn(
+                'rounded-full px-2.5 py-0.5 font-mono text-[10px] font-bold transition-all',
+                step === i ? 'bg-ios-orange text-white shadow-sm' : 'bg-muted text-muted-foreground hover:bg-muted/80',
+              )}
+            >
+              {m.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="border-b px-4 py-2.5 flex items-center gap-3">
+        <span className="shrink-0 rounded-md bg-ios-orange/15 px-2 py-0.5 font-mono text-[10px] font-bold text-ios-orange-dark">
+          {meta[step].label}
+        </span>
+        <span className="font-mono text-[11px] text-foreground/80">{meta[step].desc}</span>
+        {step > 0 && (
+          <span className="ml-auto shrink-0 font-mono text-[10px] text-muted-foreground/60">
+            {lang === 'ko' ? '집계 키: ' : 'Group key: '}
+            <span className="font-bold text-ios-orange-dark">{meta[step].groupKey}</span>
+          </span>
+        )}
+      </div>
+
+      <div className="border-b bg-muted/20 px-4 py-2 flex items-center gap-2 flex-wrap">
+        <span className="font-mono text-[10px] text-muted-foreground/60 shrink-0">
+          {lang === 'ko' ? '생성된 집계 수준:' : 'Aggregation levels built:'}
+        </span>
+        <div className="flex gap-1.5 flex-wrap">
+          {levelBadges[lang].map((lbl, i) => (
+            <span
+              key={i}
+              className={cn(
+                'rounded px-2 py-0.5 font-mono text-[10px] font-semibold transition-all duration-300',
+                step >= i + 1 ? (i === 2 ? 'bg-ios-teal/15 text-ios-teal-dark' : 'bg-ios-orange/15 text-ios-orange-dark') : 'bg-muted text-muted-foreground/30',
+              )}
+            >
+              {lbl}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      <div className="overflow-x-auto p-4">
+        <table className="text-xs">
+          <thead>
+            <tr className="border-b">
+              {['dept_id', 'job_title', step === 0 ? 'salary' : 'total_sal', step === 0 ? '' : 'cnt', ''].map((h, i) => (
+                <th key={i} className="pb-2 pr-6 text-left font-mono font-bold text-muted-foreground whitespace-nowrap last:pr-0">{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            <AnimatePresence initial={false}>
+              {rows.map((row) => {
+                const s = CUBE_GROUPING_STYLE[row._grouping]
+                return (
+                  <motion.tr
+                    key={row._key}
+                    layout
+                    initial={row._new ? { opacity: 0, x: -12, backgroundColor: '#fff3e0' } : false}
+                    animate={{ opacity: 1, x: 0, backgroundColor: 'transparent' }}
+                    transition={{ duration: 0.35, ease: 'easeOut' }}
+                    className={cn('border-b last:border-0', s.row)}
+                  >
+                    <td className="py-1.5 pr-6 font-mono text-[11px] whitespace-nowrap text-foreground/80">{row.dept_id ?? <NullCell />}</td>
+                    <td className="py-1.5 pr-6 font-mono text-[11px] whitespace-nowrap text-foreground/80">{row.job_title ?? <NullCell />}</td>
+                    <td className="py-1.5 pr-6 font-mono text-[11px] whitespace-nowrap text-foreground/80">{row.total_sal.toLocaleString()}</td>
+                    <td className="py-1.5 pr-6 font-mono text-[11px] whitespace-nowrap text-foreground/80">{row.cnt}</td>
+                    <td className="py-1.5">
+                      <span className={cn('rounded px-1.5 py-0.5 text-[10px] font-bold', s.badge)}>{s.label[lang]}</span>
+                    </td>
+                  </motion.tr>
+                )
+              })}
+            </AnimatePresence>
+          </tbody>
+        </table>
+      </div>
+
+      <div className="border-t bg-muted/20 px-4 py-2.5 flex items-center justify-between">
+        <button
+          onClick={() => setStep((p) => Math.max(0, p - 1))}
+          disabled={step === 0}
+          className="rounded-md border px-3 py-1 font-mono text-[11px] font-bold text-muted-foreground transition-colors hover:bg-muted disabled:opacity-30"
+        >
+          ← {lang === 'ko' ? '이전' : 'Prev'}
+        </button>
+        <span className="font-mono text-[10px] text-muted-foreground/50">{step + 1} / {CUBE_STEPS.length}</span>
+        <button
+          onClick={() => setStep((p) => Math.min(CUBE_STEPS.length - 1, p + 1))}
+          disabled={isLast}
+          className="rounded-md border px-3 py-1 font-mono text-[11px] font-bold text-muted-foreground transition-colors hover:bg-muted disabled:opacity-30"
+        >
+          {lang === 'ko' ? '다음' : 'Next'} →
+        </button>
+      </div>
+    </div>
+  )
+}
+
+// ── GroupingSetsAnimator ───────────────────────────────────────────────────
+
+function GroupingSetsAnimator({ lang }: { lang: 'ko' | 'en' }) {
+  const [step, setStep] = useState(0)
+  const meta = GS_STEP_META[lang]
+  const { rows } = GS_STEPS[step]
+  const isLast = step === GS_STEPS.length - 1
+
+  const levelBadges = {
+    ko: ['(dept_id) 부서별', '(job_title) 직무별'],
+    en: ['(dept_id) by dept', '(job_title) by job'],
+  }
+
+  return (
+    <div className="mb-6 rounded-xl border overflow-hidden">
+      <div className="border-b bg-muted/40 px-4 py-3 flex items-center justify-between gap-4">
+        <div>
+          <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+            {lang === 'ko' ? 'GROUPING SETS 단계별 시뮬레이터' : 'GROUPING SETS Step-by-Step Simulator'}
+          </span>
+          <p className="mt-0.5 font-mono text-[11px] text-muted-foreground/70">
+            GROUP BY GROUPING SETS ((dept_id), (job_title))
+          </p>
+        </div>
+        <div className="flex gap-1.5 shrink-0">
+          {meta.map((m, i) => (
+            <button
+              key={i}
+              onClick={() => setStep(i)}
+              className={cn(
+                'rounded-full px-2.5 py-0.5 font-mono text-[10px] font-bold transition-all',
+                step === i ? 'bg-ios-orange text-white shadow-sm' : 'bg-muted text-muted-foreground hover:bg-muted/80',
+              )}
+            >
+              {m.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="border-b px-4 py-2.5 flex items-center gap-3">
+        <span className="shrink-0 rounded-md bg-ios-orange/15 px-2 py-0.5 font-mono text-[10px] font-bold text-ios-orange-dark">
+          {meta[step].label}
+        </span>
+        <span className="font-mono text-[11px] text-foreground/80">{meta[step].desc}</span>
+        {step > 0 && (
+          <span className="ml-auto shrink-0 font-mono text-[10px] text-muted-foreground/60">
+            {lang === 'ko' ? '집계 키: ' : 'Group key: '}
+            <span className="font-bold text-ios-orange-dark">{meta[step].groupKey}</span>
+          </span>
+        )}
+      </div>
+
+      <div className="border-b bg-muted/20 px-4 py-2 flex items-center gap-2">
+        <span className="font-mono text-[10px] text-muted-foreground/60 shrink-0">
+          {lang === 'ko' ? '생성된 집계 수준:' : 'Aggregation levels built:'}
+        </span>
+        <div className="flex gap-1.5">
+          {levelBadges[lang].map((lbl, i) => (
+            <span
+              key={i}
+              className={cn(
+                'rounded px-2 py-0.5 font-mono text-[10px] font-semibold transition-all duration-300',
+                step >= i + 1 ? (i === 0 ? 'bg-ios-orange/15 text-ios-orange-dark' : 'bg-ios-teal/15 text-ios-teal-dark') : 'bg-muted text-muted-foreground/30',
+              )}
+            >
+              {lbl}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      <div className="overflow-x-auto p-4">
+        <table className="text-xs">
+          <thead>
+            <tr className="border-b">
+              {['dept_id', 'job_title', step === 0 ? 'salary' : 'total_sal', step === 0 ? '' : 'cnt', ''].map((h, i) => (
+                <th key={i} className="pb-2 pr-6 text-left font-mono font-bold text-muted-foreground whitespace-nowrap last:pr-0">{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            <AnimatePresence initial={false}>
+              {rows.map((row) => {
+                const s = GS_SET_STYLE[row._set]
+                return (
+                  <motion.tr
+                    key={row._key}
+                    layout
+                    initial={row._new ? { opacity: 0, x: -12, backgroundColor: '#fff3e0' } : false}
+                    animate={{ opacity: 1, x: 0, backgroundColor: 'transparent' }}
+                    transition={{ duration: 0.35, ease: 'easeOut' }}
+                    className={cn('border-b last:border-0', s.row)}
+                  >
+                    <td className="py-1.5 pr-6 font-mono text-[11px] whitespace-nowrap text-foreground/80">{row.dept_id ?? <NullCell />}</td>
+                    <td className="py-1.5 pr-6 font-mono text-[11px] whitespace-nowrap text-foreground/80">{row.job_title ?? <NullCell />}</td>
+                    <td className="py-1.5 pr-6 font-mono text-[11px] whitespace-nowrap text-foreground/80">{row.total_sal.toLocaleString()}</td>
+                    <td className="py-1.5 pr-6 font-mono text-[11px] whitespace-nowrap text-foreground/80">{row.cnt}</td>
+                    <td className="py-1.5">
+                      <span className={cn('rounded px-1.5 py-0.5 text-[10px] font-bold', s.badge)}>{s.label[lang]}</span>
+                    </td>
+                  </motion.tr>
+                )
+              })}
+            </AnimatePresence>
+          </tbody>
+        </table>
+      </div>
+
+      <div className="border-t bg-muted/20 px-4 py-2.5 flex items-center justify-between">
+        <button
+          onClick={() => setStep((p) => Math.max(0, p - 1))}
+          disabled={step === 0}
+          className="rounded-md border px-3 py-1 font-mono text-[11px] font-bold text-muted-foreground transition-colors hover:bg-muted disabled:opacity-30"
+        >
+          ← {lang === 'ko' ? '이전' : 'Prev'}
+        </button>
+        <span className="font-mono text-[10px] text-muted-foreground/50">{step + 1} / {GS_STEPS.length}</span>
+        <button
+          onClick={() => setStep((p) => Math.min(GS_STEPS.length - 1, p + 1))}
+          disabled={isLast}
+          className="rounded-md border px-3 py-1 font-mono text-[11px] font-bold text-muted-foreground transition-colors hover:bg-muted disabled:opacity-30"
+        >
+          {lang === 'ko' ? '다음' : 'Next'} →
+        </button>
+      </div>
+    </div>
+  )
+}
+
+// ── GroupingFnAnimator ─────────────────────────────────────────────────────
+
+function GroupingFnAnimator({ lang }: { lang: 'ko' | 'en' }) {
+  const [step, setStep] = useState(0)
+  const meta = GRPFN_STEP_META[lang]
+  const { rows } = GRPFN_STEPS[step]
+  const isLast = step === GRPFN_STEPS.length - 1
+
+  const levelBadges = {
+    ko: ['상세 (grp=0,0)', '소계 (grp_job=1)', '총계 (grp=1,1)'],
+    en: ['detail (grp=0,0)', 'subtotal (grp_job=1)', 'grand (grp=1,1)'],
+  }
+
+  return (
+    <div className="mb-6 rounded-xl border overflow-hidden">
+      <div className="border-b bg-muted/40 px-4 py-3 flex items-center justify-between gap-4">
+        <div>
+          <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+            {lang === 'ko' ? 'GROUPING() 단계별 시뮬레이터' : 'GROUPING() Step-by-Step Simulator'}
+          </span>
+          <p className="mt-0.5 font-mono text-[11px] text-muted-foreground/70">
+            GROUP BY ROLLUP(dept_id, job_title) + GROUPING()
+          </p>
+        </div>
+        <div className="flex gap-1.5 shrink-0">
+          {meta.map((m, i) => (
+            <button
+              key={i}
+              onClick={() => setStep(i)}
+              className={cn(
+                'rounded-full px-2.5 py-0.5 font-mono text-[10px] font-bold transition-all',
+                step === i ? 'bg-ios-orange text-white shadow-sm' : 'bg-muted text-muted-foreground hover:bg-muted/80',
+              )}
+            >
+              {m.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="border-b px-4 py-2.5 flex items-center gap-3">
+        <span className="shrink-0 rounded-md bg-ios-orange/15 px-2 py-0.5 font-mono text-[10px] font-bold text-ios-orange-dark">
+          {meta[step].label}
+        </span>
+        <span className="font-mono text-[11px] text-foreground/80">{meta[step].desc}</span>
+      </div>
+
+      <div className="border-b bg-muted/20 px-4 py-2 flex items-center gap-2">
+        <span className="font-mono text-[10px] text-muted-foreground/60 shrink-0">
+          {lang === 'ko' ? 'GROUPING() 값:' : 'GROUPING() values:'}
+        </span>
+        <div className="flex gap-1.5">
+          {levelBadges[lang].map((lbl, i) => (
+            <span
+              key={i}
+              className={cn(
+                'rounded px-2 py-0.5 font-mono text-[10px] font-semibold transition-all duration-300',
+                step >= i + 1 ? 'bg-ios-orange/15 text-ios-orange-dark' : 'bg-muted text-muted-foreground/30',
+              )}
+            >
+              {lbl}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      <div className="overflow-x-auto p-4">
+        <table className="text-xs">
+          <thead>
+            <tr className="border-b">
+              {['dept_id', 'job_title', step === 0 ? 'salary' : 'total_sal', step === 0 ? '' : 'cnt', 'grp_dept', 'grp_job'].map((h, i) => (
+                <th key={i} className={cn('pb-2 pr-6 text-left font-mono font-bold whitespace-nowrap last:pr-0', i >= 4 ? 'text-ios-orange-dark' : 'text-muted-foreground')}>{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            <AnimatePresence initial={false}>
+              {rows.map((row) => {
+                const s = LEVEL_STYLE[row._level]
+                return (
+                  <motion.tr
+                    key={row._key}
+                    layout
+                    initial={row._new ? { opacity: 0, x: -12, backgroundColor: '#fff3e0' } : false}
+                    animate={{ opacity: 1, x: 0, backgroundColor: 'transparent' }}
+                    transition={{ duration: 0.35, ease: 'easeOut' }}
+                    className={cn('border-b last:border-0', s.row)}
+                  >
+                    <td className="py-1.5 pr-6 font-mono text-[11px] whitespace-nowrap text-foreground/80">{row.dept_id ?? <NullCell />}</td>
+                    <td className="py-1.5 pr-6 font-mono text-[11px] whitespace-nowrap text-foreground/80">{row.job_title ?? <NullCell />}</td>
+                    <td className="py-1.5 pr-6 font-mono text-[11px] whitespace-nowrap text-foreground/80">{row.total_sal.toLocaleString()}</td>
+                    <td className="py-1.5 pr-6 font-mono text-[11px] whitespace-nowrap text-foreground/80">{row.cnt}</td>
+                    <td className="py-1.5 pr-6 text-center">
+                      <span className={cn('rounded px-1.5 py-0.5 font-mono text-[11px] font-bold',
+                        row.grp_dept === 1 ? 'bg-ios-orange/15 text-ios-orange-dark' : 'bg-muted text-muted-foreground'
+                      )}>{row.grp_dept}</span>
+                    </td>
+                    <td className="py-1.5 text-center">
+                      <span className={cn('rounded px-1.5 py-0.5 font-mono text-[11px] font-bold',
+                        row.grp_job === 1 ? 'bg-ios-orange/15 text-ios-orange-dark' : 'bg-muted text-muted-foreground'
+                      )}>{row.grp_job}</span>
+                    </td>
+                  </motion.tr>
+                )
+              })}
+            </AnimatePresence>
+          </tbody>
+        </table>
+      </div>
+
+      <div className="border-t bg-muted/20 px-4 py-2.5 flex items-center justify-between">
+        <button
+          onClick={() => setStep((p) => Math.max(0, p - 1))}
+          disabled={step === 0}
+          className="rounded-md border px-3 py-1 font-mono text-[11px] font-bold text-muted-foreground transition-colors hover:bg-muted disabled:opacity-30"
+        >
+          ← {lang === 'ko' ? '이전' : 'Prev'}
+        </button>
+        <span className="font-mono text-[10px] text-muted-foreground/50">{step + 1} / {GRPFN_STEPS.length}</span>
+        <button
+          onClick={() => setStep((p) => Math.min(GRPFN_STEPS.length - 1, p + 1))}
+          disabled={isLast}
+          className="rounded-md border px-3 py-1 font-mono text-[11px] font-bold text-muted-foreground transition-colors hover:bg-muted disabled:opacity-30"
+        >
+          {lang === 'ko' ? '다음' : 'Next'} →
+        </button>
+      </div>
+    </div>
+  )
+}
+
 // ── Sub-components ─────────────────────────────────────────────────────────
 
 function SqlBlock({ sql }: { sql: string }) {
@@ -597,126 +1151,6 @@ function SqlBlock({ sql }: { sql: string }) {
 
 function NullCell() {
   return <span className="text-muted-foreground/50 italic">NULL</span>
-}
-
-function CubeTable({ t }: { t: TShape }) {
-  const rows = computeCube()
-  const groupStyle: Record<string, string> = {
-    'dept+job': '',
-    'dept':     'bg-ios-orange-light',
-    'job':      'bg-ios-orange-light',
-    'grand':    'bg-ios-orange/10',
-  }
-  const groupBadge: Record<string, string> = {
-    'dept+job': 'bg-muted text-muted-foreground',
-    'dept':     'bg-ios-orange/15 text-ios-orange-dark',
-    'job':      'bg-ios-orange/15 text-ios-orange-dark',
-    'grand':    'bg-ios-orange/25 text-ios-orange-dark',
-  }
-  return (
-    <div className="inline-block rounded-lg border overflow-hidden">
-      <table className="text-xs">
-        <thead>
-          <tr className="border-b bg-muted/60">
-            {['dept_id', 'job_title', 'total_sal', 'cnt', ''].map((h, i) => (
-              <th key={i} className="px-3 py-2 text-left font-mono font-bold text-muted-foreground whitespace-nowrap">{h}</th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row, i) => (
-            <tr key={i} className={cn('border-b last:border-0', groupStyle[row._grouping] ?? '')}>
-              <td className="px-3 py-1.5 font-mono text-[11px] whitespace-nowrap text-foreground/80">{row.dept_id ?? <NullCell />}</td>
-              <td className="px-3 py-1.5 font-mono text-[11px] whitespace-nowrap text-foreground/80">{row.job_title ?? <NullCell />}</td>
-              <td className="px-3 py-1.5 font-mono text-[11px] whitespace-nowrap text-foreground/80">{row.total_sal.toLocaleString()}</td>
-              <td className="px-3 py-1.5 font-mono text-[11px] whitespace-nowrap text-foreground/80">{row.cnt}</td>
-              <td className="px-3 py-1.5">
-                <span className={cn('rounded px-1.5 py-0.5 text-[10px] font-bold', groupBadge[row._grouping])}>
-                  {t.groupingLabel(row._grouping)}
-                </span>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  )
-}
-
-function GroupingSetsTable({ t }: { t: TShape }) {
-  const rows = computeGroupingSets()
-  return (
-    <div className="inline-block rounded-lg border overflow-hidden">
-      <table className="text-xs">
-        <thead>
-          <tr className="border-b bg-muted/60">
-            {['dept_id', 'job_title', 'total_sal', 'cnt', ''].map((h, i) => (
-              <th key={i} className="px-3 py-2 text-left font-mono font-bold text-muted-foreground whitespace-nowrap">{h}</th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row, i) => (
-            <tr key={i} className={cn('border-b last:border-0', 'bg-ios-orange-light')}>
-              <td className="px-3 py-1.5 font-mono text-[11px] whitespace-nowrap text-foreground/80">{row.dept_id ?? <NullCell />}</td>
-              <td className="px-3 py-1.5 font-mono text-[11px] whitespace-nowrap text-foreground/80">{row.job_title ?? <NullCell />}</td>
-              <td className="px-3 py-1.5 font-mono text-[11px] whitespace-nowrap text-foreground/80">{row.total_sal.toLocaleString()}</td>
-              <td className="px-3 py-1.5 font-mono text-[11px] whitespace-nowrap text-foreground/80">{row.cnt}</td>
-              <td className="px-3 py-1.5">
-                <span className={cn('rounded px-1.5 py-0.5 text-[10px] font-bold',
-                  row._set === 'dept' ? 'bg-ios-orange/15 text-ios-orange-dark' : 'bg-ios-orange/25 text-ios-orange-dark'
-                )}>
-                  {row._set === 'dept' ? t.setBadgeDept : t.setBadgeJob}
-                </span>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  )
-}
-
-function GroupingFnTable() {
-  const rows = computeGroupingFn()
-  const levelStyle: Record<string, string> = {
-    detail:   '',
-    subtotal: 'bg-ios-orange-light',
-    grand:    'bg-ios-orange/10',
-  }
-  return (
-    <div className="inline-block rounded-lg border overflow-hidden">
-      <table className="text-xs">
-        <thead>
-          <tr className="border-b bg-muted/60">
-            {['dept_id', 'job_title', 'total_sal', 'cnt', 'grp_dept', 'grp_job'].map((h) => (
-              <th key={h} className="px-3 py-2 text-left font-mono font-bold text-muted-foreground whitespace-nowrap">{h}</th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row, i) => (
-            <tr key={i} className={cn('border-b last:border-0', levelStyle[row._level])}>
-              <td className="px-3 py-1.5 font-mono text-[11px] whitespace-nowrap text-foreground/80">{row.dept_id ?? <NullCell />}</td>
-              <td className="px-3 py-1.5 font-mono text-[11px] whitespace-nowrap text-foreground/80">{row.job_title ?? <NullCell />}</td>
-              <td className="px-3 py-1.5 font-mono text-[11px] whitespace-nowrap text-foreground/80">{row.total_sal.toLocaleString()}</td>
-              <td className="px-3 py-1.5 font-mono text-[11px] whitespace-nowrap text-foreground/80">{row.cnt}</td>
-              <td className="px-3 py-1.5 text-center">
-                <span className={cn('rounded px-1.5 py-0.5 font-mono text-[11px] font-bold',
-                  row.grp_dept === 1 ? 'bg-ios-orange/15 text-ios-orange-dark' : 'bg-muted text-muted-foreground'
-                )}>{row.grp_dept}</span>
-              </td>
-              <td className="px-3 py-1.5 text-center">
-                <span className={cn('rounded px-1.5 py-0.5 font-mono text-[11px] font-bold',
-                  row.grp_job === 1 ? 'bg-ios-orange/15 text-ios-orange-dark' : 'bg-muted text-muted-foreground'
-                )}>{row.grp_job}</span>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  )
 }
 
 // ── Main component ─────────────────────────────────────────────────────────
@@ -759,12 +1193,12 @@ export function RollupSection({ lang }: { lang: 'ko' | 'en' }) {
         <>
           <SectionTitle>{t.rollupTitle}</SectionTitle>
           <Prose>{t.rollupDesc}</Prose>
-          <InfoBox color="info" icon="📐" title="">
+          <InfoBox variant="summary" lang={lang}>
             {t.rollupInfo}
           </InfoBox>
           <SqlBlock sql={ROLLUP_SQL} />
           <RollupAnimator lang={lang} />
-          <InfoBox color="tip" icon="💡">
+          <InfoBox variant="note" lang={lang}>
             {t.nullMeaning}
           </InfoBox>
 
@@ -797,7 +1231,7 @@ export function RollupSection({ lang }: { lang: 'ko' | 'en' }) {
         <>
           <SectionTitle>{t.cubeTitle}</SectionTitle>
           <Prose>{t.cubeDesc}</Prose>
-          <InfoBox color="info" icon="📐" title="">
+          <InfoBox variant="summary" lang={lang}>
             {t.cubeInfo}
           </InfoBox>
 
@@ -838,11 +1272,8 @@ export function RollupSection({ lang }: { lang: 'ko' | 'en' }) {
           </div>
 
           <SqlBlock sql={CUBE_SQL} />
-          <SubTitle>{t.result}</SubTitle>
-          <div className="mb-4">
-            <CubeTable t={t} />
-          </div>
-          <InfoBox color="tip" icon="💡">
+          <CubeAnimator lang={lang} />
+          <InfoBox variant="note" lang={lang}>
             {t.nullMeaning}
           </InfoBox>
         </>
@@ -853,14 +1284,11 @@ export function RollupSection({ lang }: { lang: 'ko' | 'en' }) {
         <>
           <SectionTitle>{t.groupingSetsTitle}</SectionTitle>
           <Prose>{t.groupingSetsDesc}</Prose>
-          <InfoBox color="info" icon="📐" title="">
+          <InfoBox variant="summary" lang={lang}>
             {t.groupingSetsInfo}
           </InfoBox>
           <SqlBlock sql={GROUPING_SETS_SQL} />
-          <SubTitle>{t.result}</SubTitle>
-          <div className="mb-4">
-            <GroupingSetsTable t={t} />
-          </div>
+          <GroupingSetsAnimator lang={lang} />
 
           <Divider />
 
@@ -868,7 +1296,7 @@ export function RollupSection({ lang }: { lang: 'ko' | 'en' }) {
           <Prose>{t.groupingSetsEqDesc}</Prose>
           <SqlBlock sql={GROUPING_SETS_EQ_SQL} />
 
-          <InfoBox color="tip" icon="💡">
+          <InfoBox variant="note" lang={lang}>
             {t.nullMeaning}
           </InfoBox>
         </>
@@ -879,19 +1307,11 @@ export function RollupSection({ lang }: { lang: 'ko' | 'en' }) {
         <>
           <SectionTitle>{t.groupingTitle}</SectionTitle>
           <Prose>{t.groupingDesc}</Prose>
-          <InfoBox color="info" icon="🔍" title="">
+          <InfoBox variant="summary" lang={lang}>
             {t.groupingInfo}
           </InfoBox>
           <SqlBlock sql={GROUPING_FN_SQL} />
-          <SubTitle>{t.result}</SubTitle>
-          <div className="mb-2">
-            <GroupingFnTable />
-          </div>
-          <p className="mb-4 font-mono text-[11px] text-muted-foreground">
-            {lang === 'ko'
-              ? '빨간색 1 = 소계/총계 행 (해당 컬럼이 집계에서 제외됨), 0 = 실제 그룹 키'
-              : 'Red 1 = subtotal/grand-total row (column excluded from grouping), 0 = actual group key'}
-          </p>
+          <GroupingFnAnimator lang={lang} />
 
           <Divider />
 
