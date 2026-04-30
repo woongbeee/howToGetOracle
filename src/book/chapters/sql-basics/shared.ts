@@ -132,8 +132,8 @@ export const SELECT_STEPS: ExecStep[] = [
     phase: '① FROM',
     label: { ko: 'FROM — 테이블 접근', en: 'FROM — Access table' },
     desc: {
-      ko: 'Oracle이 가장 먼저 FROM 절을 처리합니다. 지정된 테이블(EMPLOYEES)을 식별하고 세그먼트를 엽니다.',
-      en: 'Oracle processes FROM first. It identifies the target table (EMPLOYEES) and opens the segment.',
+      ko: 'Oracle이 가장 먼저 FROM 절을 처리합니다. 지정된 테이블(EMPLOYEES)을 식별하고 데이터를 읽을 준비를 합니다.',
+      en: 'Oracle processes FROM first. It identifies the target table (EMPLOYEES) and prepares to read its data.',
     },
     color: 'violet',
     highlightClause: 'FROM',
@@ -371,7 +371,7 @@ function buildExampleQueries(emps: Employee[]): ExampleQuery[] {
   const dept60ForUpdate = dept60
   const updateSalaryList = dept60ForUpdate.slice(0, 3).map((e) => `${e.first_name} ${e.salary} → ${Math.round(e.salary * 1.10)}`).join(', ')
 
-  const deleteThreshold = 2700
+  const deleteThreshold = 4500
   const deletable = emps.filter((e) => e.salary < deleteThreshold)
   const deleteSample = deletable.slice(0, 3).map((e) => `${e.first_name} ${e.last_name}(${e.salary})`).join(', ')
 
@@ -388,8 +388,8 @@ function buildExampleQueries(emps: Employee[]): ExampleQuery[] {
         id: 'from', phase: '① FROM',
         label: { ko: 'FROM — 테이블 접근', en: 'FROM — Access table' },
         desc: {
-          ko: 'Oracle이 가장 먼저 FROM 절을 처리합니다. 지정된 테이블 EMPLOYEES를 식별하고 세그먼트를 엽니다.',
-          en: 'Oracle processes FROM first. It identifies the target table EMPLOYEES and opens the segment.',
+          ko: 'Oracle이 가장 먼저 FROM 절을 처리합니다. 지정된 테이블 EMPLOYEES를 식별하고 데이터를 읽을 준비를 합니다.',
+          en: 'Oracle processes FROM first. It identifies the target table EMPLOYEES and prepares to read its data.',
         },
         color: 'violet',
       },
@@ -423,8 +423,8 @@ function buildExampleQueries(emps: Employee[]): ExampleQuery[] {
         id: 'from', phase: '① FROM',
         label: { ko: 'FROM — 테이블 접근', en: 'FROM — Access table' },
         desc: {
-          ko: 'EMPLOYEES 테이블을 식별하고 세그먼트를 엽니다.',
-          en: 'Oracle identifies EMPLOYEES and opens the segment.',
+          ko: 'EMPLOYEES 테이블을 식별하고 데이터를 읽을 준비를 합니다.',
+          en: 'Oracle identifies EMPLOYEES and prepares to read its data.',
         },
         color: 'violet',
       },
@@ -467,8 +467,8 @@ function buildExampleQueries(emps: Employee[]): ExampleQuery[] {
         id: 'from', phase: '① FROM',
         label: { ko: 'FROM — 테이블 접근', en: 'FROM — Access table' },
         desc: {
-          ko: 'EMPLOYEES 테이블을 식별하고 세그먼트를 엽니다.',
-          en: 'Oracle identifies EMPLOYEES and opens the segment.',
+          ko: 'EMPLOYEES 테이블을 식별하고 데이터를 읽을 준비를 합니다.',
+          en: 'Oracle identifies EMPLOYEES and prepares to read its data.',
         },
         color: 'violet',
       },
@@ -511,8 +511,8 @@ function buildExampleQueries(emps: Employee[]): ExampleQuery[] {
         id: 'from', phase: '① FROM',
         label: { ko: 'FROM — 테이블 접근', en: 'FROM — Access table' },
         desc: {
-          ko: 'EMPLOYEES 테이블을 식별하고 세그먼트를 엽니다.',
-          en: 'Oracle identifies EMPLOYEES and opens the segment.',
+          ko: 'EMPLOYEES 테이블을 식별하고 데이터를 읽을 준비를 합니다.',
+          en: 'Oracle identifies EMPLOYEES and prepares to read its data.',
         },
         color: 'violet',
       },
@@ -622,7 +622,7 @@ function buildExampleQueries(emps: Employee[]): ExampleQuery[] {
   {
     id: 'q6',
     label: { ko: 'DELETE 저급여 삭제', en: 'DELETE low salary' },
-    sql: "DELETE FROM employees\nWHERE salary < 2700",
+    sql: "DELETE FROM employees\nWHERE salary < 4500",
     type: 'DELETE',
     steps: [
       {
@@ -638,8 +638,8 @@ function buildExampleQueries(emps: Employee[]): ExampleQuery[] {
         id: 'where', phase: '② WHERE',
         label: { ko: 'WHERE — 삭제 대상 선택', en: 'WHERE — Select rows to delete' },
         desc: {
-          ko: `salary < 2700 조건으로 삭제 대상 행을 찾습니다. ${deleteSample} 등 조건을 만족하는 행들이 선택됩니다.`,
-          en: `salary < 2700 identifies the rows to delete. Rows such as ${deleteSample} are selected.`,
+          ko: `salary < 4500 조건으로 삭제 대상 행을 찾습니다. ${deleteSample} 등 조건을 만족하는 행들이 선택됩니다.`,
+          en: `salary < 4500 identifies the rows to delete. Rows such as ${deleteSample} are selected.`,
         },
         color: 'orange',
       },
@@ -771,7 +771,7 @@ function buildExampleQueries(emps: Employee[]): ExampleQuery[] {
   {
     id: 'q8',
     label: { ko: '윈도우 함수 (RANK + SUM OVER)', en: 'Window fn (RANK + SUM OVER)' },
-    sql: "SELECT first_name, dept_id, salary,\n       RANK() OVER\n         (PARTITION BY dept_id\n          ORDER BY salary DESC) AS rnk,\n       SUM(salary) OVER\n         (PARTITION BY dept_id) AS dept_total\nFROM   employees\nWHERE  dept_id IN (10, 20)\nORDER BY dept_id, rnk",
+    sql: "SELECT first_name, dept_id, salary,\n       RANK() OVER\n         (PARTITION BY dept_id\n          ORDER BY salary DESC) AS rnk,\n       SUM(salary) OVER\n         (PARTITION BY dept_id) AS dept_total\nFROM   employees\nWHERE  dept_id IN (60, 80)\nORDER BY dept_id, rnk",
     type: 'SELECT',
     steps: [
       {
@@ -787,8 +787,8 @@ function buildExampleQueries(emps: Employee[]): ExampleQuery[] {
         id: 'where',   phase: '② WHERE',
         label: { ko: 'WHERE — 행 필터링', en: 'WHERE — Row filter' },
         desc: {
-          ko: 'dept_id IN (10, 20) 조건으로 dept_id가 30인 행을 제거합니다. 윈도우 함수는 WHERE 이후에 실행되므로, 제거된 행은 RANK·SUM 계산에도 포함되지 않습니다.',
-          en: 'Rows with dept_id = 30 are removed by WHERE dept_id IN (10, 20). Window functions run after WHERE, so excluded rows are not counted in RANK or SUM either.',
+          ko: 'dept_id IN (60, 80) 조건으로 해당 부서 직원만 남깁니다. 윈도우 함수는 WHERE 이후에 실행되므로, 제거된 행은 RANK·SUM 계산에도 포함되지 않습니다.',
+          en: 'Only employees in dept_id 60 and 80 pass the filter. Window functions run after WHERE, so excluded rows are not counted in RANK or SUM either.',
         },
         color: 'orange',
       },
@@ -841,12 +841,12 @@ function buildExampleQueries(emps: Employee[]): ExampleQuery[] {
     overrideResult: {
       columns: ['first_name', 'dept_id', 'salary', 'rnk', 'dept_total'],
       rows: [
-        { first_name: 'Grace',  dept_id: 10, salary: 9500, rnk: 1, dept_total: 24800 },
-        { first_name: 'Carol',  dept_id: 10, salary: 8100, rnk: 2, dept_total: 24800 },
-        { first_name: 'Alice',  dept_id: 10, salary: 7200, rnk: 3, dept_total: 24800 },
-        { first_name: 'Eva',    dept_id: 20, salary: 6300, rnk: 1, dept_total: 17600 },
-        { first_name: 'Henry',  dept_id: 20, salary: 5900, rnk: 2, dept_total: 17600 },
-        { first_name: 'Bob',    dept_id: 20, salary: 5400, rnk: 3, dept_total: 17600 },
+        { first_name: 'Alexander', dept_id: 60, salary: 9000, rnk: 1, dept_total: 24000 },
+        { first_name: 'Bruce',     dept_id: 60, salary: 6000, rnk: 2, dept_total: 24000 },
+        { first_name: 'David',     dept_id: 60, salary: 4800, rnk: 3, dept_total: 24000 },
+        { first_name: 'Diana',     dept_id: 60, salary: 4200, rnk: 4, dept_total: 24000 },
+        { first_name: 'John',      dept_id: 80, salary: 14000, rnk: 1, dept_total: 24000 },
+        { first_name: 'Peter',     dept_id: 80, salary: 10000, rnk: 2, dept_total: 24000 },
       ],
       summary: { ko: '6개 행 반환', en: '6 rows returned' },
     },
@@ -854,7 +854,7 @@ function buildExampleQueries(emps: Employee[]): ExampleQuery[] {
   {
     id: 'q9',
     label: { ko: 'Frame 절 (누적합 + 이동평균)', en: 'Frame clause (running sum + moving avg)' },
-    sql: "SELECT first_name, salary,\n       SUM(salary) OVER (\n         ORDER BY emp_id\n         ROWS BETWEEN UNBOUNDED PRECEDING\n                  AND CURRENT ROW\n       ) AS running_sum,\n       ROUND(AVG(salary) OVER (\n         ORDER BY emp_id\n         ROWS BETWEEN 1 PRECEDING\n                  AND 1 FOLLOWING\n       )) AS moving_avg\nFROM   employees\nORDER BY emp_id",
+    sql: "SELECT first_name, salary,\n       SUM(salary) OVER (\n         ORDER BY emp_id\n         ROWS BETWEEN UNBOUNDED PRECEDING\n                  AND CURRENT ROW\n       ) AS running_sum,\n       ROUND(AVG(salary) OVER (\n         ORDER BY emp_id\n         ROWS BETWEEN 1 PRECEDING\n                  AND 1 FOLLOWING\n       )) AS moving_avg\nFROM   employees\nWHERE  dept_id IN (60, 80)\nORDER BY emp_id",
     type: 'SELECT',
     steps: [
       {
@@ -870,8 +870,8 @@ function buildExampleQueries(emps: Employee[]): ExampleQuery[] {
         id: 'where',   phase: '② WHERE (없음)',
         label: { ko: 'WHERE — 없음', en: 'WHERE — (none)' },
         desc: {
-          ko: '이 쿼리에는 WHERE 절이 없으므로 모든 행이 다음 단계로 넘어갑니다.',
-          en: 'No WHERE clause — all rows proceed to the next step.',
+          ko: 'dept_id IN (60, 80) 조건으로 IT(60)·Sales(80) 부서 직원만 남깁니다.',
+          en: 'dept_id IN (60, 80) keeps only IT and Sales department employees.',
         },
         color: 'orange',
       },
@@ -879,8 +879,8 @@ function buildExampleQueries(emps: Employee[]): ExampleQuery[] {
         id: 'window_order', phase: '③ 윈도우 ORDER BY',
         label: { ko: '윈도우 내 정렬', en: 'Intra-window sort' },
         desc: {
-          ko: '두 윈도우 함수 모두 ORDER BY emp_id를 사용합니다. Oracle은 파티션(여기서는 전체 결과) 내부를 emp_id 오름차순으로 정렬하여 frame 경계 계산의 기준을 잡습니다.',
-          en: 'Both window functions specify ORDER BY emp_id. Oracle sorts the partition (the full result set here) by emp_id ascending to establish the reference for frame boundary calculations.',
+          ko: '두 윈도우 함수 모두 ORDER BY emp_id를 사용합니다. Oracle은 WHERE를 통과한 행들을 emp_id 오름차순으로 정렬하여 frame 경계 계산의 기준을 잡습니다.',
+          en: 'Both window functions specify ORDER BY emp_id. Oracle sorts the rows that passed WHERE by emp_id ascending to establish the reference for frame boundary calculations.',
         },
         color: 'blue',
       },
@@ -933,16 +933,14 @@ function buildExampleQueries(emps: Employee[]): ExampleQuery[] {
     overrideResult: {
       columns: ['first_name', 'salary', 'running_sum', 'moving_avg'],
       rows: [
-        { first_name: 'Alice',  salary: 7200, running_sum:  7200, moving_avg: 6300 },
-        { first_name: 'Bob',    salary: 5400, running_sum: 12600, moving_avg: 6900 },
-        { first_name: 'Carol',  salary: 8100, running_sum: 20700, moving_avg: 6133 },
-        { first_name: 'David',  salary: 4900, running_sum: 25600, moving_avg: 6433 },
-        { first_name: 'Eva',    salary: 6300, running_sum: 31900, moving_avg: 5000 },
-        { first_name: 'Frank',  salary: 3800, running_sum: 35700, moving_avg: 6533 },
-        { first_name: 'Grace',  salary: 9500, running_sum: 45200, moving_avg: 6400 },
-        { first_name: 'Henry',  salary: 5900, running_sum: 51100, moving_avg: 7700 },
+        { first_name: 'Alexander', salary:  9000, running_sum:  9000, moving_avg:  7500 },
+        { first_name: 'Bruce',     salary:  6000, running_sum: 15000, moving_avg:  6600 },
+        { first_name: 'David',     salary:  4800, running_sum: 19800, moving_avg:  5000 },
+        { first_name: 'Diana',     salary:  4200, running_sum: 24000, moving_avg:  7667 },
+        { first_name: 'John',      salary: 14000, running_sum: 38000, moving_avg:  9400 },
+        { first_name: 'Peter',     salary: 10000, running_sum: 48000, moving_avg: 12000 },
       ],
-      summary: { ko: '8개 행 반환', en: '8 rows returned' },
+      summary: { ko: '6개 행 반환', en: '6 rows returned' },
     },
   },
   {

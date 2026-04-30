@@ -29,10 +29,8 @@ export function EmpRow({
       layout
       animate={
         deleted
-          ? { opacity: 0.25, scale: 0.97 }
-          : highlighted
-          ? { opacity: 1, scale: 1 }
-          : { opacity: 0.4, scale: 1 }
+          ? { opacity: 0.35, scale: 0.97 }
+          : { opacity: 1, scale: 1 }
       }
       transition={{ duration: 0.3 }}
       className={cn(

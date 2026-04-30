@@ -360,7 +360,7 @@ const ROLLUP_STEPS: { grouping: string[]; rows: StepRow[] }[] = (() => {
 
 const STEP_META = {
   ko: [
-    { label: 'Step 0', desc: '원본 상세 데이터', groupKey: '없음 (개별 행)' },
+    { label: 'Step 0', desc: '원본 데이터', groupKey: '없음 (개별 행)' },
     { label: 'Step 1', desc: 'GROUP BY (dept_id, job_title)', groupKey: '(dept_id, job_title)' },
     { label: 'Step 2', desc: 'dept_id 소계 행 추가', groupKey: '(dept_id)' },
     { label: 'Step 3', desc: '전체 총계 행 추가', groupKey: '()' },
@@ -441,7 +441,7 @@ const CUBE_STEPS: { rows: CubeStepRow[] }[] = (() => {
 
 const CUBE_STEP_META = {
   ko: [
-    { label: 'Step 0', desc: '원본 상세 데이터', groupKey: '없음 (개별 행)' },
+    { label: 'Step 0', desc: '원본 데이터', groupKey: '없음 (개별 행)' },
     { label: 'Step 1', desc: 'GROUP BY (dept_id, job_title) 상세', groupKey: '(dept_id, job_title)' },
     { label: 'Step 2', desc: 'dept_id 소계 행 추가', groupKey: '(dept_id)' },
     { label: 'Step 3', desc: 'job_title 소계 행 추가', groupKey: '(job_title)' },
@@ -507,7 +507,7 @@ const GS_STEPS: { rows: GSStepRow[] }[] = (() => {
 
 const GS_STEP_META = {
   ko: [
-    { label: 'Step 0', desc: '원본 상세 데이터', groupKey: '없음 (개별 행)' },
+    { label: 'Step 0', desc: '원본 데이터', groupKey: '없음 (개별 행)' },
     { label: 'Step 1', desc: 'GROUP BY (dept_id) 집계', groupKey: '(dept_id)' },
     { label: 'Step 2', desc: 'GROUP BY (job_title) 집계 추가', groupKey: '(job_title)' },
   ],
@@ -578,7 +578,7 @@ const GRPFN_STEPS: { rows: GrpFnStepRow[] }[] = (() => {
 
 const GRPFN_STEP_META = {
   ko: [
-    { label: 'Step 0', desc: '원본 상세 데이터', groupKey: '없음 (개별 행)' },
+    { label: 'Step 0', desc: '원본 데이터', groupKey: '없음 (개별 행)' },
     { label: 'Step 1', desc: 'GROUP BY (dept_id, job_title) 상세 — GROUPING()=0,0', groupKey: '(dept_id, job_title)' },
     { label: 'Step 2', desc: 'dept_id 소계 — grp_job=1', groupKey: '(dept_id)' },
     { label: 'Step 3', desc: '전체 총계 — grp_dept=1, grp_job=1', groupKey: '()' },
@@ -608,11 +608,8 @@ function RollupAnimator({ lang }: { lang: 'ko' | 'en' }) {
       <div className="border-b bg-muted/40 px-4 py-3 flex items-center justify-between gap-4">
         <div>
           <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-            {lang === 'ko' ? 'ROLLUP 단계별 시뮬레이터' : 'ROLLUP Step-by-Step Simulator'}
+            {lang === 'ko' ? 'ROLLUP 단계별로 보기' : 'ROLLUP Step-by-Step Simulator'}
           </span>
-          <p className="mt-0.5 font-mono text-[11px] text-muted-foreground/70">
-            GROUP BY ROLLUP(dept_id, job_title)
-          </p>
         </div>
         {/* Step pills */}
         <div className="flex gap-1.5 shrink-0">
@@ -633,26 +630,13 @@ function RollupAnimator({ lang }: { lang: 'ko' | 'en' }) {
         </div>
       </div>
 
-      {/* Step description */}
-      <div className="border-b px-4 py-2.5 flex items-center gap-3">
+      {/* Step description + active levels */}
+      <div className="border-b px-4 py-2.5 flex flex-wrap items-center gap-x-3 gap-y-1.5">
         <span className="shrink-0 rounded-md bg-ios-orange/15 px-2 py-0.5 font-mono text-[10px] font-bold text-ios-orange-dark">
           {meta[step].label}
         </span>
         <span className="font-mono text-[11px] text-foreground/80">{meta[step].desc}</span>
-        {step > 0 && (
-          <span className="ml-auto shrink-0 font-mono text-[10px] text-muted-foreground/60">
-            {lang === 'ko' ? '집계 키: ' : 'Group key: '}
-            <span className="font-bold text-ios-orange-dark">{meta[step].groupKey}</span>
-          </span>
-        )}
-      </div>
-
-      {/* Progress visual: which levels are active */}
-      <div className="border-b bg-muted/20 px-4 py-2 flex items-center gap-2">
-        <span className="font-mono text-[10px] text-muted-foreground/60 shrink-0">
-          {lang === 'ko' ? '생성된 집계 수준:' : 'Aggregation levels built:'}
-        </span>
-        <div className="flex gap-1.5">
+        <div className="ml-auto flex gap-1.5 shrink-0 flex-wrap justify-end">
           {groupingLevels[lang].map((lbl, i) => (
             <span
               key={i}
@@ -674,10 +658,8 @@ function RollupAnimator({ lang }: { lang: 'ko' | 'en' }) {
         <table className="text-xs">
           <thead>
             <tr className="border-b">
-              {['dept_id', 'job_title', step === 0 ? 'salary' : 'total_sal', step === 0 ? '' : 'cnt', step === 0 ? '' : ''].map((h, i) => (
-                <th key={i} className="pb-2 pr-6 text-left font-mono font-bold text-muted-foreground whitespace-nowrap last:pr-0">
-                  {h}
-                </th>
+              {['dept_id', 'job_title', step === 0 ? 'salary' : 'total_sal', ...(step === 0 ? [] : ['cnt', ''])].map((h, i) => (
+                <th key={i} className="pb-2 pr-6 text-left font-mono font-bold text-muted-foreground whitespace-nowrap last:pr-0">{h}</th>
               ))}
             </tr>
           </thead>
@@ -694,23 +676,17 @@ function RollupAnimator({ lang }: { lang: 'ko' | 'en' }) {
                     transition={{ duration: 0.35, ease: 'easeOut' }}
                     className={cn('border-b last:border-0', s.row)}
                   >
-                    <td className="py-1.5 pr-6 font-mono text-[11px] whitespace-nowrap text-foreground/80">
-                      {row.dept_id ?? <NullCell />}
-                    </td>
-                    <td className="py-1.5 pr-6 font-mono text-[11px] whitespace-nowrap text-foreground/80">
-                      {row.job_title ?? <NullCell />}
-                    </td>
-                    <td className="py-1.5 pr-6 font-mono text-[11px] whitespace-nowrap text-foreground/80">
-                      {row.total_sal.toLocaleString()}
-                    </td>
-                    <td className="py-1.5 pr-6 font-mono text-[11px] whitespace-nowrap text-foreground/80">
-                      {row.cnt}
-                    </td>
-                    <td className="py-1.5">
-                      <span className={cn('rounded px-1.5 py-0.5 text-[10px] font-bold', s.badge)}>
-                        {s.label[lang]}
-                      </span>
-                    </td>
+                    <td className="py-1.5 pr-6 font-mono text-[11px] whitespace-nowrap text-foreground/80">{row.dept_id ?? <NullCell />}</td>
+                    <td className="py-1.5 pr-6 font-mono text-[11px] whitespace-nowrap text-foreground/80">{row.job_title ?? <NullCell />}</td>
+                    <td className="py-1.5 pr-6 font-mono text-[11px] whitespace-nowrap text-foreground/80">{row.total_sal.toLocaleString()}</td>
+                    {step > 0 && (
+                      <td className="py-1.5 pr-6 font-mono text-[11px] whitespace-nowrap text-foreground/80">{row.cnt}</td>
+                    )}
+                    {step > 0 && (
+                      <td className="py-1.5">
+                        <span className={cn('rounded px-1.5 py-0.5 text-[10px] font-bold', s.badge)}>{s.label[lang]}</span>
+                      </td>
+                    )}
                   </motion.tr>
                 )
               })}
@@ -761,11 +737,8 @@ function CubeAnimator({ lang }: { lang: 'ko' | 'en' }) {
       <div className="border-b bg-muted/40 px-4 py-3 flex items-center justify-between gap-4">
         <div>
           <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-            {lang === 'ko' ? 'CUBE 단계별 시뮬레이터' : 'CUBE Step-by-Step Simulator'}
+            {lang === 'ko' ? 'CUBE 단계별로 보기' : 'CUBE Step-by-Step Simulator'}
           </span>
-          <p className="mt-0.5 font-mono text-[11px] text-muted-foreground/70">
-            GROUP BY CUBE(dept_id, job_title)
-          </p>
         </div>
         <div className="flex gap-1.5 shrink-0 flex-wrap justify-end">
           {meta.map((m, i) => (
@@ -783,24 +756,12 @@ function CubeAnimator({ lang }: { lang: 'ko' | 'en' }) {
         </div>
       </div>
 
-      <div className="border-b px-4 py-2.5 flex items-center gap-3">
+      <div className="border-b px-4 py-2.5 flex flex-wrap items-center gap-x-3 gap-y-1.5">
         <span className="shrink-0 rounded-md bg-ios-orange/15 px-2 py-0.5 font-mono text-[10px] font-bold text-ios-orange-dark">
           {meta[step].label}
         </span>
         <span className="font-mono text-[11px] text-foreground/80">{meta[step].desc}</span>
-        {step > 0 && (
-          <span className="ml-auto shrink-0 font-mono text-[10px] text-muted-foreground/60">
-            {lang === 'ko' ? '집계 키: ' : 'Group key: '}
-            <span className="font-bold text-ios-orange-dark">{meta[step].groupKey}</span>
-          </span>
-        )}
-      </div>
-
-      <div className="border-b bg-muted/20 px-4 py-2 flex items-center gap-2 flex-wrap">
-        <span className="font-mono text-[10px] text-muted-foreground/60 shrink-0">
-          {lang === 'ko' ? '생성된 집계 수준:' : 'Aggregation levels built:'}
-        </span>
-        <div className="flex gap-1.5 flex-wrap">
+        <div className="ml-auto flex gap-1.5 shrink-0 flex-wrap justify-end">
           {levelBadges[lang].map((lbl, i) => (
             <span
               key={i}
@@ -819,7 +780,7 @@ function CubeAnimator({ lang }: { lang: 'ko' | 'en' }) {
         <table className="text-xs">
           <thead>
             <tr className="border-b">
-              {['dept_id', 'job_title', step === 0 ? 'salary' : 'total_sal', step === 0 ? '' : 'cnt', ''].map((h, i) => (
+              {['dept_id', 'job_title', step === 0 ? 'salary' : 'total_sal', ...(step === 0 ? [] : ['cnt', ''])].map((h, i) => (
                 <th key={i} className="pb-2 pr-6 text-left font-mono font-bold text-muted-foreground whitespace-nowrap last:pr-0">{h}</th>
               ))}
             </tr>
@@ -840,10 +801,12 @@ function CubeAnimator({ lang }: { lang: 'ko' | 'en' }) {
                     <td className="py-1.5 pr-6 font-mono text-[11px] whitespace-nowrap text-foreground/80">{row.dept_id ?? <NullCell />}</td>
                     <td className="py-1.5 pr-6 font-mono text-[11px] whitespace-nowrap text-foreground/80">{row.job_title ?? <NullCell />}</td>
                     <td className="py-1.5 pr-6 font-mono text-[11px] whitespace-nowrap text-foreground/80">{row.total_sal.toLocaleString()}</td>
-                    <td className="py-1.5 pr-6 font-mono text-[11px] whitespace-nowrap text-foreground/80">{row.cnt}</td>
-                    <td className="py-1.5">
-                      <span className={cn('rounded px-1.5 py-0.5 text-[10px] font-bold', s.badge)}>{s.label[lang]}</span>
-                    </td>
+                    {step > 0 && <td className="py-1.5 pr-6 font-mono text-[11px] whitespace-nowrap text-foreground/80">{row.cnt}</td>}
+                    {step > 0 && (
+                      <td className="py-1.5">
+                        <span className={cn('rounded px-1.5 py-0.5 text-[10px] font-bold', s.badge)}>{s.label[lang]}</span>
+                      </td>
+                    )}
                   </motion.tr>
                 )
               })}
@@ -891,11 +854,8 @@ function GroupingSetsAnimator({ lang }: { lang: 'ko' | 'en' }) {
       <div className="border-b bg-muted/40 px-4 py-3 flex items-center justify-between gap-4">
         <div>
           <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-            {lang === 'ko' ? 'GROUPING SETS 단계별 시뮬레이터' : 'GROUPING SETS Step-by-Step Simulator'}
+            {lang === 'ko' ? 'GROUPING SETS 단계별로 보기' : 'GROUPING SETS Step-by-Step Simulator'}
           </span>
-          <p className="mt-0.5 font-mono text-[11px] text-muted-foreground/70">
-            GROUP BY GROUPING SETS ((dept_id), (job_title))
-          </p>
         </div>
         <div className="flex gap-1.5 shrink-0">
           {meta.map((m, i) => (
@@ -913,24 +873,12 @@ function GroupingSetsAnimator({ lang }: { lang: 'ko' | 'en' }) {
         </div>
       </div>
 
-      <div className="border-b px-4 py-2.5 flex items-center gap-3">
+      <div className="border-b px-4 py-2.5 flex flex-wrap items-center gap-x-3 gap-y-1.5">
         <span className="shrink-0 rounded-md bg-ios-orange/15 px-2 py-0.5 font-mono text-[10px] font-bold text-ios-orange-dark">
           {meta[step].label}
         </span>
         <span className="font-mono text-[11px] text-foreground/80">{meta[step].desc}</span>
-        {step > 0 && (
-          <span className="ml-auto shrink-0 font-mono text-[10px] text-muted-foreground/60">
-            {lang === 'ko' ? '집계 키: ' : 'Group key: '}
-            <span className="font-bold text-ios-orange-dark">{meta[step].groupKey}</span>
-          </span>
-        )}
-      </div>
-
-      <div className="border-b bg-muted/20 px-4 py-2 flex items-center gap-2">
-        <span className="font-mono text-[10px] text-muted-foreground/60 shrink-0">
-          {lang === 'ko' ? '생성된 집계 수준:' : 'Aggregation levels built:'}
-        </span>
-        <div className="flex gap-1.5">
+        <div className="ml-auto flex gap-1.5 shrink-0 flex-wrap justify-end">
           {levelBadges[lang].map((lbl, i) => (
             <span
               key={i}
@@ -949,7 +897,7 @@ function GroupingSetsAnimator({ lang }: { lang: 'ko' | 'en' }) {
         <table className="text-xs">
           <thead>
             <tr className="border-b">
-              {['dept_id', 'job_title', step === 0 ? 'salary' : 'total_sal', step === 0 ? '' : 'cnt', ''].map((h, i) => (
+              {['dept_id', 'job_title', step === 0 ? 'salary' : 'total_sal', ...(step === 0 ? [] : ['cnt', ''])].map((h, i) => (
                 <th key={i} className="pb-2 pr-6 text-left font-mono font-bold text-muted-foreground whitespace-nowrap last:pr-0">{h}</th>
               ))}
             </tr>
@@ -970,10 +918,12 @@ function GroupingSetsAnimator({ lang }: { lang: 'ko' | 'en' }) {
                     <td className="py-1.5 pr-6 font-mono text-[11px] whitespace-nowrap text-foreground/80">{row.dept_id ?? <NullCell />}</td>
                     <td className="py-1.5 pr-6 font-mono text-[11px] whitespace-nowrap text-foreground/80">{row.job_title ?? <NullCell />}</td>
                     <td className="py-1.5 pr-6 font-mono text-[11px] whitespace-nowrap text-foreground/80">{row.total_sal.toLocaleString()}</td>
-                    <td className="py-1.5 pr-6 font-mono text-[11px] whitespace-nowrap text-foreground/80">{row.cnt}</td>
-                    <td className="py-1.5">
-                      <span className={cn('rounded px-1.5 py-0.5 text-[10px] font-bold', s.badge)}>{s.label[lang]}</span>
-                    </td>
+                    {step > 0 && <td className="py-1.5 pr-6 font-mono text-[11px] whitespace-nowrap text-foreground/80">{row.cnt}</td>}
+                    {step > 0 && (
+                      <td className="py-1.5">
+                        <span className={cn('rounded px-1.5 py-0.5 text-[10px] font-bold', s.badge)}>{s.label[lang]}</span>
+                      </td>
+                    )}
                   </motion.tr>
                 )
               })}
@@ -1021,11 +971,8 @@ function GroupingFnAnimator({ lang }: { lang: 'ko' | 'en' }) {
       <div className="border-b bg-muted/40 px-4 py-3 flex items-center justify-between gap-4">
         <div>
           <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-            {lang === 'ko' ? 'GROUPING() 단계별 시뮬레이터' : 'GROUPING() Step-by-Step Simulator'}
+            {lang === 'ko' ? 'GROUPING() 단계별로 보기=' : 'GROUPING() Step-by-Step Simulator'}
           </span>
-          <p className="mt-0.5 font-mono text-[11px] text-muted-foreground/70">
-            GROUP BY ROLLUP(dept_id, job_title) + GROUPING()
-          </p>
         </div>
         <div className="flex gap-1.5 shrink-0">
           {meta.map((m, i) => (
@@ -1043,18 +990,12 @@ function GroupingFnAnimator({ lang }: { lang: 'ko' | 'en' }) {
         </div>
       </div>
 
-      <div className="border-b px-4 py-2.5 flex items-center gap-3">
+      <div className="border-b px-4 py-2.5 flex flex-wrap items-center gap-x-3 gap-y-1.5">
         <span className="shrink-0 rounded-md bg-ios-orange/15 px-2 py-0.5 font-mono text-[10px] font-bold text-ios-orange-dark">
           {meta[step].label}
         </span>
         <span className="font-mono text-[11px] text-foreground/80">{meta[step].desc}</span>
-      </div>
-
-      <div className="border-b bg-muted/20 px-4 py-2 flex items-center gap-2">
-        <span className="font-mono text-[10px] text-muted-foreground/60 shrink-0">
-          {lang === 'ko' ? 'GROUPING() 값:' : 'GROUPING() values:'}
-        </span>
-        <div className="flex gap-1.5">
+        <div className="ml-auto flex gap-1.5 shrink-0 flex-wrap justify-end">
           {levelBadges[lang].map((lbl, i) => (
             <span
               key={i}
@@ -1073,7 +1014,7 @@ function GroupingFnAnimator({ lang }: { lang: 'ko' | 'en' }) {
         <table className="text-xs">
           <thead>
             <tr className="border-b">
-              {['dept_id', 'job_title', step === 0 ? 'salary' : 'total_sal', step === 0 ? '' : 'cnt', 'grp_dept', 'grp_job'].map((h, i) => (
+              {['dept_id', 'job_title', step === 0 ? 'salary' : 'total_sal', ...(step === 0 ? [] : ['cnt', 'grp_dept', 'grp_job'])].map((h, i) => (
                 <th key={i} className={cn('pb-2 pr-6 text-left font-mono font-bold whitespace-nowrap last:pr-0', i >= 4 ? 'text-ios-orange-dark' : 'text-muted-foreground')}>{h}</th>
               ))}
             </tr>
@@ -1094,17 +1035,21 @@ function GroupingFnAnimator({ lang }: { lang: 'ko' | 'en' }) {
                     <td className="py-1.5 pr-6 font-mono text-[11px] whitespace-nowrap text-foreground/80">{row.dept_id ?? <NullCell />}</td>
                     <td className="py-1.5 pr-6 font-mono text-[11px] whitespace-nowrap text-foreground/80">{row.job_title ?? <NullCell />}</td>
                     <td className="py-1.5 pr-6 font-mono text-[11px] whitespace-nowrap text-foreground/80">{row.total_sal.toLocaleString()}</td>
-                    <td className="py-1.5 pr-6 font-mono text-[11px] whitespace-nowrap text-foreground/80">{row.cnt}</td>
-                    <td className="py-1.5 pr-6 text-center">
-                      <span className={cn('rounded px-1.5 py-0.5 font-mono text-[11px] font-bold',
-                        row.grp_dept === 1 ? 'bg-ios-orange/15 text-ios-orange-dark' : 'bg-muted text-muted-foreground'
-                      )}>{row.grp_dept}</span>
-                    </td>
-                    <td className="py-1.5 text-center">
-                      <span className={cn('rounded px-1.5 py-0.5 font-mono text-[11px] font-bold',
-                        row.grp_job === 1 ? 'bg-ios-orange/15 text-ios-orange-dark' : 'bg-muted text-muted-foreground'
-                      )}>{row.grp_job}</span>
-                    </td>
+                    {step > 0 && <td className="py-1.5 pr-6 font-mono text-[11px] whitespace-nowrap text-foreground/80">{row.cnt}</td>}
+                    {step > 0 && (
+                      <td className="py-1.5 pr-6 text-center">
+                        <span className={cn('rounded px-1.5 py-0.5 font-mono text-[11px] font-bold',
+                          row.grp_dept === 1 ? 'bg-ios-orange/15 text-ios-orange-dark' : 'bg-muted text-muted-foreground'
+                        )}>{row.grp_dept}</span>
+                      </td>
+                    )}
+                    {step > 0 && (
+                      <td className="py-1.5 text-center">
+                        <span className={cn('rounded px-1.5 py-0.5 font-mono text-[11px] font-bold',
+                          row.grp_job === 1 ? 'bg-ios-orange/15 text-ios-orange-dark' : 'bg-muted text-muted-foreground'
+                        )}>{row.grp_job}</span>
+                      </td>
+                    )}
                   </motion.tr>
                 )
               })}

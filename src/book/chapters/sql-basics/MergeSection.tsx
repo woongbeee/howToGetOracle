@@ -7,52 +7,80 @@ import { SqlHighlight } from './SqlHighlight'
 const T = {
   ko: {
     chapterTitle: 'MERGE INTO',
-    chapterSubtitle: 'MERGE INTO는 조건에 따라 INSERT와 UPDATE를 한 번에 처리하는 구문입니다. "있으면 업데이트, 없으면 삽입" 로직을 단 하나의 SQL로 표현할 수 있습니다.',
-    whatTitle: 'MERGE INTO란?',
-    whatDesc: 'MERGE INTO는 원본(source) 데이터를 대상(target) 테이블에 병합(merge)합니다. 대상 테이블에 이미 해당 행이 있으면 UPDATE, 없으면 INSERT를 수행합니다. 두 작업을 별도의 SQL로 나누지 않아도 됩니다.',
+    chapterSubtitle:
+      'MERGE INTO는 INSERT와 UPDATE를 한 번에 처리하는 구문입니다. 대상(Target) 테이블과 참조(Source) 테이블의 데이터를 비교해서, "있으면 UPDATE, 없으면 INSERT" 합니다. 두 개의 SQL로 나누지 않고 한 번에 처리합니다.',
     structureTitle: '기본 구조',
     matchedTitle: 'WHEN MATCHED — 일치하는 행이 있을 때',
-    matchedDesc: 'ON 조건에 맞는 행이 대상 테이블에 이미 존재하면 이 절이 실행됩니다. 보통 UPDATE로 기존 값을 갱신합니다.',
+    matchedDesc:
+      '대상 테이블에서 ON 조건에 맞는 행이 있으면 실행됩니다. 보통 UPDATE로 기존 값을 갱신합니다.',
     notMatchedTitle: 'WHEN NOT MATCHED — 일치하는 행이 없을 때',
-    notMatchedDesc: 'ON 조건에 맞는 행이 대상 테이블에 없으면 이 절이 실행됩니다. 보통 INSERT로 새 행을 추가합니다.',
+    notMatchedDesc:
+      'ON 조건에 맞는 행이 대상 테이블에 없으면 이 절이 실행됩니다. 보통 INSERT로 새 행을 추가합니다.',
     deleteTitle: 'WHEN MATCHED THEN DELETE',
-    deleteDesc: 'UPDATE 후 추가 조건을 만족하면 해당 행을 삭제할 수도 있습니다. DELETE는 항상 WHEN MATCHED 안에서만 사용합니다.',
-    exampleTitle: '예시 쿼리',
-    sourceTable: '원본 테이블 (SOURCE)',
+    exampleTitle: '예시 쿼리 1 — UPDATE + INSERT',
+    example2Title: '예시 쿼리 2 — UPDATE + DELETE (WHEN MATCHED만)',
+    example2Desc:
+      'WHEN MATCHED만 단독으로 써도 됩니다. UPDATE 후 DELETE WHERE 조건을 검사할 때, 조건은 UPDATE된 값을 기준으로 합니다. 아래 예시에서 emp_id=102는 salary가 5600으로 업데이트된 뒤 dept_id=99가 아니므로 유지되고, emp_id=104는 원래 dept_id=99이므로 소스에 없어 이 MERGE에서 변경되지 않습니다.',
+    example2MatchDesc: '일치 + dept_id=99 → UPDATE 후 DELETE',
+    example2MatchKeep: '일치 + dept_id≠99 → UPDATE 유지',
+    example2NoSource: '소스에 없음 → 변경 없음',
+    sourceTable: '참조 테이블 (SOURCE)',
     targetTable: '대상 테이블 (TARGET)',
     resultTable: 'MERGE 결과',
     matched: '일치 → UPDATE',
     notMatched: '불일치 → INSERT',
     usecaseTitle: '언제 쓰나요?',
     usecases: [
-      { icon: '🔄', title: '동기화', desc: '외부 시스템에서 받아온 데이터를 내부 테이블에 반영할 때' },
-      { icon: '📥', title: 'Upsert', desc: '있으면 업데이트, 없으면 삽입 — 중복 체크 없이 한 번에' },
-      { icon: '🧹', title: '조건부 삭제', desc: '특정 조건을 만족하는 행을 업데이트 후 삭제할 때' },
+      {
+        icon: '🔄',
+        title: '동기화',
+        desc: '외부 시스템에서 받아온 데이터를 내부 테이블에 반영할 때',
+      },
+      {
+        icon: '📥',
+        title: 'Upsert',
+        desc: '있으면 업데이트, 없으면 삽입 — 중복 체크 없이 한 번에',
+      },
+      {
+        icon: '🧹',
+        title: '조건부 삭제',
+        desc: '특정 조건을 만족하는 행을 업데이트 후 삭제할 때',
+      },
     ],
+    targetLabel: '변경 대상',
     onColumnTitle: 'ON 절 컬럼은 UPDATE/DELETE 할 수 없습니다',
-    onColumnDesc: 'ON 절에서 두 테이블을 연결하는 데 쓰인 컬럼은 WHEN MATCHED THEN UPDATE나 DELETE의 대상이 될 수 없습니다. Oracle이 행을 식별하는 기준 자체를 바꾸는 것이기 때문입니다.',
-    onColumnWhy: '왜 그럴까요? ON 절은 "이 행이 원본과 같은 행인지" 판별하는 키입니다. 이 값을 UPDATE로 바꾸면 Oracle이 같은 행을 다시 찾을 수 없게 되므로 허용하지 않습니다.',
+    onColumnDesc:
+      'ON 절에서 두 테이블을 연결하는 데 쓰인 컬럼은 WHEN MATCHED THEN UPDATE나 DELETE의 대상이 될 수 없습니다. Oracle이 행을 식별하는 기준 자체를 바꾸는 것이기 때문입니다.',
+    onColumnWhy:
+      '왜 그럴까요? ON 절은 "이 행이 원본과 같은 행인지" 판별하는 키입니다. 이 값을 UPDATE로 바꾸면 Oracle이 같은 행을 다시 찾을 수 없게 되므로 허용하지 않습니다.',
     onColumnBadLabel: '오류 — ON 절 컬럼(emp_id)을 UPDATE 시도',
     onColumnGoodLabel: '올바른 방법 — ON 절 컬럼이 아닌 컬럼만 UPDATE',
+    sqlError: 'SQL — 오류',
+    sqlCorrect: 'SQL — 올바른 예',
     noteTitle: '주의사항',
     noteItems: [
-      'WHEN MATCHED와 WHEN NOT MATCHED는 둘 다 써도 되고 하나만 써도 됩니다.',
       'Oracle 9i 이상에서 지원합니다.',
     ],
   },
   en: {
     chapterTitle: 'MERGE INTO',
-    chapterSubtitle: 'MERGE INTO lets you INSERT and UPDATE in a single statement based on a condition — "update if exists, insert if not."',
-    whatTitle: 'What is MERGE INTO?',
-    whatDesc: 'MERGE INTO merges source data into a target table. If a matching row already exists in the target, it runs UPDATE; otherwise it runs INSERT. No need to split the logic into two separate SQL statements.',
+    chapterSubtitle:
+      'MERGE INTO handles INSERT and UPDATE in one shot. It compares rows between a target table and a source table — "update if matched, insert if not." No need to split it into two separate SQL statements.',
     structureTitle: 'Basic Structure',
     matchedTitle: 'WHEN MATCHED — Row found in target',
-    matchedDesc: 'When the ON condition finds a matching row in the target table, this clause executes. Typically used to UPDATE the existing row.',
+    matchedDesc:
+      'When the ON condition finds a matching row in the target table, this clause executes. Typically used to UPDATE the existing row.',
     notMatchedTitle: 'WHEN NOT MATCHED — No matching row',
-    notMatchedDesc: 'When the ON condition finds no match in the target table, this clause executes. Typically used to INSERT a new row.',
+    notMatchedDesc:
+      'When the ON condition finds no match in the target table, this clause executes. Typically used to INSERT a new row.',
     deleteTitle: 'WHEN MATCHED THEN DELETE',
-    deleteDesc: 'After an UPDATE, you can optionally DELETE the row if an additional condition is met. DELETE is only allowed inside WHEN MATCHED.',
-    exampleTitle: 'Example Query',
+    exampleTitle: 'Example Query 1 — UPDATE + INSERT',
+    example2Title: 'Example Query 2 — UPDATE + DELETE (WHEN MATCHED only)',
+    example2Desc:
+      'WHEN MATCHED can be used on its own without WHEN NOT MATCHED. When DELETE follows UPDATE, the DELETE WHERE condition is checked against the already-updated values. In the example below, emp_id=102 keeps its row because dept_id stays 30 after the update; emp_id=104 has no matching source row so it is untouched by this MERGE.',
+    example2MatchDesc: 'Matched + dept_id=99 → UPDATE then DELETE',
+    example2MatchKeep: 'Matched + dept_id≠99 → UPDATE, row kept',
+    example2NoSource: 'No source row → unchanged',
     sourceTable: 'Source Table (SOURCE)',
     targetTable: 'Target Table (TARGET)',
     resultTable: 'MERGE Result',
@@ -60,18 +88,34 @@ const T = {
     notMatched: 'Not matched → INSERT',
     usecaseTitle: 'When to use it?',
     usecases: [
-      { icon: '🔄', title: 'Sync', desc: 'Apply incoming data from an external system to an internal table' },
-      { icon: '📥', title: 'Upsert', desc: 'Update if exists, insert if not — no duplicate checks needed' },
-      { icon: '🧹', title: 'Conditional delete', desc: 'Delete rows that meet a condition after an update' },
+      {
+        icon: '🔄',
+        title: 'Sync',
+        desc: 'Apply incoming data from an external system to an internal table',
+      },
+      {
+        icon: '📥',
+        title: 'Upsert',
+        desc: 'Update if exists, insert if not — no duplicate checks needed',
+      },
+      {
+        icon: '🧹',
+        title: 'Conditional delete',
+        desc: 'Delete rows that meet a condition after an update',
+      },
     ],
+    targetLabel: 'modified',
     onColumnTitle: 'ON clause columns cannot be UPDATE-d or DELETE-d',
-    onColumnDesc: 'Columns used in the ON clause to join the two tables cannot be the target of WHEN MATCHED THEN UPDATE or DELETE. They are the key Oracle uses to identify the row.',
-    onColumnWhy: 'Why? The ON clause is how Oracle decides "is this the same row as the source?" If you update that key, Oracle can no longer find the row again — so it simply disallows it.',
+    onColumnDesc:
+      'Columns used in the ON clause to join the two tables cannot be the target of WHEN MATCHED THEN UPDATE or DELETE. They are the key Oracle uses to identify the row.',
+    onColumnWhy:
+      'Why? The ON clause is how Oracle decides "is this the same row as the source?" If you update that key, Oracle can no longer find the row again — so it simply disallows it.',
     onColumnBadLabel: 'Error — trying to UPDATE the ON clause column (emp_id)',
     onColumnGoodLabel: 'Correct — only UPDATE columns not used in ON',
+    sqlError: 'SQL — Error',
+    sqlCorrect: 'SQL — Correct',
     noteTitle: 'Important notes',
     noteItems: [
-      'You can use both WHEN MATCHED and WHEN NOT MATCHED, or just one of them.',
       'Supported in Oracle 9i and above.',
     ],
   },
@@ -108,6 +152,21 @@ WHEN NOT MATCHED THEN
   VALUES (s.emp_id, s.first_name,
           s.dept_id, s.salary)`
 
+// Example 2: WHEN MATCHED only — UPDATE then DELETE WHERE (on updated values)
+// SOURCE has emp_id 101 (dept_id=10) and 102 (dept_id=99)
+// TARGET has emp_id 101 (dept_id=10, salary=7200), 102 (dept_id=30, salary=5400),
+//              103 (dept_id=10, salary=8100), 104 (dept_id=99, salary=4900)
+// After UPDATE: emp_id=102 gets dept_id=99 → DELETE WHERE dept_id=99 fires → deleted
+//               emp_id=101 gets dept_id=10 → dept_id≠99 → kept
+// emp_id=103, 104 have no source row → untouched
+const MERGE2_SQL = `MERGE INTO employees t
+USING dept_changes s
+  ON (t.emp_id = s.emp_id)
+WHEN MATCHED THEN
+  UPDATE SET t.salary  = s.salary,
+             t.dept_id = s.dept_id
+  DELETE WHERE t.dept_id = 99`
+
 const STRUCTURE_SQL = `MERGE INTO target_table t
 USING source_table s
   ON (t.join_key = s.join_key)
@@ -117,13 +176,6 @@ WHEN MATCHED THEN
 WHEN NOT MATCHED THEN
   INSERT (col1, col2, col3)
   VALUES (s.col1, s.col2, s.col3)`
-
-const DELETE_SQL = `MERGE INTO employees t
-USING former_employees s
-  ON (t.emp_id = s.emp_id)
-WHEN MATCHED THEN
-  UPDATE SET t.salary = s.salary
-  DELETE WHERE t.dept_id = 99`
 
 const ON_COLUMN_BAD_SQL = `-- ❌ ORA-38104: ON 절에서 참조된 컬럼은 업데이트할 수 없습니다
 MERGE INTO employees t
@@ -142,17 +194,51 @@ WHEN MATCHED THEN
   UPDATE SET t.salary  = s.salary,
              t.dept_id = s.dept_id`
 
+// ── Example 2 data ────────────────────────────────────────────────────────────
+// SOURCE: emp_id 101 (dept_id=10), 102 (dept_id=99)
+// TARGET: emp_id 101~104; after UPDATE emp_id=102 gets dept_id=99 → DELETE fires
+
+interface Ex2SourceRow { emp_id: number; dept_id: number; salary: number }
+interface Ex2TargetRow { emp_id: number; first_name: string; dept_id: number; salary: number }
+
+const EX2_SOURCE: Ex2SourceRow[] = [
+  { emp_id: 101, dept_id: 10, salary: 8000 },
+  { emp_id: 102, dept_id: 99, salary: 5600 },
+]
+
+const EX2_TARGET: Ex2TargetRow[] = [
+  { emp_id: 101, first_name: 'Alice', dept_id: 10, salary: 7200 },
+  { emp_id: 102, first_name: 'Bob',   dept_id: 30, salary: 5400 },
+  { emp_id: 103, first_name: 'Carol', dept_id: 10, salary: 8100 },
+  { emp_id: 104, first_name: 'David', dept_id: 99, salary: 4900 },
+]
+
+type Ex2RowState = 'updated' | 'deleted' | 'unchanged'
+
+// After UPDATE applied first, then DELETE WHERE dept_id=99 on updated values
+// emp_id=101: matched, dept_id stays 10 → updated, kept
+// emp_id=102: matched, dept_id becomes 99 → updated then deleted
+// emp_id=103,104: no source row → unchanged (104 has dept_id=99 but no match → untouched)
+const EX2_RESULT: (Ex2TargetRow & { state: Ex2RowState })[] = [
+  { emp_id: 101, first_name: 'Alice', dept_id: 10, salary: 8000, state: 'updated' },
+  { emp_id: 103, first_name: 'Carol', dept_id: 10, salary: 8100, state: 'unchanged' },
+  { emp_id: 104, first_name: 'David', dept_id: 99, salary: 4900, state: 'unchanged' },
+]
+
 // ── Static merge table ────────────────────────────────────────────────────────
 
 const MERGE_TABLE_COLS = ['emp_id', 'first_name', 'dept_id', 'salary'] as const
 
-function MergeTableHeader() {
+function MergeTableHeader({ cols = MERGE_TABLE_COLS as readonly string[], extraCol }: { cols?: readonly string[]; extraCol?: string }) {
   return (
     <thead>
       <tr className="border-b bg-muted/60">
-        {MERGE_TABLE_COLS.map((h) => (
+        {cols.map((h) => (
           <th key={h} className="px-3 py-2 text-left font-mono text-[10px] font-bold text-muted-foreground whitespace-nowrap">{h}</th>
         ))}
+        {extraCol && (
+          <th className="px-3 py-2 text-left font-mono text-[10px] font-bold text-muted-foreground whitespace-nowrap">{extraCol}</th>
+        )}
       </tr>
     </thead>
   )
@@ -178,9 +264,9 @@ const RESULT_ROWS: TargetRow[] = [
 
 function MergeTables({ t }: { t: typeof T['ko'] }) {
   return (
-    <div className="rounded-xl border bg-muted/20 overflow-hidden">
+    <div className="mb-6 rounded-xl border bg-muted/20 overflow-hidden">
       {/* Legend */}
-      <div className="flex items-center gap-3 border-b bg-muted/40 px-4 py-2.5">
+      <div className="border-b bg-muted/40 px-4 py-2.5 flex flex-wrap items-center gap-x-3 gap-y-1.5">
         <span className="flex items-center gap-1.5 font-mono text-[10px]">
           <span className="inline-block h-2.5 w-2.5 rounded-sm bg-ios-orange-light border border-ios-orange/30" />
           <span className="text-ios-orange-dark font-bold">{t.matched}</span>
@@ -191,11 +277,40 @@ function MergeTables({ t }: { t: typeof T['ko'] }) {
         </span>
       </div>
 
-      {/* 3-panel layout */}
+      {/* 3-panel layout: TARGET | SOURCE | RESULT */}
       <div className="grid grid-cols-1 gap-0 lg:grid-cols-3 lg:divide-x">
 
-        {/* SOURCE */}
+        {/* TARGET */}
         <div className="p-4">
+          <div className="mb-2 flex items-center gap-1.5 font-mono text-[10px] font-bold uppercase tracking-widest">
+            <span className="text-foreground/70">{t.targetTable}</span>
+            <span className="rounded bg-ios-orange/15 px-1.5 py-0.5 text-[9px] font-bold text-ios-orange-dark normal-case tracking-normal">{t.targetLabel}</span>
+          </div>
+          <div className="overflow-x-auto rounded-lg border-2 border-ios-orange/30">
+            <table className="w-full text-xs">
+              <MergeTableHeader />
+              <tbody>
+                {INITIAL_TARGET.map((row) => {
+                  const state = MERGE_ROW_STATES[row.emp_id]
+                  return (
+                    <tr key={row.emp_id} className={cn(
+                      'border-b last:border-0',
+                      state === 'updated' ? 'bg-ios-orange-light/60' : '',
+                    )}>
+                      <td className="px-3 py-1.5 font-mono text-[11px] whitespace-nowrap text-foreground/80">{row.emp_id}</td>
+                      <td className="px-3 py-1.5 font-mono text-[11px] whitespace-nowrap text-foreground/80">{row.first_name}</td>
+                      <td className="px-3 py-1.5 font-mono text-[11px] whitespace-nowrap text-foreground/80">{row.dept_id}</td>
+                      <td className="px-3 py-1.5 font-mono text-[11px] whitespace-nowrap text-foreground/80">{row.salary.toLocaleString()}</td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* SOURCE */}
+        <div className="p-4 border-t lg:border-t-0">
           <div className="mb-2 font-mono text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
             {t.sourceTable}
           </div>
@@ -206,13 +321,10 @@ function MergeTables({ t }: { t: typeof T['ko'] }) {
                 {SOURCE_ROWS.map((src) => {
                   const state = MERGE_ROW_STATES[src.emp_id]
                   return (
-                    <tr
-                      key={src.emp_id}
-                      className={cn(
-                        'border-b last:border-0',
-                        state === 'updated'  ? 'bg-ios-orange-light' : 'bg-ios-teal-light',
-                      )}
-                    >
+                    <tr key={src.emp_id} className={cn(
+                      'border-b last:border-0',
+                      state === 'updated' ? 'bg-ios-orange-light' : 'bg-ios-teal-light',
+                    )}>
                       <td className="px-3 py-1.5 font-mono text-[11px] whitespace-nowrap text-foreground/80">{src.emp_id}</td>
                       <td className="px-3 py-1.5 font-mono text-[11px] whitespace-nowrap text-foreground/80">{src.first_name}</td>
                       <td className="px-3 py-1.5 font-mono text-[11px] whitespace-nowrap text-foreground/80">{src.dept_id}</td>
@@ -225,56 +337,24 @@ function MergeTables({ t }: { t: typeof T['ko'] }) {
           </div>
         </div>
 
-        {/* TARGET */}
-        <div className="p-4 border-t lg:border-t-0">
-          <div className="mb-2 font-mono text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-            {t.targetTable}
-          </div>
-          <div className="overflow-x-auto rounded-lg border">
-            <table className="w-full text-xs">
-              <MergeTableHeader />
-              <tbody>
-                {INITIAL_TARGET.map((row, i) => (
-                  <tr key={row.emp_id} className={cn('border-b last:border-0', i % 2 === 0 ? 'bg-background' : 'bg-muted/20')}>
-                    <td className="px-3 py-1.5 font-mono text-[11px] whitespace-nowrap text-foreground/80">{row.emp_id}</td>
-                    <td className="px-3 py-1.5 font-mono text-[11px] whitespace-nowrap text-foreground/80">{row.first_name}</td>
-                    <td className="px-3 py-1.5 font-mono text-[11px] whitespace-nowrap text-foreground/80">{row.dept_id}</td>
-                    <td className="px-3 py-1.5 font-mono text-[11px] whitespace-nowrap text-foreground/80">{row.salary.toLocaleString()}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
         {/* RESULT */}
         <div className="p-4 border-t lg:border-t-0">
-          <div className="mb-2 font-mono text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-            {t.resultTable}
+          <div className="mb-2 flex items-center gap-1.5 font-mono text-[10px] font-bold uppercase tracking-widest">
+            <span className="text-foreground/70">{t.resultTable}</span>
           </div>
-          <div className="overflow-x-auto rounded-lg border">
+          <div className="overflow-x-auto rounded-lg border-2 border-ios-orange/30">
             <table className="w-full text-xs">
-              <thead>
-                <tr className="border-b bg-muted/60">
-                  {MERGE_TABLE_COLS.map((h) => (
-                    <th key={h} className="px-3 py-2 text-left font-mono text-[10px] font-bold text-muted-foreground whitespace-nowrap">{h}</th>
-                  ))}
-                  <th className="px-3 py-2 text-left font-mono text-[10px] font-bold text-muted-foreground whitespace-nowrap">status</th>
-                </tr>
-              </thead>
+              <MergeTableHeader extraCol="status" />
               <tbody>
                 {RESULT_ROWS.map((row) => {
                   const state = MERGE_ROW_STATES[row.emp_id]
                   const orig = INITIAL_TARGET.find((r) => r.emp_id === row.emp_id)
                   return (
-                    <tr
-                      key={row.emp_id}
-                      className={cn(
-                        'border-b last:border-0',
-                        state === 'updated'  ? 'bg-ios-orange-light' :
-                        state === 'inserted' ? 'bg-ios-teal-light'   : '',
-                      )}
-                    >
+                    <tr key={row.emp_id} className={cn(
+                      'border-b last:border-0',
+                      state === 'updated'  ? 'bg-ios-orange-light' :
+                      state === 'inserted' ? 'bg-ios-teal-light'   : '',
+                    )}>
                       <td className="px-3 py-1.5 font-mono text-[11px] whitespace-nowrap text-foreground/80">{row.emp_id}</td>
                       <td className="px-3 py-1.5 font-mono text-[11px] whitespace-nowrap text-foreground/80">{row.first_name}</td>
                       <td className="px-3 py-1.5 font-mono text-[11px] whitespace-nowrap text-foreground/80">{row.dept_id}</td>
@@ -305,6 +385,152 @@ function MergeTables({ t }: { t: typeof T['ko'] }) {
   )
 }
 
+// ── Example 2 table (UPDATE + DELETE) ─────────────────────────────────────────
+
+const EX2_SOURCE_COLS = ['emp_id', 'dept_id', 'salary'] as const
+
+function MergeTables2({ t }: { t: typeof T['ko'] }) {
+  const deletedRow = EX2_TARGET.find((r) => r.emp_id === 102)!
+  const deletedSrc = EX2_SOURCE.find((s) => s.emp_id === 102)!
+
+  return (
+    <div className="mb-6 rounded-xl border bg-muted/20 overflow-hidden">
+      {/* Legend */}
+      <div className="border-b bg-muted/40 px-4 py-2.5 flex flex-wrap items-center gap-x-3 gap-y-1.5">
+        <span className="flex items-center gap-1.5 font-mono text-[10px]">
+          <span className="inline-block h-2.5 w-2.5 rounded-sm bg-ios-orange-light border border-ios-orange/30" />
+          <span className="text-ios-orange-dark font-bold">{t.example2MatchKeep}</span>
+        </span>
+        <span className="flex items-center gap-1.5 font-mono text-[10px]">
+          <span className="inline-block h-2.5 w-2.5 rounded-sm bg-ios-red-light border border-ios-red/30" />
+          <span className="text-ios-red-dark font-bold">{t.example2MatchDesc}</span>
+        </span>
+        <span className="flex items-center gap-1.5 font-mono text-[10px]">
+          <span className="inline-block h-2.5 w-2.5 rounded-sm bg-muted border border-border" />
+          <span className="text-muted-foreground font-bold">{t.example2NoSource}</span>
+        </span>
+      </div>
+
+      {/* 3-panel layout: TARGET | SOURCE | RESULT */}
+      <div className="grid grid-cols-1 gap-0 lg:grid-cols-3 lg:divide-x">
+
+        {/* TARGET */}
+        <div className="p-4">
+          <div className="mb-2 flex items-center gap-1.5 font-mono text-[10px] font-bold uppercase tracking-widest">
+            <span className="text-foreground/70">{t.targetTable}</span>
+            <span className="rounded bg-ios-orange/15 px-1.5 py-0.5 text-[9px] font-bold text-ios-orange-dark normal-case tracking-normal">{t.targetLabel}</span>
+          </div>
+          <div className="overflow-x-auto rounded-lg border-2 border-ios-orange/30">
+            <table className="w-full text-xs">
+              <MergeTableHeader />
+              <tbody>
+                {EX2_TARGET.map((row) => {
+                  const src = EX2_SOURCE.find((s) => s.emp_id === row.emp_id)
+                  const willDelete = src?.dept_id === 99
+                  const willUpdate = !!src && !willDelete
+                  return (
+                    <tr key={row.emp_id} className={cn(
+                      'border-b last:border-0',
+                      willDelete ? 'bg-ios-red-light/60' :
+                      willUpdate ? 'bg-ios-orange-light/60' : '',
+                    )}>
+                      <td className="px-3 py-1.5 font-mono text-[11px] whitespace-nowrap text-foreground/80">{row.emp_id}</td>
+                      <td className="px-3 py-1.5 font-mono text-[11px] whitespace-nowrap text-foreground/80">{row.first_name}</td>
+                      <td className="px-3 py-1.5 font-mono text-[11px] whitespace-nowrap text-foreground/80">{row.dept_id}</td>
+                      <td className="px-3 py-1.5 font-mono text-[11px] whitespace-nowrap text-foreground/80">{row.salary.toLocaleString()}</td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* SOURCE */}
+        <div className="p-4 border-t lg:border-t-0">
+          <div className="mb-2 font-mono text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+            {t.sourceTable}
+          </div>
+          <div className="overflow-x-auto rounded-lg border">
+            <table className="w-full text-xs">
+              <MergeTableHeader cols={EX2_SOURCE_COLS} />
+              <tbody>
+                {EX2_SOURCE.map((src) => {
+                  const willDelete = src.dept_id === 99
+                  return (
+                    <tr key={src.emp_id} className={cn(
+                      'border-b last:border-0',
+                      willDelete ? 'bg-ios-red-light' : 'bg-ios-orange-light',
+                    )}>
+                      <td className="px-3 py-1.5 font-mono text-[11px] whitespace-nowrap text-foreground/80">{src.emp_id}</td>
+                      <td className="px-3 py-1.5 font-mono text-[11px] whitespace-nowrap text-foreground/80">{src.dept_id}</td>
+                      <td className="px-3 py-1.5 font-mono text-[11px] whitespace-nowrap text-foreground/80">{src.salary.toLocaleString()}</td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* RESULT */}
+        <div className="p-4 border-t lg:border-t-0">
+          <div className="mb-2 font-mono text-[10px] font-bold uppercase tracking-widest text-foreground/70">
+            {t.resultTable}
+          </div>
+          <div className="overflow-x-auto rounded-lg border-2 border-ios-orange/30">
+            <table className="w-full text-xs">
+              <MergeTableHeader extraCol="status" />
+              <tbody>
+                {/* deleted row with strikethrough */}
+                <tr className="border-b bg-ios-red-light/50 opacity-60">
+                  <td className="px-3 py-1.5 font-mono text-[11px] whitespace-nowrap line-through text-foreground/50">{deletedRow.emp_id}</td>
+                  <td className="px-3 py-1.5 font-mono text-[11px] whitespace-nowrap line-through text-foreground/50">{deletedRow.first_name}</td>
+                  <td className="px-3 py-1.5 font-mono text-[11px] whitespace-nowrap">
+                    <span className="line-through text-foreground/50 mr-1 text-[10px]">{deletedRow.dept_id}</span>
+                    <span className="font-bold text-ios-red-dark">{deletedSrc.dept_id}</span>
+                  </td>
+                  <td className="px-3 py-1.5 font-mono text-[11px] whitespace-nowrap">
+                    <span className="line-through text-foreground/50 mr-1 text-[10px]">{deletedRow.salary.toLocaleString()}</span>
+                    <span className="font-bold text-ios-red-dark">{deletedSrc.salary.toLocaleString()}</span>
+                  </td>
+                  <td className="px-3 py-1.5 font-mono text-[11px] whitespace-nowrap">
+                    <span className="rounded bg-ios-red/20 px-1.5 py-0.5 text-[10px] font-bold text-ios-red-dark">DELETED</span>
+                  </td>
+                </tr>
+                {EX2_RESULT.map((row) => {
+                  const orig = EX2_TARGET.find((r) => r.emp_id === row.emp_id)
+                  return (
+                    <tr key={row.emp_id} className={cn('border-b last:border-0', row.state === 'updated' ? 'bg-ios-orange-light' : '')}>
+                      <td className="px-3 py-1.5 font-mono text-[11px] whitespace-nowrap text-foreground/80">{row.emp_id}</td>
+                      <td className="px-3 py-1.5 font-mono text-[11px] whitespace-nowrap text-foreground/80">{row.first_name}</td>
+                      <td className="px-3 py-1.5 font-mono text-[11px] whitespace-nowrap text-foreground/80">{row.dept_id}</td>
+                      <td className="px-3 py-1.5 font-mono text-[11px] whitespace-nowrap">
+                        {row.state === 'updated' && orig && orig.salary !== row.salary ? (
+                          <span>
+                            <span className="text-ios-red line-through mr-1 text-[10px]">{orig.salary.toLocaleString()}</span>
+                            <span className="font-bold text-ios-orange-dark">{row.salary.toLocaleString()}</span>
+                          </span>
+                        ) : (
+                          <span className="text-foreground/80">{row.salary.toLocaleString()}</span>
+                        )}
+                      </td>
+                      <td className="px-3 py-1.5 font-mono text-[11px] whitespace-nowrap">
+                        {row.state === 'updated'   && <span className="rounded bg-ios-orange/20 px-1.5 py-0.5 text-[10px] font-bold text-ios-orange-dark">UPDATED</span>}
+                        {row.state === 'unchanged' && <span className="text-muted-foreground/40">—</span>}
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ── Main component ─────────────────────────────────────────────────────────────
 
 export function MergeSection({ lang }: { lang: 'ko' | 'en' }) {
@@ -313,10 +539,6 @@ export function MergeSection({ lang }: { lang: 'ko' | 'en' }) {
   return (
     <PageContainer className="max-w-5xl">
       <ChapterTitle icon="🔀" num={1} title={t.chapterTitle} subtitle={t.chapterSubtitle} />
-
-      {/* What is MERGE */}
-      <SectionTitle>{t.whatTitle}</SectionTitle>
-      <Prose>{t.whatDesc}</Prose>
 
       <InfoBox variant="usage" lang={lang}>
         <div className="flex flex-col gap-2 mt-1">
@@ -355,21 +577,7 @@ export function MergeSection({ lang }: { lang: 'ko' | 'en' }) {
 
       <Divider />
 
-      {/* DELETE variant */}
-      <SectionTitle>{t.deleteTitle}</SectionTitle>
-      <Prose>{t.deleteDesc}</Prose>
-      <div className="mb-6 rounded-xl border overflow-hidden">
-        <div className="border-b px-4 py-2">
-          <span className="font-mono text-[10px] text-zinc-400 uppercase tracking-widest">SQL</span>
-        </div>
-        <div className="p-4">
-          <SqlHighlight sql={DELETE_SQL} />
-        </div>
-      </div>
-
-      <Divider />
-
-      {/* Example query */}
+      {/* Example query 1 */}
       <SectionTitle>{t.exampleTitle}</SectionTitle>
       <div className="mb-6 rounded-xl border overflow-hidden">
         <div className="border-b px-4 py-2">
@@ -380,6 +588,21 @@ export function MergeSection({ lang }: { lang: 'ko' | 'en' }) {
         </div>
       </div>
       <MergeTables t={t} />
+
+      <Divider />
+
+      {/* Example query 2 — UPDATE + DELETE, WHEN MATCHED only */}
+      <SectionTitle>{t.example2Title}</SectionTitle>
+      <Prose>{t.example2Desc}</Prose>
+      <div className="mb-6 rounded-xl border overflow-hidden">
+        <div className="border-b px-4 py-2">
+          <span className="font-mono text-[10px] text-zinc-400 uppercase tracking-widest">SQL</span>
+        </div>
+        <div className="p-4">
+          <SqlHighlight sql={MERGE2_SQL} />
+        </div>
+      </div>
+      <MergeTables2 t={t} />
 
       <Divider />
 
@@ -395,7 +618,7 @@ export function MergeSection({ lang }: { lang: 'ko' | 'en' }) {
       </div>
       <div className="mb-5 rounded-xl border border-ios-red/30 overflow-hidden">
         <div className="border-b border-ios-red/30 bg-ios-red-light px-4 py-2">
-          <span className="font-mono text-[10px] text-ios-red-dark uppercase tracking-widest">SQL — Error</span>
+          <span className="font-mono text-[10px] text-ios-red-dark uppercase tracking-widest">{t.sqlError}</span>
         </div>
         <div className="p-4">
           <SqlHighlight sql={ON_COLUMN_BAD_SQL} />
@@ -407,7 +630,7 @@ export function MergeSection({ lang }: { lang: 'ko' | 'en' }) {
       </div>
       <div className="mb-6 rounded-xl border border-ios-teal/30 overflow-hidden">
         <div className="border-b border-ios-teal/30 bg-ios-teal-light px-4 py-2">
-          <span className="font-mono text-[10px] text-ios-teal-dark uppercase tracking-widest">SQL — Correct</span>
+          <span className="font-mono text-[10px] text-ios-teal-dark uppercase tracking-widest">{t.sqlCorrect}</span>
         </div>
         <div className="p-4">
           <SqlHighlight sql={ON_COLUMN_GOOD_SQL} />

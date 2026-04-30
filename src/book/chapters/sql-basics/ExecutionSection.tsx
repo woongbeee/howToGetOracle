@@ -106,7 +106,7 @@ function ResultTable({ parsed, t, lang, overrideResult }: {
           <table className="text-xs">
             <thead>
               <tr className="border-b bg-muted/60">
-                {MERGE_COLS.map((h) => (
+                {cols.map((h) => (
                   <th key={h} className="px-3 py-2 text-left font-mono font-bold text-muted-foreground whitespace-nowrap">
                     {h}
                   </th>
@@ -474,27 +474,21 @@ export function ExecutionSimulator({ lang, t }: { lang: 'ko' | 'en'; t: typeof T
                       </tr>
                     </thead>
                     <tbody>
-                      {(() => {
-                        const isFiltered = parsed.type === 'UPDATE' || parsed.type === 'DELETE' || parsed.matchedRows.length < EMPLOYEES.length
-                        const displayRows = isFiltered
-                          ? EMPLOYEES.filter((e) => parsed.matchedRows.some((r) => r.emp_id === e.emp_id))
-                          : EMPLOYEES
-                        return displayRows.map((emp) => {
-                          const isHighlighted = parsed.matchedRows.some((r) => r.emp_id === emp.emp_id)
-                          const resultRow = parsed.resultRows.find((r) => r.emp_id === emp.emp_id)
-                          const isDeleted = parsed.type === 'DELETE' && isHighlighted
-                          return (
-                            <EmpRow
-                              key={emp.emp_id}
-                              row={parsed.type === 'UPDATE' && resultRow ? resultRow : emp}
-                              highlighted={isHighlighted}
-                              deleted={!!isDeleted}
-                              columns={[]}
-                              original={parsed.type === 'UPDATE' && isHighlighted ? emp : undefined}
-                            />
-                          )
-                        })
-                      })()}
+                      {EMPLOYEES.map((emp) => {
+                        const isHighlighted = parsed.matchedRows.some((r) => r.emp_id === emp.emp_id)
+                        const resultRow = parsed.resultRows.find((r) => r.emp_id === emp.emp_id)
+                        const isDeleted = parsed.type === 'DELETE' && isHighlighted
+                        return (
+                          <EmpRow
+                            key={emp.emp_id}
+                            row={parsed.type === 'UPDATE' && resultRow ? resultRow : emp}
+                            highlighted={isHighlighted}
+                            deleted={!!isDeleted}
+                            columns={[]}
+                            original={parsed.type === 'UPDATE' && isHighlighted ? emp : undefined}
+                          />
+                        )
+                      })}
                     </tbody>
                   </table>
                 </div>
