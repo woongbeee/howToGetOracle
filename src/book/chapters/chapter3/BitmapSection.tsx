@@ -175,7 +175,7 @@ export function BitmapSection({ lang }: Props) {
   const rows = table?.rows.slice(0, DEMO_SIZE) ?? []
 
   return (
-    <div className="mx-auto max-w-5xl space-y-8 px-6 py-8">
+    <div className="mx-auto max-w-6xl space-y-8 px-8 py-8">
 
       {/* Structure explanation */}
       <section>

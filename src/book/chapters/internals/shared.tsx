@@ -9,10 +9,10 @@ import { useSimulationStore } from '@/store/simulationStore'
 
 export function TwoColLayout({ children, map }: { children: React.ReactNode; map: React.ReactNode }) {
   return (
-    <div className="mx-auto max-w-7xl px-8 py-10">
+    <div className="mx-auto max-w-screen-2xl px-10 py-10">
       <div className="flex gap-10">
         <div className="min-w-0 flex-1">{children}</div>
-        <aside className="w-80 shrink-0 xl:w-96">
+        <aside className="w-72 shrink-0">
           <div className="sticky top-6">{map}</div>
         </aside>
       </div>

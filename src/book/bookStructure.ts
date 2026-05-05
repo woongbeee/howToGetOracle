@@ -87,8 +87,46 @@ export const BOOK_CHAPTERS: BookChapter[] = [
     ],
   },
   {
-    id: 'index',
+    id: 'internals',
     num: 2,
+    icon: '⚙',
+    color: 'blue',
+    title: {
+      ko: '오라클 내부 구조와 프로세스',
+      en: 'Oracle Internals & Processes',
+    },
+    sections: [
+      {
+        id: 'internals-storage',
+        title: { ko: '데이터 저장 구조', en: 'Data Storage Structure' },
+      },
+      {
+        id: 'internals-overview',
+        title: { ko: '아키텍처 개요', en: 'Architecture Overview' },
+      },
+      {
+        id: 'internals-sga',
+        title: {
+          ko: 'SGA — System Global Area',
+          en: 'SGA — System Global Area',
+        },
+      },
+      {
+        id: 'internals-pga',
+        title: {
+          ko: 'PGA — Program Global Area',
+          en: 'PGA — Program Global Area',
+        },
+      },
+      {
+        id: 'internals-processes',
+        title: { ko: '백그라운드 프로세스', en: 'Background Processes' },
+      },
+    ],
+  },
+  {
+    id: 'index',
+    num: 3,
     icon: '🔍',
     color: 'violet',
     title: {
@@ -125,7 +163,7 @@ export const BOOK_CHAPTERS: BookChapter[] = [
   },
   {
     id: 'join',
-    num: 3,
+    num: 4,
     icon: '🔗',
     color: 'emerald',
     title: { ko: '조인 원리와 활용', en: 'Join Principles & Usage' },
@@ -159,7 +197,7 @@ export const BOOK_CHAPTERS: BookChapter[] = [
   },
   {
     id: 'optimizer',
-    num: 4,
+    num: 5,
     icon: '⚡',
     color: 'orange',
     title: { ko: '옵티마이저 원리', en: 'Optimizer Principles' },
@@ -193,7 +231,7 @@ export const BOOK_CHAPTERS: BookChapter[] = [
   },
   {
     id: 'query-transform',
-    num: 5,
+    num: 6,
     icon: '🔄',
     color: 'cyan',
     title: { ko: '쿼리 변환', en: 'Query Transformation' },
@@ -230,7 +268,7 @@ export const BOOK_CHAPTERS: BookChapter[] = [
   },
   {
     id: 'sort',
-    num: 6,
+    num: 7,
     icon: '↕',
     color: 'rose',
     title: { ko: '소트 튜닝', en: 'Sort Tuning' },
@@ -263,7 +301,7 @@ export const BOOK_CHAPTERS: BookChapter[] = [
   },
   {
     id: 'partition',
-    num: 7,
+    num: 8,
     icon: '▦',
     color: 'amber',
     title: { ko: '파티셔닝', en: 'Partitioning' },
@@ -296,7 +334,7 @@ export const BOOK_CHAPTERS: BookChapter[] = [
   },
   {
     id: 'parallel',
-    num: 8,
+    num: 9,
     icon: '⫴',
     color: 'teal',
     title: { ko: '병렬 처리', en: 'Parallel Processing' },
@@ -320,53 +358,6 @@ export const BOOK_CHAPTERS: BookChapter[] = [
         simulatorLabel: {
           ko: '병렬 처리 시뮬레이터 실행',
           en: 'Launch Parallel Simulator',
-        },
-      },
-    ],
-  },
-  {
-    id: 'internals',
-    num: 9,
-    icon: '⚙',
-    color: 'blue',
-    title: {
-      ko: '오라클 내부 구조와 프로세스',
-      en: 'Oracle Internals & Processes',
-    },
-    sections: [
-      {
-        id: 'internals-storage',
-        title: { ko: '데이터 저장 구조', en: 'Data Storage Structure' },
-      },
-      {
-        id: 'internals-overview',
-        title: { ko: '아키텍처 개요', en: 'Architecture Overview' },
-      },
-      {
-        id: 'internals-sga',
-        title: {
-          ko: 'SGA — System Global Area',
-          en: 'SGA — System Global Area',
-        },
-      },
-      {
-        id: 'internals-pga',
-        title: {
-          ko: 'PGA — Program Global Area',
-          en: 'PGA — Program Global Area',
-        },
-      },
-      {
-        id: 'internals-processes',
-        title: { ko: '백그라운드 프로세스', en: 'Background Processes' },
-      },
-      {
-        id: 'internals-simulator',
-        title: { ko: 'Internals Simulator', en: 'Internals Simulator' },
-        hasSimulator: true,
-        simulatorLabel: {
-          ko: 'Internals 시뮬레이터 실행',
-          en: 'Launch Internals Simulator',
         },
       },
     ],

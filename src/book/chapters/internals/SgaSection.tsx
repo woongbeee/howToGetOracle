@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useSimulationStore } from '@/store/simulationStore'
 import type { InstanceComponentId } from './OracleInstanceMap'
-import { SectionTitle, Prose, InfoBox, Table, Divider, SubTitle } from '../shared'
+import { ChapterTitle, InfoBox, Table, Divider, SubTitle } from '../shared'
 import { TwoColLayout, MapPanel, TourPanel } from './shared'
 import type { TourItem } from './shared'
 import { cn } from '@/lib/utils'
@@ -142,8 +142,7 @@ export function SgaSection() {
         />
       }
     >
-      <SectionTitle>{t.sgaTitle}</SectionTitle>
-      <Prose>{t.sgaDesc}</Prose>
+      <ChapterTitle title={t.sgaTitle} subtitle={t.sgaDesc} />
 
       <TourPanel
         tour={t.sgaTour}

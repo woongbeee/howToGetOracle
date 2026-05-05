@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils'
 // Chapter pages
 import { SqlBasicsPage } from './chapters/sql-basics'
 import { InternalsPage } from './chapters/internals'
-import { IndexChapterPage } from './chapters/index-chapter'
+import { IndexChapterPage } from './chapters/chapter3'
 import { JoinPage } from './chapters/join'
 import { OptimizerChapterPage } from './chapters/optimizer'
 import { QueryTransformPage } from './chapters/query-transform'
@@ -36,9 +36,6 @@ const COLOR_MAP: Record<string, { text: string; border: string; bg: string; dot:
   'brand-salmon':{ text: 'text-brand-salmon-dark',border: 'border-brand-salmon/30',   bg: 'bg-brand-salmon-light',dot: 'bg-brand-salmon' },
 }
 
-// Sections that use full-height fixed layouts (no scroll wrapper)
-const FULLSCREEN_SECTIONS = new Set(['internals-simulator'])
-
 export const BookContent = memo(function BookContent({ sectionId, onNavigate }: Props) {
   const lang = useSimulationStore((s) => s.lang)
   const info = useMemo(() => getSectionById(sectionId), [sectionId])
@@ -48,7 +45,6 @@ export const BookContent = memo(function BookContent({ sectionId, onNavigate }: 
 
   const { chapter } = info
   const c = COLOR_MAP[chapter.color] ?? COLOR_MAP.blue
-  const isFullscreen = FULLSCREEN_SECTIONS.has(sectionId)
 
   return (
     <div className="flex h-full flex-col overflow-hidden">
@@ -63,30 +59,24 @@ export const BookContent = memo(function BookContent({ sectionId, onNavigate }: 
         </span>
       </div>
 
-      {/* Content area — full-height sections skip scroll wrapper */}
-      <div className={cn('min-h-0 flex-1', isFullscreen ? 'overflow-hidden' : 'overflow-x-hidden overflow-y-auto')}>
-        {isFullscreen ? (
-          <div key={sectionId} className="h-full">
+      {/* Content area */}
+      <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={sectionId}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+            className="h-full"
+          >
             <SectionRouter sectionId={sectionId} />
-          </div>
-        ) : (
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={sectionId}
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-              className="h-full"
-            >
-              <SectionRouter sectionId={sectionId} />
-            </motion.div>
-          </AnimatePresence>
-        )}
+          </motion.div>
+        </AnimatePresence>
       </div>
 
-      {/* Prev / Next navigation — hidden for full-height simulator sections */}
-      <div className={cn('flex h-[52px] shrink-0 items-center justify-between border-t bg-card px-6', isFullscreen && 'hidden')}>
+      {/* Prev / Next navigation */}
+      <div className="flex h-[52px] shrink-0 items-center justify-between border-t bg-card px-6">
         <div className="flex-1">
           {adjacent.prev && (
             <button

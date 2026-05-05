@@ -11,7 +11,7 @@ interface Props {
   onHome: () => void
 }
 
-const T: Record<'ko' | 'en', { title: string; subtitle: string; langToggle: string; tocLabel: string; openTitle: string; closeTitle: string }> = {
+const T: Record<'ko' | 'en', { title: string; subtitle: string; langToggle: string; tocLabel: string; openTitle: string; closeTitle: string; simulator: string }> = {
   ko: {
     title: 'Oracle DB',
     subtitle: 'Interactive Learning Book',
@@ -19,6 +19,7 @@ const T: Record<'ko' | 'en', { title: string; subtitle: string; langToggle: stri
     tocLabel: '목차',
     openTitle: '목차 열기',
     closeTitle: '목차 닫기',
+    simulator: 'Internals Simulator',
   },
   en: {
     title: 'Oracle DB',
@@ -27,6 +28,7 @@ const T: Record<'ko' | 'en', { title: string; subtitle: string; langToggle: stri
     tocLabel: 'TOC',
     openTitle: 'Open TOC',
     closeTitle: 'Close TOC',
+    simulator: 'Internals Simulator',
   },
 }
 
@@ -127,6 +129,14 @@ export function BookLayout({ onHome }: Props) {
             last updated {__BUILD_DATE__}
           </span>
           <div className="hidden h-3 w-px bg-border sm:block" />
+          <button
+            onClick={() => window.open(`${window.location.pathname}#simulator`, '_blank', 'width=1400,height=900')}
+            className="flex items-center gap-1.5 rounded-full border bg-muted px-2.5 py-0.5 font-mono text-[10px] font-medium text-muted-foreground transition-colors hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300"
+          >
+            <span>⚙</span>
+            {t.simulator}
+          </button>
+          <div className="h-3 w-px bg-border" />
           <button
             onClick={toggleLang}
             className="flex items-center gap-1 rounded-full border bg-muted px-2.5 py-0.5 font-mono text-[10px] font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"

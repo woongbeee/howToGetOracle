@@ -1,11 +1,9 @@
 import { useSimulationStore } from '@/store/simulationStore'
-import { ChapterTitle, SectionTitle, Prose, ConceptGrid } from '../shared'
+import { ChapterTitle, Prose, ConceptGrid } from '../shared'
 import { TwoColLayout, MapPanel } from './shared'
 
 const T = {
   ko: {
-    chapterTitle: '오라클 내부 구조와 프로세스',
-    chapterSubtitle: 'Oracle Database가 SQL을 처리하는 방법을 인스턴스 아키텍처 수준에서 이해합니다.',
     mapTitle: '인스턴스 구조에서의 위치',
     overviewTitle: '아키텍처 개요',
     overviewDesc: 'Oracle Database는 크게 두 가지 구성 요소로 이루어집니다. 메모리 구조와 프로세스로 이루어진 Oracle Instance와 실제 데이터가 저장되는 Oracle Database(파일 세트)입니다.',
@@ -19,8 +17,6 @@ const T = {
     ],
   },
   en: {
-    chapterTitle: 'Oracle Internals & Processes',
-    chapterSubtitle: 'Understand how Oracle Database processes SQL at the instance architecture level.',
     mapTitle: 'Location in Instance Structure',
     overviewTitle: 'Architecture Overview',
     overviewDesc: 'An Oracle Database system consists of two main components: the Oracle Instance (memory structures + processes) and the Oracle Database (the set of physical files on disk).',
@@ -41,9 +37,7 @@ export function OverviewSection() {
 
   return (
     <TwoColLayout map={<MapPanel title={t.mapTitle} highlightIds={[]} callout={t.overviewCallout} />}>
-      <ChapterTitle icon="⚙" num={1} title={t.chapterTitle} subtitle={t.chapterSubtitle} />
-      <SectionTitle>{t.overviewTitle}</SectionTitle>
-      <Prose>{t.overviewDesc}</Prose>
+      <ChapterTitle title={t.overviewTitle} subtitle={t.overviewDesc} />
       <Prose>{t.overviewDesc2}</Prose>
       <ConceptGrid items={t.instanceItems} />
     </TwoColLayout>

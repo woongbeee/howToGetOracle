@@ -1,5 +1,5 @@
 import { useSimulationStore } from '@/store/simulationStore'
-import { SectionTitle, Prose, InfoBox, ConceptGrid } from '../shared'
+import { ChapterTitle, InfoBox, ConceptGrid } from '../shared'
 import { TwoColLayout, MapPanel } from './shared'
 
 const T = {
@@ -41,8 +41,7 @@ export function PgaSection() {
     <TwoColLayout
       map={<MapPanel title={t.mapTitle} highlightIds={['server-process', 'pga']} callout={t.pgaCallout} />}
     >
-      <SectionTitle>{t.pgaTitle}</SectionTitle>
-      <Prose>{t.pgaDesc}</Prose>
+      <ChapterTitle title={t.pgaTitle} subtitle={t.pgaDesc} />
       <ConceptGrid items={t.pgaItems} />
       <InfoBox variant="note" lang={lang}>{t.pgaSgaVsDesc}</InfoBox>
     </TwoColLayout>

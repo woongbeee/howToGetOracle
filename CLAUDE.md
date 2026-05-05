@@ -88,7 +88,8 @@ interface Props {
 
 **`simulationStore.ts` — 전역 앱 상태**
 - `lang: 'ko' | 'en'` + `setLang` 만 포함
-- `useSimulationStore`는 `useLangStore`의 alias. 모든 챕터 페이지·레이아웃·GlossaryPanel이 이 스토어에서 `lang`을 읽음
+- 정식 export 이름은 `useLangStore`. `useSimulationStore`는 하위 호환용 alias — **새 코드에서는 `useLangStore`를 사용할 것**
+- 모든 챕터 페이지·레이아웃·GlossaryPanel이 이 스토어에서 `lang`을 읽음
 
 **`internalsStore.ts` — Internals Simulator 전용 상태**
 - `currentStep / isRunning / isComplete` — 시뮬레이션 제어
@@ -185,6 +186,13 @@ const T = {
 - CSS: Tailwind 유틸리티 클래스만 사용, 커스텀 CSS 파일 금지 (`index.css` 테마 변수 제외)
 - Path alias: `@/` → `src/`
 
+### TypeScript 엄격 플래그 주의사항
+
+`tsconfig.app.json`에 아래 플래그가 모두 활성화되어 있다. 빌드 전 확인 필수:
+- `noUnusedLocals` / `noUnusedParameters` — 사용하지 않는 변수·매개변수는 컴파일 에러
+- `erasableSyntaxOnly` — `const enum`, `namespace` 등 TypeScript 전용 문법 사용 불가. `enum` 대신 `const` 객체 + `as const` 패턴 사용
+- `verbatimModuleSyntax` — 타입 import는 반드시 `import type { ... }` 형태로 분리
+
 ## ESLint / Prettier
 
 - **ESLint**: TypeScript·React 문법 오류만 검사 (타입 오류, hooks 규칙, react-refresh)
@@ -199,6 +207,7 @@ const T = {
 - `lucide-react` — 아이콘 라이브러리
 - `@base-ui/react` + `shadcn` — UI 컴포넌트 기반
 - `tailwindcss` v4 — CSS-first 설정 방식 (`@import "tailwindcss"` in `index.css`)
+- `react-scan` — 개발 전용 렌더링 성능 모니터. 프로덕션 빌드에 포함되지 않도록 주의
 
 ## 테마 / 스타일링
 

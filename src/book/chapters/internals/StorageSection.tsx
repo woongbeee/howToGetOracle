@@ -1,44 +1,31 @@
+import { useState } from 'react'
 import { useSimulationStore } from '@/store/simulationStore'
 import {
-  ChapterTitle, SectionTitle, SubTitle, Prose,
+  ChapterTitle, SubTitle, Prose,
   InfoBox, Table, ConceptGrid, Divider,
 } from '../shared'
 import { cn } from '@/lib/utils'
+
 
 // ── Bilingual strings ──────────────────────────────────────────────────────
 
 const STORAGE_T = {
   ko: {
-    chapterTitle: '오라클 내부 구조와 프로세스',
-    chapterSubtitle: 'Oracle Database가 데이터를 물리적으로 저장하고 관리하는 방식을 이해합니다.',
     sectionTitle: '데이터 저장 구조',
     sectionDesc: 'Oracle은 데이터를 Block → Extent → Segment → Tablespace의 4계층 구조로 관리합니다. 각 계층은 논리적 단위이며, 물리적으로는 데이터 파일(.dbf)에 매핑됩니다.',
-    hierarchyLabel: '저장 계층 구조',
 
     blockTitle: 'Block — 최소 I/O 단위',
-    blockDesc: 'Oracle이 데이터를 읽고 쓰는 최소 단위입니다. 기본 크기는 8KB이며, DB_BLOCK_SIZE 파라미터로 설정합니다. Buffer Cache도 블록 단위로 데이터를 캐싱합니다.',
-    blockDetail: [
-      ['블록 크기', '기본 8KB. DB_BLOCK_SIZE로 설정하며 생성 후 변경 불가'],
-      ['블록 기본 정보', '이 블록의 종류(데이터·인덱스 등), 디스크 위치, 마지막으로 변경된 시점을 기록'],
-      ['Transaction Header', '이 블록을 동시에 수정할 수 있는 트랜잭션 수를 관리. INITRANS(기본 슬롯 수)·MAXTRANS(최대 슬롯 수)로 설정'],
-      ['Table Directory', '이 블록에 데이터가 있는 테이블 목록(클러스터 블록용)'],
-      ['Row Directory', '각 행의 블록 내 오프셋 포인터 배열'],
-      ['PCTFREE', 'UPDATE로 행이 늘어날 때를 대비해 예약하는 빈 공간 비율 (기본 10%)'],
-      ['PCTUSED', '사용 공간이 이 비율 아래로 떨어지면 블록을 Freelist에 다시 등록 (기본 40%)'],
-    ],
-    blockNote: 'Buffer Cache는 데이터 파일의 블록을 메모리에 올려둡니다. 동일 블록 재접근 시 디스크 I/O 없이 메모리에서 읽습니다.',
 
     extentTitle: 'Extent — 연속 블록의 묶음',
-    extentDesc: '논리적으로 연속된 Block들의 집합입니다. Extent 단위로 세그먼트에 공간을 할당합니다. 연속된 블록 배치로 Sequential I/O 성능을 높입니다.',
+    extentDesc: '논리적으로 연속된 Block들의 집합입니다. Segment에 공간을 할당할 때 Extent 단위로 묶어서 할당합니다. 연속 배치로 Sequential I/O 성능을 높입니다.',
     extentDetail: [
-      ['할당 단위', '세그먼트가 공간 부족 시 Extent 단위로 추가 할당'],
+      ['할당 단위', '공간 부족 시 Extent 단위로 추가 할당'],
       ['INITIAL', '세그먼트 생성 시 첫 번째로 할당되는 Extent 크기'],
-      ['NEXT', '추가 Extent 할당 시 크기 (Locally Managed Tablespace에서 자동)'],
       ['Locally Managed', 'Extent 할당 정보를 Tablespace 비트맵으로 관리 (권장)'],
     ],
 
     segmentTitle: 'Segment — 오브젝트 저장 공간',
-    segmentDesc: '하나의 데이터베이스 오브젝트(테이블, 인덱스 등)가 사용하는 Extent 집합입니다. 테이블 하나 = 하나의 Segment(파티션 테이블은 파티션당 하나).',
+    segmentDesc: '하나의 데이터베이스 오브젝트(테이블, 인덱스 등)가 사용하는 Extent 집합입니다. 테이블 하나 = 하나의 Segment (파티션 테이블은 파티션당 하나).',
     segmentTypes: [
       { icon: '🗄', title: 'Table Segment', desc: '일반 테이블 데이터 저장', color: 'blue' },
       { icon: '🔍', title: 'Index Segment', desc: '인덱스 구조(B-Tree·Bitmap) 저장', color: 'violet' },
@@ -57,37 +44,20 @@ const STORAGE_T = {
     ],
     tablespaceNote: '물리적으로는 .dbf 데이터 파일이지만, DBA는 Tablespace라는 논리 이름으로만 관리합니다. 파일을 추가하거나 Autoextend를 설정해 공간을 늘릴 수 있습니다.',
 
-    flowTitle: '계층 간 관계',
-    flowDesc: 'INSERT 시 Oracle이 공간을 할당하는 흐름: Tablespace 내 사용 가능한 Extent → Extent 내 빈 Block → Block에 Row 기록.',
     infoTitle: '핵심 정리',
     infoBody: 'Block이 I/O의 기본 단위이고, Extent가 할당의 기본 단위이며, Segment가 오브젝트와 1:1 대응하고, Tablespace가 DBA 관리의 논리 단위입니다.',
   },
   en: {
-    chapterTitle: 'Oracle Internals & Processes',
-    chapterSubtitle: 'Understand how Oracle Database physically stores and manages data.',
     sectionTitle: 'Data Storage Structure',
     sectionDesc: 'Oracle organizes data in a 4-tier hierarchy: Block → Extent → Segment → Tablespace. Each tier is a logical unit that ultimately maps to physical data files (.dbf).',
-    hierarchyLabel: 'Storage Hierarchy',
 
     blockTitle: 'Block — Smallest I/O Unit',
-    blockDesc: 'The smallest unit Oracle uses for reading and writing data. The default size is 8KB, set by the DB_BLOCK_SIZE parameter. The Buffer Cache also caches data at the block level.',
-    blockDetail: [
-      ['Block Size', 'Default 8KB. Set by DB_BLOCK_SIZE; cannot be changed after creation.'],
-      ['Block Metadata', 'Records this block\'s type (data, index, etc.), its location on disk, and when it was last modified.'],
-      ['Transaction Header', 'Tracks how many transactions can modify this block simultaneously. Configured with INITRANS (default slots) and MAXTRANS (maximum slots).'],
-      ['Table Directory', 'List of tables with data in this block (used for clustered tables).'],
-      ['Row Directory', 'Array of in-block offset pointers, one per row.'],
-      ['PCTFREE', 'Free space reserved for UPDATE row growth (default 10%). New INSERTs stop when free space hits this threshold.'],
-      ['PCTUSED', 'Block re-added to Freelist when used space drops below this percentage (default 40%).'],
-    ],
-    blockNote: 'The Buffer Cache loads data file blocks into memory. Repeated access to the same block is served from memory without disk I/O.',
 
     extentTitle: 'Extent — Group of Contiguous Blocks',
     extentDesc: 'A logically contiguous set of Blocks. Space is allocated to segments in Extent units. Contiguous block placement improves sequential I/O performance.',
     extentDetail: [
       ['Allocation Unit', 'When a segment runs out of space, another Extent is allocated.'],
       ['INITIAL', 'Size of the first Extent allocated when a segment is created.'],
-      ['NEXT', 'Size of subsequent Extent allocations (auto-managed in Locally Managed Tablespaces).'],
       ['Locally Managed', 'Extent allocation tracked via a tablespace bitmap (recommended).'],
     ],
 
@@ -111,337 +81,500 @@ const STORAGE_T = {
     ],
     tablespaceNote: 'Physically these are .dbf data files, but DBAs manage them using logical tablespace names. You can add files or enable Autoextend to grow the space.',
 
-    flowTitle: 'Hierarchy Relationship',
-    flowDesc: 'Space allocation flow on INSERT: find a free Extent in the Tablespace → find a free Block in the Extent → write the Row into the Block.',
     infoTitle: 'Key Takeaway',
     infoBody: 'Block is the I/O unit. Extent is the allocation unit. Segment maps 1:1 to a database object. Tablespace is the DBA\'s logical management unit.',
   },
 }
 
-// ── BlockDiagram ───────────────────────────────────────────────────────────
+// ── HierarchyOverview ──────────────────────────────────────────────────────
 
-function BlockDiagram() {
-  const lang = useSimulationStore((s) => s.lang)
+function HierarchyOverview({ lang }: { lang: 'ko' | 'en' }) {
   const isKo = lang === 'ko'
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-      {/* Title bar */}
-      <div className="flex items-center justify-between bg-slate-700 px-4 py-2">
-        <span className="font-mono text-[11px] font-bold uppercase tracking-widest text-slate-200">
-          Oracle Data Block — 8KB
-        </span>
-        <span className="font-mono text-[10px] text-slate-400">DB_BLOCK_SIZE</span>
-      </div>
-
-      {/* Block body — top label */}
-      <div className="flex items-center gap-2 bg-slate-50 px-4 py-1 border-b border-slate-200">
-        <span className="font-mono text-[9px] font-bold uppercase tracking-widest text-slate-400">
-          {isKo ? '▲ 상단 (낮은 주소)' : '▲ Top (low address)'}
+    <div className="rounded-xl border border-blue-300 bg-blue-50 p-4 shadow-sm">
+      {/* Tablespace */}
+      <div className="mb-1 flex items-center gap-2">
+        <span className="rounded bg-blue-500 px-2 py-0.5 font-mono text-[10px] font-bold text-white">TABLESPACE</span>
+        <span className="font-mono text-[11px] text-blue-700">
+          {isKo ? '논리적 저장 컨테이너 — 하나 이상의 .dbf 파일' : 'Logical storage container — one or more .dbf files'}
         </span>
       </div>
 
-      <div className="flex">
-        {/* Left: block layout */}
-        <div className="flex-1 divide-y divide-slate-200">
+      {/* Segment */}
+      <div className="ml-4 rounded-xl border border-violet-300 bg-violet-50 p-3">
+        <div className="mb-1 flex items-center gap-2">
+          <span className="rounded bg-violet-500 px-2 py-0.5 font-mono text-[10px] font-bold text-white">SEGMENT</span>
+          <span className="font-mono text-[11px] text-violet-700">
+            {isKo ? '오브젝트 1개 (테이블·인덱스 등) = Segment 1개' : 'One object (table/index/etc.) = one Segment'}
+          </span>
+        </div>
 
-          {/* ── Block Header ── */}
-          <div className="bg-blue-50 px-4 py-2.5">
-            <div className="flex items-center gap-2 mb-1.5">
-              <span className="rounded bg-blue-600 px-1.5 py-0.5 font-mono text-[9px] font-bold text-white">BLOCK HEADER</span>
-              <span className="font-mono text-[10px] text-blue-500">
-                {isKo ? '고정 크기 · 블록 최상단' : 'Fixed size · top of block'}
-              </span>
-            </div>
-            {/* Common header */}
-            <div className="rounded border border-blue-200 bg-blue-100 px-3 py-1.5 mb-1">
-              <div className="font-mono text-[10px] font-bold text-blue-800">
-                {isKo ? '블록 기본 정보' : 'Block Metadata'}
-              </div>
-              <div className="font-mono text-[9px] text-blue-600 mt-0.5">
-                {isKo
-                  ? '이 블록의 종류·위치·마지막 변경 시점을 기록합니다'
-                  : 'Records this block\'s type, location, and last modification time'}
-              </div>
-            </div>
-            {/* ITL */}
-            <div className="rounded border border-indigo-200 bg-indigo-50 px-3 py-1.5">
-              <div className="flex items-center gap-2 mb-1.5">
-                <div className="font-mono text-[10px] font-bold text-indigo-800">
-                  Transaction Header
-                </div>
-                <span className="rounded bg-indigo-200 px-1 py-0.5 font-mono text-[8px] text-indigo-700">
-                  {isKo ? '동시 접근 슬롯' : 'Concurrent access slots'}
+        {/* Extents */}
+        <div className="ml-4 flex gap-2">
+          {(['Extent 1', 'Extent 2', 'Extent 3'] as const).map((ext, ei) => (
+            <div key={ext} className="flex-1 rounded-xl border border-emerald-300 bg-emerald-50 p-2">
+              <div className="mb-1.5 flex items-center gap-1.5">
+                <span className="rounded bg-emerald-500 px-1.5 py-0.5 font-mono text-[9px] font-bold text-white">
+                  {ext.toUpperCase()}
                 </span>
+                {ei === 0 && (
+                  <span className="font-mono text-[9px] text-emerald-600">
+                    {isKo ? '연속 블록 묶음' : 'contiguous blocks'}
+                  </span>
+                )}
               </div>
-              <div className="mb-1.5 font-mono text-[9px] text-indigo-600">
-                {isKo
-                  ? '이 블록을 동시에 수정할 수 있는 트랜잭션 수를 제어합니다.'
-                  : 'Controls how many transactions can modify this block at the same time.'}
-              </div>
-              {/* Slots visual */}
+
+              {/* Blocks */}
               <div className="flex gap-1">
-                {[
-                  { label: isKo ? '트랜잭션 1' : 'Txn 1', active: true },
-                  { label: isKo ? '트랜잭션 2' : 'Txn 2', active: true },
-                  { label: isKo ? '빈 슬롯' : 'Free', active: false },
-                  { label: isKo ? '빈 슬롯' : 'Free', active: false },
-                ].map((s, i) => (
+                {Array.from({ length: 4 }).map((_, bi) => (
                   <div
-                    key={i}
-                    className={cn(
-                      'flex-1 rounded border px-1 py-1.5 text-center',
-                      s.active
-                        ? 'border-indigo-300 bg-indigo-100'
-                        : 'border-indigo-100 bg-white'
-                    )}
+                    key={bi}
+                    className="flex flex-1 flex-col items-center rounded border border-orange-300 bg-orange-100 py-1.5"
                   >
-                    <div className={cn('font-mono text-[8px] font-bold', s.active ? 'text-indigo-700' : 'text-indigo-300')}>
-                      {s.label}
-                    </div>
+                    <span className="font-mono text-[8px] font-bold text-orange-700">BLK</span>
+                    <span className="font-mono text-[7px] text-orange-500">{ei * 4 + bi + 1}</span>
                   </div>
                 ))}
               </div>
-              <div className="mt-1.5 font-mono text-[9px] text-indigo-500">
-                {isKo
-                  ? 'INITRANS: 기본 슬롯 수 / MAXTRANS: 최대 슬롯 수 설정'
-                  : 'INITRANS: default slots / MAXTRANS: maximum slots'}
-              </div>
             </div>
-          </div>
+          ))}
+        </div>
 
-          {/* ── Data Header ── */}
-          <div className="bg-slate-50 px-4 py-2.5">
-            <div className="flex items-center gap-2 mb-1.5">
-              <span className="rounded bg-slate-500 px-1.5 py-0.5 font-mono text-[9px] font-bold text-white">DATA HEADER</span>
-              <span className="font-mono text-[10px] text-slate-500">
-                {isKo ? '가변 크기 · 헤더 하단' : 'Variable size · below header'}
-              </span>
-            </div>
-            <div className="flex gap-1">
-              <div className="flex-1 rounded border border-slate-300 bg-slate-100 px-3 py-1.5">
-                <div className="font-mono text-[10px] font-bold text-slate-700">Table Directory</div>
-                <div className="font-mono text-[9px] text-slate-500 mt-0.5">
-                  {isKo ? '이 블록에 데이터가 있는 테이블 목록' : 'Tables having rows in this block'}
-                </div>
-              </div>
-              <div className="flex-1 rounded border border-slate-300 bg-slate-100 px-3 py-1.5">
-                <div className="font-mono text-[10px] font-bold text-slate-700">Row Directory</div>
-                <div className="font-mono text-[9px] text-slate-500 mt-0.5">
-                  {isKo ? '각 행의 블록 내 오프셋 포인터' : 'In-block offset pointer per row'}
-                </div>
-              </div>
-            </div>
-          </div>
+        {/* Block label row */}
+        <div className="ml-4 mt-1.5 flex items-center gap-1">
+          <span className="rounded bg-orange-400 px-1.5 py-0.5 font-mono text-[9px] font-bold text-white">BLOCK</span>
+          <span className="font-mono text-[10px] text-orange-700">
+            {isKo ? '최소 I/O 단위 (기본 8KB) — Buffer Cache 캐싱 단위' : 'Smallest I/O unit (default 8KB) — unit of Buffer Cache'}
+          </span>
+        </div>
+      </div>
+    </div>
+  )
+}
 
-          {/* ── Free Space ── */}
-          <div className="relative px-4 py-0">
-            {/* PCTFREE band */}
-            <div className="border-b border-dashed border-green-400 bg-green-50 px-3 py-2">
-              <div className="flex items-center justify-between">
-                <div>
-                  <span className="rounded bg-green-500 px-1.5 py-0.5 font-mono text-[9px] font-bold text-white">PCTFREE</span>
-                  <span className="ml-2 font-mono text-[9px] text-green-700">
-                    {isKo ? 'UPDATE 예약 공간 (기본 10%)' : 'Reserved for UPDATE growth (default 10%)'}
-                  </span>
-                </div>
-                <span className="font-mono text-[9px] font-bold text-green-600">10%</span>
-              </div>
-              <div className="mt-1 font-mono text-[9px] text-green-600">
-                {isKo
-                  ? 'INSERT는 이 경계에 도달하면 이 블록에 더 이상 삽입하지 않음'
-                  : 'INSERT stops adding to this block when free space hits this line'}
-              </div>
-            </div>
-            {/* PCTUSED band */}
-            <div className="border-b border-dashed border-yellow-400 bg-yellow-50 px-3 py-2">
-              <div className="flex items-center justify-between">
-                <div>
-                  <span className="rounded bg-yellow-500 px-1.5 py-0.5 font-mono text-[9px] font-bold text-white">PCTUSED</span>
-                  <span className="ml-2 font-mono text-[9px] text-yellow-700">
-                    {isKo ? 'Freelist 복귀 임계값 (기본 40%)' : 'Freelist re-entry threshold (default 40%)'}
-                  </span>
-                </div>
-                <span className="font-mono text-[9px] font-bold text-yellow-600">40%</span>
-              </div>
-              <div className="mt-1 font-mono text-[9px] text-yellow-600">
-                {isKo
-                  ? 'DELETE 후 사용량이 이 값 이하가 되면 블록을 Freelist에 다시 등록'
-                  : 'Block re-added to Freelist when used space falls below this after DELETE'}
-              </div>
-            </div>
-          </div>
+// ── BlockDiagram ───────────────────────────────────────────────────────────
 
-          {/* ── Row Data ── */}
-          <div className="bg-orange-50 px-4 py-2.5">
-            <div className="flex items-center gap-2 mb-1.5">
-              <span className="rounded bg-orange-500 px-1.5 py-0.5 font-mono text-[9px] font-bold text-white">ROW DATA</span>
-              <span className="font-mono text-[10px] text-orange-600">
-                {isKo ? '블록 하단에서 위로 ↑ 채워짐' : 'Fills upward ↑ from block bottom'}
-              </span>
-            </div>
-            <div className="flex flex-col gap-1">
-              {['Row 3 (최신)', 'Row 2', 'Row 1 (최초 삽입)'].map((r, i) => (
-                <div key={i} className="flex items-center gap-2 rounded border border-orange-200 bg-orange-100 px-3 py-1">
-                  <div className="flex gap-1">
-                    <div className="h-2 w-2 rounded-full bg-orange-400" />
-                    <div className="h-2 w-2 rounded-full bg-orange-300" />
-                  </div>
-                  <span className="font-mono text-[9px] text-orange-700">{isKo ? r : r.replace('최신', 'newest').replace('최초 삽입', 'first inserted')}</span>
+type BlockField = {
+  name: string
+  value: string
+  note?: string
+  accent: string
+}
+
+type BlockSection = {
+  id: string
+  label: string
+  badge: string
+  bg: string
+  activeBg: string
+  border: string
+  activeBorder: string
+  text: string
+  size: string
+  title: string
+  desc: string
+  fields: BlockField[]
+}
+
+const BLOCK_SECTIONS: Record<'ko' | 'en', BlockSection[]> = {
+  ko: [
+    {
+      id: 'common-header',
+      label: '공통 헤더',
+      badge: 'bg-blue-500',
+      bg: 'bg-blue-50',
+      activeBg: 'bg-blue-50',
+      border: 'border-blue-200',
+      activeBorder: 'border-blue-400',
+      text: 'text-blue-700',
+      size: 'h-10',
+      title: '공통 헤더 (Common Header)',
+      desc: '블록 타입·위치·변경 이력을 기록하는 고정 크기 헤더. 모든 블록 타입에 공통으로 존재합니다.',
+      fields: [
+        { name: 'Block Type',    value: '0x06 (Table Data)',       note: '데이터·인덱스·언두 등 블록 종류', accent: 'bg-blue-100 border-blue-300' },
+        { name: 'DBA',           value: '0x00C00123',              note: 'Data Block Address — 파일 번호 + 블록 번호', accent: 'bg-blue-100 border-blue-300' },
+        { name: 'SCN (seq/cnt)', value: '0x0000.00A3F2 / 0x0001',  note: '마지막 변경 시점의 System Change Number', accent: 'bg-blue-100 border-blue-300' },
+        { name: 'Checksum',      value: '0xB4E2',                  note: '블록 무결성 검증값 (DB_BLOCK_CHECKSUM)', accent: 'bg-blue-100 border-blue-300' },
+      ],
+    },
+    {
+      id: 'itl',
+      label: 'ITL (Interested Transaction List)',
+      badge: 'bg-indigo-500',
+      bg: 'bg-indigo-50',
+      activeBg: 'bg-indigo-50',
+      border: 'border-indigo-200',
+      activeBorder: 'border-indigo-400',
+      text: 'text-indigo-700',
+      size: 'h-16',
+      title: 'ITL — Interested Transaction List',
+      desc: '이 블록을 동시에 수정 중인 트랜잭션 슬롯 목록. INITRANS 수만큼 미리 확보하고, 부족하면 Free Space에서 동적 확장합니다.',
+      fields: [
+        { name: 'Slot #1  XID',  value: '0x0005.00B.000012A4',    note: 'Transaction ID — Undo Seg# · Slot# · Seq#', accent: 'bg-indigo-100 border-indigo-300' },
+        { name: 'Slot #1  UBA',  value: '0x00800078.0031.02',     note: 'Undo Block Address — 롤백에 필요한 이전 이미지 위치', accent: 'bg-indigo-100 border-indigo-300' },
+        { name: 'Slot #1  Flag', value: 'C--- (Committed)',       note: 'C=커밋됨 / U=잠금 중 / T=활성 트랜잭션', accent: 'bg-indigo-100 border-indigo-300' },
+        { name: 'Slot #2  XID',  value: '0x0007.01C.0000FFB1',    note: '두 번째 동시 트랜잭션 슬롯 (INITRANS ≥ 2)', accent: 'bg-indigo-200 border-indigo-400' },
+        { name: 'INITRANS',      value: '2  (기본: 테이블 1, 인덱스 2)', note: '블록 생성 시 미리 할당하는 슬롯 수 · 슬롯 1개 = 약 24 bytes', accent: 'bg-violet-100 border-violet-300' },
+        { name: 'MAXTRANS',      value: '255  (Oracle 10g+ 사실상 무제한)', note: '슬롯 고갈 + Free Space 없음 → enq: TX – allocate ITL entry 대기', accent: 'bg-violet-100 border-violet-300' },
+      ],
+    },
+    {
+      id: 'table-dir',
+      label: 'Table / Row Directory',
+      badge: 'bg-slate-500',
+      bg: 'bg-slate-50',
+      activeBg: 'bg-slate-50',
+      border: 'border-slate-200',
+      activeBorder: 'border-slate-400',
+      text: 'text-slate-700',
+      size: 'h-10',
+      title: 'Table / Row Directory',
+      desc: '블록 내 행 위치를 O(1)로 찾기 위한 포인터 배열. ROWID 접근 시 이 배열로 오프셋을 조회합니다.',
+      fields: [
+        { name: 'Table Directory', value: 'OBJ#=74821',             note: '이 블록에 데이터가 있는 테이블 (클러스터 블록에서 유효)', accent: 'bg-slate-100 border-slate-300' },
+        { name: 'Row #0  offset',  value: '0x1F8A  (행 0 위치)',    note: 'Row 0의 블록 내 바이트 오프셋 → 직접 점프', accent: 'bg-slate-100 border-slate-300' },
+        { name: 'Row #1  offset',  value: '0x1E3C  (행 1 위치)',    note: 'ROWID의 slot# 부분이 이 배열의 인덱스', accent: 'bg-slate-100 border-slate-300' },
+        { name: 'Row #2  offset',  value: '0x1CD0  (행 2 위치)',    note: 'DELETE 후 슬롯은 재사용될 때까지 0xFFFF로 표시', accent: 'bg-slate-100 border-slate-300' },
+      ],
+    },
+    {
+      id: 'pctfree',
+      label: 'Free Space (PCTFREE 예약)',
+      badge: 'bg-green-500',
+      bg: 'bg-green-50',
+      activeBg: 'bg-green-50',
+      border: 'border-green-300',
+      activeBorder: 'border-green-500',
+      text: 'text-green-700',
+      size: 'h-20',
+      title: 'Free Space — PCTFREE 예약 구간',
+      desc: 'UPDATE 시 가변 컬럼 확장을 위해 미리 비워 두는 공간 (기본 10%). INSERT 상한선 역할을 합니다.',
+      fields: [
+        { name: 'PCTFREE',         value: '10%  →  819 bytes (8KB 기준)', note: 'INSERT 상한선 — 여유 공간이 이 비율 이하로 줄면 새 INSERT 금지. UPDATE 확장용으로 예약', accent: 'bg-green-100 border-green-300' },
+        { name: 'PCTUSED',         value: '40%  (기본값)',                 note: 'Freelist 재진입 하한선 — DELETE 등으로 사용률이 이 값 아래로 떨어지면 블록을 Freelist에 재등록 → 새 INSERT 허용', accent: 'bg-green-100 border-green-300' },
+        { name: 'PCTFREE + PCTUSED', value: '≤ 100  필수',                note: '합이 100 초과 시 블록이 Freelist에 영구적으로 재진입 불가', accent: 'bg-green-100 border-green-300' },
+        { name: 'Row Migration',   value: 'ROWID 유지, 실제 데이터 이동', note: 'PCTFREE 공간 부족으로 UPDATE 제자리 저장 불가 → 다른 블록으로 이동 + 원본 포인터 남김 → 추가 I/O', accent: 'bg-amber-100 border-amber-300' },
+        { name: 'Row Chaining',    value: '행 크기 > DB_BLOCK_SIZE',       note: '행 자체가 블록보다 커서 여러 블록에 걸쳐 저장 (LONG, LOB 컬럼 등)', accent: 'bg-amber-100 border-amber-300' },
+      ],
+    },
+    {
+      id: 'row-data',
+      label: 'Row Data',
+      badge: 'bg-orange-500',
+      bg: 'bg-orange-50',
+      activeBg: 'bg-orange-50',
+      border: 'border-orange-200',
+      activeBorder: 'border-orange-400',
+      text: 'text-orange-700',
+      size: 'h-24',
+      title: 'Row Data',
+      desc: '실제 행 데이터가 저장되는 영역. 블록 끝에서 위로 자라며, 위에서 내려오는 Directory와 가운데 Free Space에서 만납니다.',
+      fields: [
+        { name: 'Row Header',      value: '2~3 bytes',               note: '행 플래그 (삭제·마이그레이션 여부), 컬럼 수, 락 바이트 포함', accent: 'bg-orange-100 border-orange-300' },
+        { name: 'Col #0  (NUMBER)', value: '0x C2 27  → 38',         note: '컬럼 길이(1 byte) + 데이터. NULL은 0xFF 1바이트', accent: 'bg-orange-100 border-orange-300' },
+        { name: 'Col #1  (VARCHAR2)', value: '0x 08 "Harrison"',     note: '길이 prefix + 문자 데이터 (가변 길이)', accent: 'bg-orange-100 border-orange-300' },
+        { name: 'PCTUSED',         value: '40%  (기본값)',            note: '사용률이 이 값 아래로 떨어지면 블록을 Freelist에 재등록 → 새 INSERT 허용', accent: 'bg-rose-100 border-rose-300' },
+        { name: 'PCTFREE + PCTUSED', value: '≤ 100  필수',           note: '합이 100 초과 시 블록이 영원히 Freelist에 재진입 불가', accent: 'bg-rose-100 border-rose-300' },
+      ],
+    },
+  ],
+  en: [
+    {
+      id: 'common-header',
+      label: 'Common Header',
+      badge: 'bg-blue-500',
+      bg: 'bg-blue-50',
+      activeBg: 'bg-blue-50',
+      border: 'border-blue-200',
+      activeBorder: 'border-blue-400',
+      text: 'text-blue-700',
+      size: 'h-10',
+      title: 'Common Header',
+      desc: 'Fixed-size header recording block type, location, and change history. Present in every block type.',
+      fields: [
+        { name: 'Block Type',    value: '0x06 (Table Data)',       note: 'Identifies data / index / undo / etc.', accent: 'bg-blue-100 border-blue-300' },
+        { name: 'DBA',           value: '0x00C00123',              note: 'Data Block Address — file number + block number', accent: 'bg-blue-100 border-blue-300' },
+        { name: 'SCN (seq/cnt)', value: '0x0000.00A3F2 / 0x0001',  note: 'System Change Number of the last modification', accent: 'bg-blue-100 border-blue-300' },
+        { name: 'Checksum',      value: '0xB4E2',                  note: 'Block integrity value (DB_BLOCK_CHECKSUM)', accent: 'bg-blue-100 border-blue-300' },
+      ],
+    },
+    {
+      id: 'itl',
+      label: 'ITL (Interested Transaction List)',
+      badge: 'bg-indigo-500',
+      bg: 'bg-indigo-50',
+      activeBg: 'bg-indigo-50',
+      border: 'border-indigo-200',
+      activeBorder: 'border-indigo-400',
+      text: 'text-indigo-700',
+      size: 'h-16',
+      title: 'ITL — Interested Transaction List',
+      desc: 'Slots tracking transactions currently modifying this block. Pre-allocated by INITRANS; expands into free space when needed.',
+      fields: [
+        { name: 'Slot #1  XID',  value: '0x0005.00B.000012A4',    note: 'Transaction ID — Undo Seg# · Slot# · Seq#', accent: 'bg-indigo-100 border-indigo-300' },
+        { name: 'Slot #1  UBA',  value: '0x00800078.0031.02',     note: 'Undo Block Address — location of the before-image', accent: 'bg-indigo-100 border-indigo-300' },
+        { name: 'Slot #1  Flag', value: 'C--- (Committed)',       note: 'C=committed / U=locked / T=active transaction', accent: 'bg-indigo-100 border-indigo-300' },
+        { name: 'Slot #2  XID',  value: '0x0007.01C.0000FFB1',    note: 'Second concurrent transaction slot (INITRANS ≥ 2)', accent: 'bg-indigo-200 border-indigo-400' },
+        { name: 'INITRANS',      value: '2  (default: table 1, index 2)', note: 'Slots pre-allocated at block creation · ~24 bytes each', accent: 'bg-violet-100 border-violet-300' },
+        { name: 'MAXTRANS',      value: '255  (Oracle 10g+ effectively unlimited)', note: 'Slots exhausted + no free space → "enq: TX – allocate ITL entry" wait', accent: 'bg-violet-100 border-violet-300' },
+      ],
+    },
+    {
+      id: 'table-dir',
+      label: 'Table / Row Directory',
+      badge: 'bg-slate-500',
+      bg: 'bg-slate-50',
+      activeBg: 'bg-slate-50',
+      border: 'border-slate-200',
+      activeBorder: 'border-slate-400',
+      text: 'text-slate-700',
+      size: 'h-10',
+      title: 'Table / Row Directory',
+      desc: 'Pointer array for O(1) row lookup within the block. ROWID access resolves the in-block offset through this directory.',
+      fields: [
+        { name: 'Table Directory', value: 'OBJ#=74821',             note: 'Tables with rows in this block (meaningful for clustered tables)', accent: 'bg-slate-100 border-slate-300' },
+        { name: 'Row #0  offset',  value: '0x1F8A  (row 0 position)', note: 'Byte offset of row 0 — Oracle jumps directly here', accent: 'bg-slate-100 border-slate-300' },
+        { name: 'Row #1  offset',  value: '0x1E3C  (row 1 position)', note: 'The slot# in a ROWID is the index into this array', accent: 'bg-slate-100 border-slate-300' },
+        { name: 'Row #2  offset',  value: '0x1CD0  (row 2 position)', note: 'After DELETE, slot is marked 0xFFFF until reused', accent: 'bg-slate-100 border-slate-300' },
+      ],
+    },
+    {
+      id: 'pctfree',
+      label: 'Free Space (PCTFREE reserved)',
+      badge: 'bg-green-500',
+      bg: 'bg-green-50',
+      activeBg: 'bg-green-50',
+      border: 'border-green-300',
+      activeBorder: 'border-green-500',
+      text: 'text-green-700',
+      size: 'h-20',
+      title: 'Free Space — PCTFREE Reserved Zone',
+      desc: 'Space kept free for in-place UPDATE row growth (default 10%). Acts as the upper INSERT cutoff.',
+      fields: [
+        { name: 'PCTFREE',           value: '10%  →  819 bytes (in 8KB block)', note: 'INSERT upper cutoff — once free space drops below this, new INSERTs are rejected. Reserved for UPDATE growth', accent: 'bg-green-100 border-green-300' },
+        { name: 'PCTUSED',           value: '40%  (default)',                   note: 'Freelist re-entry threshold — when used space falls below this after DELETEs, the block is re-added to the Freelist for new INSERTs', accent: 'bg-green-100 border-green-300' },
+        { name: 'PCTFREE + PCTUSED', value: '≤ 100  required',                 note: 'If sum exceeds 100, a block can never re-enter the Freelist', accent: 'bg-green-100 border-green-300' },
+        { name: 'Row Migration',     value: 'ROWID kept, data moved',          note: 'UPDATE can\'t fit row in place due to insufficient PCTFREE → row moves to another block, original slot holds a forwarding pointer → extra I/O', accent: 'bg-amber-100 border-amber-300' },
+        { name: 'Row Chaining',      value: 'Row size > DB_BLOCK_SIZE',        note: 'Row itself is larger than one block (LONG, LOB columns, wide rows) → stored across multiple blocks', accent: 'bg-amber-100 border-amber-300' },
+      ],
+    },
+    {
+      id: 'row-data',
+      label: 'Row Data',
+      badge: 'bg-orange-500',
+      bg: 'bg-orange-50',
+      activeBg: 'bg-orange-50',
+      border: 'border-orange-200',
+      activeBorder: 'border-orange-400',
+      text: 'text-orange-700',
+      size: 'h-24',
+      title: 'Row Data',
+      desc: 'Actual row data, growing upward from the bottom of the block toward the downward-growing directory, meeting in the middle Free Space.',
+      fields: [
+        { name: 'Row Header',        value: '2–3 bytes',               note: 'Row flags (deleted / migrated), column count, lock byte', accent: 'bg-orange-100 border-orange-300' },
+        { name: 'Col #0  (NUMBER)',   value: '0x C2 27  → 38',         note: 'Length byte + data. NULL is stored as 0xFF (1 byte)', accent: 'bg-orange-100 border-orange-300' },
+        { name: 'Col #1  (VARCHAR2)', value: '0x 08 "Harrison"',       note: 'Length prefix + character data (variable length)', accent: 'bg-orange-100 border-orange-300' },
+        { name: 'PCTUSED',           value: '40%  (default)',          note: 'When used space drops below this after DELETEs, block re-enters Freelist for new INSERTs', accent: 'bg-rose-100 border-rose-300' },
+        { name: 'PCTFREE + PCTUSED', value: '≤ 100  required',        note: 'If sum exceeds 100, a block can never re-enter the Freelist', accent: 'bg-rose-100 border-rose-300' },
+      ],
+    },
+  ],
+}
+
+function BlockDiagram({ lang }: { lang: 'ko' | 'en' }) {
+  const [active, setActive] = useState('itl')
+  const sections = BLOCK_SECTIONS[lang]
+  const activeSection = sections.find((s) => s.id === active)!
+  const isKo = lang === 'ko'
+
+  return (
+    <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+      {/* Title bar */}
+      <div className="flex items-center justify-between bg-slate-700 px-4 py-2.5">
+        <span className="font-mono text-[11px] font-bold uppercase tracking-widest text-slate-200">
+          Oracle Data Block
+        </span>
+        <span className="font-mono text-[10px] text-slate-400">8 KB (default)</span>
+      </div>
+
+      <div className="flex divide-x divide-slate-200">
+        {/* Left: block layout */}
+        <div className="flex w-52 shrink-0 flex-col">
+          <div className="border-b border-slate-200 bg-slate-50 px-3 py-1.5">
+            <span className="font-mono text-[9px] font-bold uppercase tracking-widest text-slate-400">
+              {isKo ? '▲ 상단 (낮은 주소)' : '▲ Top (low address)'}
+            </span>
+          </div>
+          {sections.map((s) => {
+            const isActive = active === s.id
+            return (
+              <button
+                key={s.id}
+                onClick={() => setActive(s.id)}
+                className={cn(
+                  'flex items-center gap-2 border-b border-slate-100 px-3 text-left transition-all',
+                  s.size,
+                  isActive ? `${s.activeBg} border-l-2 ${s.activeBorder}` : `${s.bg} border-l-2 border-transparent hover:brightness-95`,
+                )}
+              >
+                <span className={cn('shrink-0 rounded px-1.5 py-0.5 font-mono text-[9px] font-bold text-white', s.badge)}>
+                  {s.id === 'pctfree' ? 'PCTFREE' : s.id === 'row-data' ? 'ROW DATA' : s.id === 'itl' ? 'ITL' : s.id === 'common-header' ? 'HEADER' : 'DIR'}
+                </span>
+                <span className={cn('font-mono text-[9px] leading-tight', isActive ? s.text : 'text-slate-500')}>
+                  {s.label}
+                </span>
+              </button>
+            )
+          })}
+          <div className="bg-slate-50 px-3 py-1.5">
+            <span className="font-mono text-[9px] font-bold uppercase tracking-widest text-slate-400">
+              {isKo ? '▼ 하단 (높은 주소)' : '▼ Bottom (high address)'}
+            </span>
+          </div>
+        </div>
+
+        {/* Right: detail panel */}
+        <div className="flex flex-1 flex-col">
+          {/* Section title bar */}
+          <div className={cn('flex items-center gap-2 border-b border-slate-100 px-4 py-2.5', activeSection.activeBg)}>
+            <span className={cn('rounded px-2 py-0.5 font-mono text-[10px] font-bold text-white', activeSection.badge)}>
+              {activeSection.id.toUpperCase()}
+            </span>
+            <span className={cn('font-mono text-xs font-bold', activeSection.text)}>
+              {activeSection.title}
+            </span>
+          </div>
+          {/* Summary desc */}
+          <p className="border-b border-slate-100 bg-white px-4 py-2 font-mono text-[10px] leading-relaxed text-slate-500">
+            {activeSection.desc}
+          </p>
+          {/* Field cards */}
+          <div className="flex flex-col divide-y divide-slate-100 bg-white">
+            {activeSection.fields.map((f) => (
+              <div key={f.name} className={cn('grid grid-cols-[180px_1fr] items-stretch', f.accent, 'border-l-0')}>
+                {/* Field name + value */}
+                <div className={cn('flex flex-col justify-center gap-0.5 border-r border-slate-200 px-3 py-2', f.accent)}>
+                  <span className="font-mono text-[9px] font-bold uppercase tracking-wide text-slate-500">{f.name}</span>
+                  <span className="font-mono text-[10px] font-semibold text-slate-800 break-all">{f.value}</span>
+                </div>
+                {/* Note */}
+                <div className="flex items-center bg-white px-3 py-2">
+                  <span className="font-mono text-[10px] leading-snug text-slate-500">{f.note}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── ExtentDiagram ──────────────────────────────────────────────────────────
+
+function ExtentDiagram({ lang }: { lang: 'ko' | 'en' }) {
+  const isKo = lang === 'ko'
+
+  return (
+    <div className="overflow-hidden rounded-xl border border-emerald-200 bg-emerald-50 p-4 shadow-sm">
+      <div className="mb-3 font-mono text-[10px] font-bold uppercase tracking-widest text-emerald-700">
+        {isKo ? 'Extent — 연속된 Block의 묶음' : 'Extent — contiguous Blocks'}
+      </div>
+      <div className="flex items-stretch gap-1">
+        {Array.from({ length: 8 }).map((_, i) => (
+          <div
+            key={i}
+            className="flex flex-1 flex-col items-center rounded border border-orange-300 bg-orange-100 py-3 gap-1"
+          >
+            <span className="font-mono text-[9px] font-bold text-orange-700">Block</span>
+            <span className="font-mono text-[8px] text-orange-500">{i + 1}</span>
+          </div>
+        ))}
+      </div>
+      <div className="mt-2 flex items-center gap-1">
+        <div className="h-px flex-1 bg-emerald-300" />
+        <span className="font-mono text-[9px] text-emerald-600">
+          {isKo ? '물리적으로 연속된 주소' : 'Physically contiguous addresses'}
+        </span>
+        <div className="h-px flex-1 bg-emerald-300" />
+      </div>
+    </div>
+  )
+}
+
+// ── SegmentDiagram ─────────────────────────────────────────────────────────
+
+function SegmentDiagram({ lang }: { lang: 'ko' | 'en' }) {
+  const isKo = lang === 'ko'
+
+  return (
+    <div className="overflow-hidden rounded-xl border border-violet-200 bg-violet-50 p-4 shadow-sm">
+      <div className="mb-3 font-mono text-[10px] font-bold uppercase tracking-widest text-violet-700">
+        {isKo ? 'Segment — Extent 집합 (예: EMPLOYEES 테이블)' : 'Segment — set of Extents (e.g. EMPLOYEES table)'}
+      </div>
+      <div className="flex gap-2">
+        {['Extent 1', 'Extent 2', 'Extent 3'].map((ext, ei) => (
+          <div key={ext} className="flex-1 rounded-lg border border-emerald-300 bg-emerald-50 p-2">
+            <div className="mb-1.5 font-mono text-[9px] font-bold text-emerald-700">{ext}</div>
+            <div className="flex gap-0.5">
+              {Array.from({ length: 4 }).map((_, bi) => (
+                <div
+                  key={bi}
+                  className="flex flex-1 items-center justify-center rounded border border-orange-300 bg-orange-100 py-1.5"
+                >
+                  <span className="font-mono text-[7px] font-bold text-orange-600">B{ei * 4 + bi + 1}</span>
                 </div>
               ))}
             </div>
           </div>
-        </div>
-
-        {/* Right: address arrows */}
-        <div className="flex w-10 flex-col items-center justify-between bg-slate-50 py-3 border-l border-slate-200">
-          <div className="flex flex-col items-center gap-1">
-            <div className="h-2 w-2 rounded-full bg-blue-400" />
-            <div className="h-full w-px bg-gradient-to-b from-blue-300 via-slate-300 to-orange-300 my-1" style={{ minHeight: 120 }} />
-            <div className="h-2 w-2 rounded-full bg-orange-400" />
-          </div>
-        </div>
+        ))}
       </div>
-
-      {/* Bottom label */}
-      <div className="flex items-center gap-2 bg-slate-50 px-4 py-1 border-t border-slate-200">
-        <span className="font-mono text-[9px] font-bold uppercase tracking-widest text-slate-400">
-          {isKo ? '▼ 하단 (높은 주소)' : '▼ Bottom (high address)'}
-        </span>
+      <div className="mt-2 font-mono text-[9px] text-violet-600">
+        {isKo
+          ? '공간 부족 시 Extent를 추가로 할당하며 Segment가 늘어납니다.'
+          : 'When space runs out, a new Extent is allocated and the Segment grows.'}
       </div>
     </div>
   )
 }
 
-// ── StorageHierarchyDiagram ────────────────────────────────────────────────
+// ── TablespaceDiagram ──────────────────────────────────────────────────────
 
-function StorageHierarchyDiagram() {
-  const lang = useSimulationStore((s) => s.lang)
-  const labels = lang === 'ko'
-    ? { ts: 'Tablespace', seg: 'Segment', ext: 'Extent', blk: 'Block', datafile: '데이터 파일 (.dbf)', rowLabel: 'Row' }
-    : { ts: 'Tablespace', seg: 'Segment', ext: 'Extent', blk: 'Block', datafile: 'Data File (.dbf)', rowLabel: 'Row' }
+function TablespaceDiagram({ lang }: { lang: 'ko' | 'en' }) {
+  const isKo = lang === 'ko'
 
-  const blocks = ['B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'B7', 'B8']
+  const spaces = [
+    { name: 'SYSTEM', files: ['system01.dbf'], color: 'border-blue-300 bg-blue-50', badge: 'bg-blue-500' },
+    { name: 'UNDO', files: ['undo01.dbf'], color: 'border-orange-300 bg-orange-50', badge: 'bg-orange-500' },
+    { name: 'TEMP', files: ['temp01.dbf'], color: 'border-slate-300 bg-slate-50', badge: 'bg-slate-500' },
+    { name: 'USERS', files: ['users01.dbf', 'users02.dbf'], color: 'border-violet-300 bg-violet-50', badge: 'bg-violet-500' },
+  ]
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-slate-200 bg-gradient-to-br from-slate-50 to-blue-50 p-5 shadow-sm">
-      {/* Tablespace */}
-      <div className="rounded-xl border-2 border-blue-400 bg-blue-50/60 p-3">
-        <div className="mb-2 flex items-center gap-2">
-          <span className="rounded-full bg-blue-500 px-2 py-0.5 font-mono text-[10px] font-bold text-white">TS</span>
-          <span className="font-mono text-xs font-bold text-blue-700">{labels.ts}</span>
-          <span className="ml-auto font-mono text-[10px] text-blue-400">{labels.datafile}</span>
-        </div>
-
-        {/* Segment */}
-        <div className="rounded-lg border-2 border-violet-400 bg-violet-50/60 p-2.5">
-          <div className="mb-2 flex items-center gap-2">
-            <span className="rounded-full bg-violet-500 px-2 py-0.5 font-mono text-[10px] font-bold text-white">SEG</span>
-            <span className="font-mono text-xs font-bold text-violet-700">{labels.seg}</span>
-            <span className="ml-auto font-mono text-[10px] text-violet-400">e.g. EMPLOYEES table</span>
-          </div>
-
-          <div className="flex gap-2">
-            {/* Extent 1 */}
-            <div className="flex-1 rounded-lg border-2 border-emerald-400 bg-emerald-50/60 p-2">
-              <div className="mb-1.5 flex items-center gap-1">
-                <span className="rounded bg-emerald-500 px-1.5 py-0.5 font-mono text-[9px] font-bold text-white">EXT 1</span>
-                <span className="font-mono text-[10px] font-semibold text-emerald-700">{labels.ext}</span>
-              </div>
-              <div className="grid grid-cols-4 gap-1">
-                {blocks.slice(0, 4).map((b) => (
-                  <div key={b} className="flex flex-col items-center rounded border border-orange-300 bg-orange-100 px-1 py-1.5">
-                    <span className="font-mono text-[8px] font-bold text-orange-700">{labels.blk}</span>
-                    <span className="font-mono text-[7px] text-orange-500">{b}</span>
-                    <div className="mt-1 flex flex-col gap-0.5 w-full">
-                      {[1,2,3].map(r => (
-                        <div key={r} className="h-1 w-full rounded-sm bg-orange-300 opacity-70" title={labels.rowLabel} />
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Extent 2 */}
-            <div className="flex-1 rounded-lg border-2 border-emerald-400 bg-emerald-50/60 p-2">
-              <div className="mb-1.5 flex items-center gap-1">
-                <span className="rounded bg-emerald-500 px-1.5 py-0.5 font-mono text-[9px] font-bold text-white">EXT 2</span>
-                <span className="font-mono text-[10px] font-semibold text-emerald-700">{labels.ext}</span>
-              </div>
-              <div className="grid grid-cols-4 gap-1">
-                {blocks.slice(4).map((b) => (
-                  <div key={b} className="flex flex-col items-center rounded border border-orange-300 bg-orange-100 px-1 py-1.5">
-                    <span className="font-mono text-[8px] font-bold text-orange-700">{labels.blk}</span>
-                    <span className="font-mono text-[7px] text-orange-500">{b}</span>
-                    <div className="mt-1 flex flex-col gap-0.5 w-full">
-                      {[1,2].map(r => (
-                        <div key={r} className="h-1 w-full rounded-sm bg-orange-300 opacity-70" />
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
+    <div className="overflow-hidden rounded-xl border border-blue-200 bg-blue-50/40 p-4 shadow-sm">
+      <div className="mb-3 font-mono text-[10px] font-bold uppercase tracking-widest text-blue-700">
+        {isKo ? 'Tablespace → 데이터 파일 (.dbf)' : 'Tablespace → data files (.dbf)'}
       </div>
-
-      {/* Legend */}
-      <div className="mt-3 flex flex-wrap gap-3">
-        {[
-          { color: 'bg-blue-500', label: labels.ts },
-          { color: 'bg-violet-500', label: labels.seg },
-          { color: 'bg-emerald-500', label: labels.ext },
-          { color: 'bg-orange-400', label: labels.blk },
-        ].map((item) => (
-          <div key={item.label} className="flex items-center gap-1.5">
-            <div className={cn('h-2.5 w-2.5 rounded-full', item.color)} />
-            <span className="font-mono text-[10px] font-semibold text-slate-600">{item.label}</span>
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+        {spaces.map((ts) => (
+          <div key={ts.name} className={`rounded-lg border ${ts.color} p-2.5`}>
+            <div className="mb-2 flex items-center gap-1.5">
+              <span className={`rounded px-1.5 py-0.5 font-mono text-[9px] font-bold text-white ${ts.badge}`}>
+                {ts.name}
+              </span>
+            </div>
+            <div className="flex flex-col gap-1">
+              {ts.files.map((f) => (
+                <div key={f} className="flex items-center gap-1 rounded border border-slate-200 bg-white px-1.5 py-1">
+                  <span className="text-[10px]">📄</span>
+                  <span className="font-mono text-[8px] text-slate-500">{f}</span>
+                </div>
+              ))}
+            </div>
           </div>
         ))}
       </div>
-    </div>
-  )
-}
-
-// ── InsertFlowDiagram ──────────────────────────────────────────────────────
-
-function InsertFlowDiagram() {
-  const lang = useSimulationStore((s) => s.lang)
-  const steps = lang === 'ko'
-    ? [
-        { icon: '🔢', label: 'INSERT 실행', desc: 'Row 저장 공간 필요' },
-        { icon: '📁', label: 'Tablespace 확인', desc: '사용 가능한 Segment 탐색' },
-        { icon: '📦', label: 'Segment → Extent', desc: '빈 Extent가 없으면 신규 할당' },
-        { icon: '🧱', label: 'Extent → Block', desc: 'PCTFREE 이하 여유 블록 선택' },
-        { icon: '✏', label: 'Block에 Row 기록', desc: 'Redo Log → Block 순서로 저장' },
-      ]
-    : [
-        { icon: '🔢', label: 'INSERT Executes', desc: 'Row needs storage space' },
-        { icon: '📁', label: 'Check Tablespace', desc: 'Find segment with available space' },
-        { icon: '📦', label: 'Segment → Extent', desc: 'Allocate new Extent if none free' },
-        { icon: '🧱', label: 'Extent → Block', desc: 'Find block with space below PCTFREE' },
-        { icon: '✏', label: 'Write Row to Block', desc: 'Redo Log written first, then Block' },
-      ]
-
-  return (
-    <div className="flex flex-col gap-1.5">
-      {steps.map((s, i) => (
-        <div key={i} className="flex items-start gap-3">
-          <div className="flex flex-col items-center">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 border-blue-300 bg-blue-50 text-sm">
-              {s.icon}
-            </div>
-            {i < steps.length - 1 && <div className="mt-1 h-4 w-px bg-blue-200" />}
-          </div>
-          <div className="pt-1">
-            <div className="font-mono text-xs font-bold text-slate-700">{s.label}</div>
-            <div className="font-mono text-[10px] text-muted-foreground">{s.desc}</div>
-          </div>
-        </div>
-      ))}
     </div>
   )
 }
@@ -453,63 +586,29 @@ export function StorageSection() {
   const t = STORAGE_T[lang]
 
   return (
-    <div className="mx-auto max-w-7xl px-8 py-10">
-      <ChapterTitle icon="⚙" num={1} title={t.chapterTitle} subtitle={t.chapterSubtitle} />
-      <SectionTitle>{t.sectionTitle}</SectionTitle>
-      <Prose>{t.sectionDesc}</Prose>
+    <div className="mx-auto max-w-screen-2xl px-10 py-10">
+      <ChapterTitle title={t.sectionTitle} subtitle={t.sectionDesc} />
 
-      {/* Hierarchy visual */}
-      <SubTitle>{t.hierarchyLabel}</SubTitle>
-      <StorageHierarchyDiagram />
+      {/* Overview: 4-tier hierarchy */}
+      <HierarchyOverview lang={lang} />
 
       <Divider />
 
-      {/* Two-column: Block + Extent */}
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-        {/* Block */}
-        <div>
-          <SubTitle>{t.blockTitle}</SubTitle>
-          <Prose>{t.blockDesc}</Prose>
-          <BlockDiagram />
-          <div className="mt-3">
-            <Table headers={[lang === 'ko' ? '항목' : 'Item', lang === 'ko' ? '설명' : 'Description']} rows={t.blockDetail} />
-          </div>
-          <InfoBox variant="note" lang={lang}>
-            {t.blockNote}
-          </InfoBox>
-        </div>
+      {/* Block */}
+      <SubTitle>{t.blockTitle}</SubTitle>
+      <BlockDiagram lang={lang} />
 
-        {/* Extent */}
-        <div>
-          <SubTitle>{t.extentTitle}</SubTitle>
-          <Prose>{t.extentDesc}</Prose>
+      <Divider />
 
-          {/* Extent visual */}
-          <div className="mb-4 overflow-hidden rounded-xl border border-emerald-200 bg-emerald-50 p-4">
-            <div className="mb-2 font-mono text-[10px] font-bold uppercase tracking-widest text-emerald-600">
-              {lang === 'ko' ? 'Extent 내부 (연속 블록)' : 'Inside an Extent (contiguous blocks)'}
-            </div>
-            <div className="flex items-center gap-1">
-              {Array.from({ length: 8 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="flex flex-1 flex-col items-center justify-center rounded border border-orange-300 bg-orange-100 py-2.5"
-                >
-                  <span className="font-mono text-[9px] font-bold text-orange-700">B{i + 1}</span>
-                </div>
-              ))}
-            </div>
-            <div className="mt-2 flex items-center gap-1">
-              <div className="h-px flex-1 bg-emerald-300" />
-              <span className="font-mono text-[9px] text-emerald-600">
-                {lang === 'ko' ? '연속된 블록 주소' : 'Contiguous block addresses'}
-              </span>
-              <div className="h-px flex-1 bg-emerald-300" />
-            </div>
-          </div>
-
-          <Table headers={[lang === 'ko' ? '항목' : 'Item', lang === 'ko' ? '설명' : 'Description']} rows={t.extentDetail} />
-        </div>
+      {/* Extent */}
+      <SubTitle>{t.extentTitle}</SubTitle>
+      <Prose>{t.extentDesc}</Prose>
+      <ExtentDiagram lang={lang} />
+      <div className="mt-4">
+        <Table
+          headers={[lang === 'ko' ? '항목' : 'Item', lang === 'ko' ? '설명' : 'Description']}
+          rows={t.extentDetail}
+        />
       </div>
 
       <Divider />
@@ -517,54 +616,28 @@ export function StorageSection() {
       {/* Segment */}
       <SubTitle>{t.segmentTitle}</SubTitle>
       <Prose>{t.segmentDesc}</Prose>
-      <ConceptGrid items={t.segmentTypes} />
+      <SegmentDiagram lang={lang} />
+      <div className="mt-4">
+        <ConceptGrid items={t.segmentTypes} />
+      </div>
 
       <Divider />
 
       {/* Tablespace */}
       <SubTitle>{t.tablespaceTitle}</SubTitle>
       <Prose>{t.tablespaceDesc}</Prose>
-
-      {/* Tablespace → File visual */}
-      <div className="mb-4 flex flex-col gap-2 overflow-hidden rounded-xl border border-blue-200 bg-blue-50 p-4 sm:flex-row">
-        {['SYSTEM', 'UNDO', 'TEMP', 'USERS'].map((ts, i) => (
-          <div key={ts} className="flex-1 rounded-lg border border-blue-300 bg-white p-2 text-center shadow-sm">
-            <div className="font-mono text-[10px] font-bold text-blue-700">{ts}</div>
-            <div className="mt-1.5 flex flex-col gap-1">
-              {Array.from({ length: i === 0 ? 2 : 1 }).map((_, j) => (
-                <div key={j} className="flex items-center gap-1 rounded border border-slate-200 bg-slate-50 px-1.5 py-1">
-                  <span className="text-[10px]">📄</span>
-                  <span className="font-mono text-[9px] text-slate-500">{ts.toLowerCase()}{j + 1 > 1 ? `0${j+1}` : '01'}.dbf</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        ))}
+      <TablespaceDiagram lang={lang} />
+      <div className="mt-4">
+        <Table
+          headers={[lang === 'ko' ? 'Tablespace' : 'Tablespace', lang === 'ko' ? '용도' : 'Purpose']}
+          rows={t.tablespaceTable}
+        />
+        <InfoBox variant="tip" lang={lang}>{t.tablespaceNote}</InfoBox>
       </div>
-
-      <Table
-        headers={[lang === 'ko' ? 'Tablespace' : 'Tablespace', lang === 'ko' ? '용도' : 'Purpose']}
-        rows={t.tablespaceTable}
-      />
-      <InfoBox variant="tip" lang={lang}>
-        {t.tablespaceNote}
-      </InfoBox>
 
       <Divider />
 
-      {/* INSERT flow */}
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-        <div>
-          <SubTitle>{t.flowTitle}</SubTitle>
-          <Prose>{t.flowDesc}</Prose>
-          <InsertFlowDiagram />
-        </div>
-        <div className="flex items-center">
-          <InfoBox variant="summary" lang={lang}>
-            {t.infoBody}
-          </InfoBox>
-        </div>
-      </div>
+      <InfoBox variant="summary" lang={lang}>{t.infoBody}</InfoBox>
     </div>
   )
 }
