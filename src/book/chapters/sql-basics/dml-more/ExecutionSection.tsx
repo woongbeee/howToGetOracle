@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { cn } from '@/lib/utils'
 import {
   PageContainer, ChapterTitle, SectionTitle, Prose,
-} from '../shared'
+} from '../../shared'
 import {
   EMPLOYEES, EXAMPLE_QUERIES, SELECT_STEPS, UPDATE_STEPS, DELETE_STEPS,
   STEP_COLOR, parseAndExecute, type ParsedQuery, type ExampleQuery,

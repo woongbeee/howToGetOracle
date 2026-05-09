@@ -7,6 +7,8 @@ export interface BookSection {
   /** If true, a simulator panel appears at the bottom of this section */
   hasSimulator?: boolean
   simulatorLabel?: { ko: string; en: string }
+  /** Subsections rendered indented under this section in the TOC */
+  children?: BookSection[]
 }
 
 export interface BookChapter {
@@ -27,55 +29,94 @@ export const BOOK_CHAPTERS: BookChapter[] = [
     title: { ko: 'SQL 문법', en: 'SQL Syntax Fundamentals' },
     sections: [
       {
-        id: 'sql-basics-syntax',
+        id: 'sql-basics-ddl-dml-dcl',
         title: {
-          ko: '기본 문법 — SELECT / FROM / WHERE',
-          en: 'Core Syntax — SELECT / FROM / WHERE',
+          ko: '오라클 명령어의 종류 알아보기',
+          en: 'Types of Oracle SQL Commands',
         },
+        children: [
+          {
+            id: 'sql-basics-ddl',
+            title: {
+              ko: 'DDL — Data Definition Language',
+              en: 'DDL — Data Definition Language',
+            },
+          },
+          {
+            id: 'sql-basics-dml',
+            title: {
+              ko: 'DML — Data Manipulation Language',
+              en: 'DML — Data Manipulation Language',
+            },
+          },
+          {
+            id: 'sql-basics-dcl',
+            title: {
+              ko: 'DCL — Data Control Language',
+              en: 'DCL — Data Control Language',
+            },
+          },
+          {
+            id: 'sql-basics-tcl',
+            title: {
+              ko: 'TCL — Transaction Control Language',
+              en: 'TCL — Transaction Control Language',
+            },
+          },
+        ],
       },
       {
-        id: 'sql-basics-clauses',
+        id: 'sql-basics-dml-more',
         title: {
-          ko: 'ORDER BY / GROUP BY / HAVING',
-          en: 'ORDER BY / GROUP BY / HAVING',
+          ko: 'DML 더 많이 알아보기',
+          en: 'DML — Going Deeper',
         },
-      },
-      {
-        id: 'sql-basics-join',
-        title: { ko: 'JOIN — 테이블 결합', en: 'JOIN — Combining Tables' },
-      },
-      {
-        id: 'sql-basics-null',
-        title: { ko: 'NULL 을 다루는 법', en: 'Oracle Key Functions' },
-      },
-      {
-        id: 'sql-basics-date',
-        title: { ko: '날짜와 시간을 다루는 법', en: 'Date & Time Functions' },
-      },
-      {
-        id: 'sql-basics-windowFunc',
-        title: { ko: '윈도우 함수', en: 'Oracle Window function' },
-      },
-      {
-        id: 'sql-basics-merge',
-        title: {
-          ko: 'MERGE INTO — 병합 구문',
-          en: 'MERGE INTO — Merge Statement',
-        },
-      },
-      {
-        id: 'sql-basics-rollup',
-        title: {
-          ko: 'ROLLUP / CUBE / GROUPING SETS / GROUPING',
-          en: 'ROLLUP / CUBE / GROUPING SETS / GROUPING',
-        },
-      },
-      {
-        id: 'sql-basics-pivot',
-        title: {
-          ko: 'PIVOT / UNPIVOT',
-          en: 'PIVOT / UNPIVOT',
-        },
+        children: [
+          {
+            id: 'sql-basics-clauses',
+            title: {
+              ko: 'ORDER BY / GROUP BY / HAVING',
+              en: 'ORDER BY / GROUP BY / HAVING',
+            },
+          },
+          {
+            id: 'sql-basics-join',
+            title: { ko: 'JOIN — 테이블 결합', en: 'JOIN — Combining Tables' },
+          },
+          {
+            id: 'sql-basics-null',
+            title: { ko: 'NULL 을 다루는 법', en: 'Oracle Key Functions' },
+          },
+          {
+            id: 'sql-basics-date',
+            title: { ko: '날짜와 시간을 다루는 법', en: 'Date & Time Functions' },
+          },
+          {
+            id: 'sql-basics-windowFunc',
+            title: { ko: '윈도우 함수', en: 'Oracle Window function' },
+          },
+          {
+            id: 'sql-basics-merge',
+            title: {
+              ko: 'MERGE INTO — 병합 구문',
+              en: 'MERGE INTO — Merge Statement',
+            },
+          },
+          {
+            id: 'sql-basics-rollup',
+            title: {
+              ko: 'ROLLUP / CUBE / GROUPING SETS / GROUPING',
+              en: 'ROLLUP / CUBE / GROUPING SETS / GROUPING',
+            },
+          },
+          {
+            id: 'sql-basics-pivot',
+            title: {
+              ko: 'PIVOT / UNPIVOT',
+              en: 'PIVOT / UNPIVOT',
+            },
+          },
+        ],
       },
       {
         id: 'sql-basics-execution',
@@ -368,10 +409,24 @@ export function getChapterById(id: string): BookChapter | undefined {
   return BOOK_CHAPTERS.find((c) => c.id === id)
 }
 
+function flattenSections(chapter: BookChapter): Array<{ chapter: BookChapter; section: BookSection }> {
+  const result: Array<{ chapter: BookChapter; section: BookSection }> = []
+  for (const section of chapter.sections) {
+    result.push({ chapter, section })
+    if (section.children) {
+      for (const child of section.children) {
+        result.push({ chapter, section: child })
+      }
+    }
+  }
+  return result
+}
+
 export function getSectionById(sectionId: string): { chapter: BookChapter; section: BookSection } | undefined {
   for (const chapter of BOOK_CHAPTERS) {
-    const section = chapter.sections.find((s) => s.id === sectionId)
-    if (section) return { chapter, section }
+    const flat = flattenSections(chapter)
+    const found = flat.find((s) => s.section.id === sectionId)
+    if (found) return found
   }
   return undefined
 }
@@ -382,9 +437,7 @@ export function getAdjacentSections(sectionId: string): {
 } {
   const allSections: Array<{ chapter: BookChapter; section: BookSection }> = []
   for (const chapter of BOOK_CHAPTERS) {
-    for (const section of chapter.sections) {
-      allSections.push({ chapter, section })
-    }
+    allSections.push(...flattenSections(chapter))
   }
   const idx = allSections.findIndex((s) => s.section.id === sectionId)
   return {

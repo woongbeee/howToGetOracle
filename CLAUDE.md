@@ -47,13 +47,15 @@ interface Props {
 
 `bookStructure.ts`의 `BOOK_CHAPTERS`가 단일 진실 공급원(TOC 데이터). 새 섹션 추가 시 여기만 수정하면 TOC·breadcrumb·Prev/Next가 자동 반영된다.
 
-앱 첫 진입 시 활성 섹션은 `sql-basics-syntax` (Chapter 1 첫 섹션, `BookLayout.tsx`의 `useState` 초기값).
+`BookSection`은 `children?: BookSection[]`을 가질 수 있어 2단계 계층 구조를 지원한다. `flattenSections()`가 children을 포함해 평탄화하므로 `getSectionById()`·`getAdjacentSections()`·Prev/Next 모두 children까지 올바르게 동작한다. **현재 최대 2단계(부모-자식)까지만 지원**하며, 자식 섹션이 다시 children을 가지는 3단계 구조는 `flattenSections()`가 처리하지 않는다.
+
+앱 첫 진입 시 활성 섹션은 `sql-basics-ddl-dml-dcl` (Chapter 1 첫 섹션, `BookLayout.tsx`의 `useState` 초기값).
 
 현재 `SectionRouter` 접두사 → 컴포넌트 매핑:
 | 접두사 | 컴포넌트 | 진입점 |
 |--------|----------|--------|
 | `sql-basics-` | `SqlBasicsPage` | `src/book/chapters/sql-basics/index.tsx` |
-| `index-` | `IndexChapterPage` | `src/book/chapters/index-chapter/index.tsx` |
+| `index-` | `IndexChapterPage` | `src/book/chapters/chapter3/index.tsx` |
 | `join-` | `JoinPage` | `src/book/chapters/join/index.tsx` |
 | `optimizer-` | `OptimizerChapterPage` | `src/book/chapters/optimizer/index.tsx` |
 | `qt-` | `QueryTransformPage` | `src/book/chapters/query-transform/index.tsx` |
@@ -68,7 +70,7 @@ interface Props {
 1. `BOOK_CHAPTERS`에 챕터 항목 추가 (`color`는 `BookContent.tsx`의 `COLOR_MAP` 키 중 하나여야 함: `blue|violet|emerald|orange|cyan|rose|amber|teal|brand-pink|brand-navy|brand-teal|brand-orange|brand-salmon`)
 2. 챕터 페이지 컴포넌트 생성 (`src/book/chapters/`)
 3. `BookContent.tsx`의 `SectionRouter`에 접두사 분기 추가
-4. 시뮬레이터 섹션(전체 높이 레이아웃이 필요한 섹션)은 `BookContent.tsx`의 `FULLSCREEN_SECTIONS` Set에 해당 섹션 ID를 추가해야 함. 그렇지 않으면 스크롤 래퍼로 감싸져 레이아웃이 깨짐 (현재: `internals-simulator`만 등록됨)
+4. 시뮬레이터 섹션(전체 높이 레이아웃이 필요한 섹션)은 `BookContent.tsx`의 `SectionRouter`에서 별도 처리 필요 (레이아웃 wrapper 없이 직접 렌더링)
 
 ### 시뮬레이션 데이터 흐름
 
@@ -123,7 +125,7 @@ Internals 시뮬레이터를 구성하는 핵심 컴포넌트들:
 - `OptimizerPanel.tsx` — CBO 실행 계획 3단계 시각화
 - `DataPanel.tsx` — 스키마·샘플 데이터 브라우저 (`SchemaView`, `TableView` named export)
 - `SchemaDiagram.tsx` — React Flow 기반 ERD
-- `components/index/` — Index 챕터 전용 서브 컴포넌트들 (`BTreeSection`, `BitmapSection`, `CompositeSection`, `IndexTypesOverview`). `IndexPage.tsx`는 현재 미사용(dead code)
+- `components/index/` — 현재 존재하지 않음. Index 챕터 전용 서브 컴포넌트들(`BTreeSection`, `BitmapSection`, `CompositeSection`, `IndexTypesOverview`)은 `src/book/chapters/chapter3/`에 위치. `IndexPage.tsx`는 현재 미사용(dead code)
 
 ### 데이터 스키마 (`src/data/`)
 
@@ -132,7 +134,7 @@ Internals 시뮬레이터를 구성하는 핵심 컴포넌트들:
 - `coSchema.ts` — CO(Customer Orders) 스키마 5개 테이블 + 샘플 데이터
 - `largeDataGenerator.ts` — IndexPage용 대용량 가상 데이터 생성기 (Mulberry32 PRNG, 시드 기반). 모듈 import 시 1회 생성 후 캐시됨
 - `index.ts` — 배럴 파일. `SCHEMAS`, `SAMPLE_QUERIES`, 두 스키마, `largeDataGenerator`를 re-export
-- `dataset.ts` — 레거시 심플 `DATASET` 배열 (`Table[]` 타입, `types.ts`와 무관). 현재는 직접 참조 드물고 `hrSchema`/`coSchema`가 주 데이터 소스임
+- `dataset.ts` — 삭제됨. `hrSchema`/`coSchema`가 유일한 데이터 소스임
 
 `sql-basics/shared.ts`는 `sql-basics` 챕터 전용 공유 헬퍼다: `Employee` / `ExampleQuery` / `ExecStep` 인터페이스, `EMPLOYEES` 샘플 데이터 배열, 섹션 간에 공통으로 쓰이는 순수 유틸 함수들이 정의되어 있다.
 
@@ -163,8 +165,33 @@ const T = {
 콘텐츠가 많은 챕터(Index 등)는 섹션별 서브 컴포넌트를 `src/components/<챕터명>/`에 분리한다. 예: `src/components/index/` — `BTreeSection.tsx`, `BitmapSection.tsx`, `CompositeSection.tsx`, `IndexTypesOverview.tsx`. 챕터 페이지(`IndexChapterPage.tsx`)가 이를 import해 조합한다.
 
 콘텐츠가 많은 챕터는 섹션별 파일로 추가 분리된다:
-- `sql-basics/` — `SyntaxSection.tsx`, `ClausesSection.tsx`, `JoinSection.tsx`, `NullSection.tsx`, `DateSection.tsx`, `WindowFuncSection.tsx`, `FunctionsSection.tsx`, `ExecutionSection.tsx`, `MergeSection.tsx`, `RollupSection.tsx`, `PivotSection.tsx` + 공유 헬퍼(`shared.ts`, `SqlHighlight.tsx`, `EmpRow.tsx`, `MiniSimulator.tsx`)
-  - `NullSection`, `DateSection`, `WindowFuncSection`, `MergeSection`, `RollupSection`, `PivotSection`은 `T` 객체를 export하지 않고 `lang` prop만 받아 컴포넌트 내부에서 직접 이중 언어 문자열을 정의한다. `SyntaxSection`·`ClausesSection`·`ExecutionSection`은 `T` 객체를 named export한다.
+
+- `sql-basics/` — **3개 서브폴더 구조**로 정리됨:
+  - `sql-basics/index.tsx` — 챕터 1 전체 라우터. `sectionId`를 받아 서브폴더의 컴포넌트로 분기
+  - `sql-basics/commands/` — 명령어 종류 섹션 (섹션 1.x):
+    - `DdlDmlDclSection.tsx` — 개요 (1)
+    - `DDLSection.tsx` — DDL 상세 (1.1): AccordionSection 5개, 데이터 타입·제약조건 표, `SqlBlock` 주석 포함
+    - `DMLSection.tsx` — DML 상세 (1.2, 구 `SyntaxSection.tsx`)
+    - `DCLSection.tsx` — DCL 상세 (1.3): GRANT·REVOKE·Role
+    - `TCLSection.tsx` — TCL 상세 (1.4): 트랜잭션·COMMIT·ROLLBACK·SAVEPOINT
+  - `sql-basics/dml-more/` — DML 심화 섹션 (섹션 2.x) + 공유 헬퍼:
+    - `ClausesSection.tsx`, `JoinSection.tsx`, `NullSection.tsx`, `DateSection.tsx`, `WindowFuncSection.tsx`, `MergeSection.tsx`, `RollupSection.tsx`, `PivotSection.tsx`
+    - `shared.ts` — `Employee`·`ExampleQuery`·`ExecStep` 인터페이스, `EMPLOYEES` 배열, 유틸 함수
+    - `SqlHighlight.tsx` — SQL 키워드 하이라이터. `--` 주석을 회색 이탤릭으로 처리. `shared.tsx`의 `SqlBlock`이 이를 import함
+    - `EmpRow.tsx`, `MiniSimulator.tsx`, `FunctionsSection.tsx`
+  - `ExecutionSection.tsx` (`dml-more/` 안에 파일은 있지만 섹션 3으로 독립 배치됨)
+
+  **`sql-basics` TOC 구조 (현재):**
+  ```
+  1. 오라클 명령어의 종류 알아보기
+     1.1 DDL   1.2 DML   1.3 DCL   1.4 TCL
+  2. DML 더 많이 알아보기
+     2.1 ORDER BY/GROUP BY/HAVING  2.2 JOIN  2.3 NULL
+     2.4 날짜와 시간  2.5 윈도우 함수  2.6 MERGE INTO
+     2.7 ROLLUP/CUBE/GROUPING SETS  2.8 PIVOT/UNPIVOT
+  3. SQL은 어떤 순서로 실행될까?
+  ```
+
 - `internals/` — `StorageSection.tsx`, `OverviewSection.tsx`, `SgaSection.tsx`, `PgaSection.tsx`, `ProcessesSection.tsx`, `SimulatorSection.tsx`, `OracleInstanceMap.tsx` + `shared.tsx`(TwoColLayout, MapPanel, TourPanel)
 
 나머지 챕터(join, optimizer, sort, partition, parallel, query-transform, index-chapter)는 `index.tsx` 단일 파일로 구성된다.
@@ -175,7 +202,13 @@ const T = {
 
 ### 챕터 공통 UI (`src/book/chapters/shared.tsx`)
 
-`PageContainer`, `ChapterTitle`, `SectionTitle`, `SubTitle`, `Prose`, `InfoBox`, `Table`, `ConceptGrid`, `Divider`, `SimulatorPlaceholder`, `WipBanner` 등 챕터 내 모든 공통 레이아웃 프리미티브. 새 챕터 콘텐츠 작성 시 이 컴포넌트들을 우선 사용한다. `WipBanner`는 아직 작성 중인 챕터 최상단에 표시하는 경고 배너다.
+`PageContainer`, `ChapterTitle`, `SectionTitle`, `SubTitle`, `Prose`, `InfoBox`, `Table`, `ConceptGrid`, `Divider`, `SimulatorPlaceholder`, `WipBanner`, `TermPopup`, `AccordionSection`, `SqlBlock` 등 챕터 내 모든 공통 레이아웃 프리미티브. 새 챕터 콘텐츠 작성 시 이 컴포넌트들을 우선 사용한다.
+
+- `Prose` — `whitespace-pre-line` 포함. 문자열에 `\n` 넣으면 줄바꿈 렌더링됨
+- `AccordionSection` — 기본 접힘. `defaultOpen` prop으로 펼친 상태로 시작 가능. 버튼 hover 시 `rgba(255,243,224,0.4)` 배경(TOC hover 색과 동일), 펼쳐진 내용 영역은 배경 변경 없음
+- `SqlBlock` — `badge`/`badgeColor`/`desc` 없으면 코드 블록만, 있으면 헤더가 붙은 카드로 렌더링. 내부적으로 `SqlHighlight` 사용
+- `SqlHighlight` (`sql-basics/dml-more/SqlHighlight.tsx`) — `--` 이후를 회색 이탤릭 주석으로 처리. `shared.tsx`가 이 파일을 직접 import함 (`from './sql-basics/dml-more/SqlHighlight'`)
+- `WipBanner` — 아직 작성 중인 챕터 최상단에 표시하는 경고 배너
 
 `OracleInstanceMap` (`src/book/chapters/internals/OracleInstanceMap.tsx`) — Internals 챕터 전용 인터랙티브 인스턴스 다이어그램. `InstanceComponentId` 타입으로 강조할 컴포넌트 ID를 받는다.
 

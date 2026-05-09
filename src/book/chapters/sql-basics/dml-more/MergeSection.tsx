@@ -1,7 +1,7 @@
 import { cn } from '@/lib/utils'
 import {
   PageContainer, ChapterTitle, SectionTitle, SubTitle, Prose, InfoBox, Divider,
-} from '../shared'
+} from '../../shared'
 import { SqlHighlight } from './SqlHighlight'
 
 const T = {

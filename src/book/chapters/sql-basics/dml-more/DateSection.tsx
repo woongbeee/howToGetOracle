@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
-import { PageContainer, ChapterTitle, Prose, Divider, InfoBox, TermPopup } from '../shared'
+import { PageContainer, ChapterTitle, Prose, Divider, InfoBox, TermPopup } from '../../shared'
 import { SqlHighlight } from './SqlHighlight'
 
 // ── Types ──────────────────────────────────────────────────────────────────

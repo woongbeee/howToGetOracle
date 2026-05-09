@@ -15,7 +15,9 @@ export function TableOfContents({ activeSectionId, onSelect, onToggle }: Props) 
   const lang = useSimulationStore((s) => s.lang)
   // Find which chapter contains the active section — expand it by default
   const defaultOpen = BOOK_CHAPTERS.reduce<Record<string, boolean>>((acc, ch) => {
-    acc[ch.id] = ch.sections.some((s) => s.id === activeSectionId)
+    acc[ch.id] = ch.sections.some(
+      (s) => s.id === activeSectionId || s.children?.some((c) => c.id === activeSectionId)
+    )
     return acc
   }, {})
 
@@ -45,7 +47,9 @@ export function TableOfContents({ activeSectionId, onSelect, onToggle }: Props) 
       <div className="flex flex-col py-3">
       {BOOK_CHAPTERS.map((chapter) => {
         const isOpen      = !!openChapters[chapter.id]
-        const hasActive   = chapter.sections.some((s) => s.id === activeSectionId)
+        const hasActive   = chapter.sections.some(
+          (s) => s.id === activeSectionId || s.children?.some((c) => c.id === activeSectionId)
+        )
         const isChapter1  = chapter.num === 1
 
         return (
@@ -106,59 +110,107 @@ export function TableOfContents({ activeSectionId, onSelect, onToggle }: Props) 
                       const isActive    = section.id === activeSectionId
                       const isSimulator = section.hasSimulator
                       const isChapter1  = chapter.num === 1
+                      const hasChildren = !!section.children?.length
+                      const childActive = section.children?.some((c) => c.id === activeSectionId) ?? false
 
                       return (
-                        <button
-                          key={section.id}
-                          onClick={() => {
-                            onSelect(section.id)
-                            setOpenChapters((prev) => ({ ...prev, [chapter.id]: true }))
-                          }}
-                          className={cn(
-                            'group flex w-full items-center gap-2 px-3 py-1.5 text-left transition-colors rounded-r-md',
-                            isActive
-                              ? 'bg-ios-orange-light text-ios-orange-dark'
-                              : isChapter1
-                                ? 'text-muted-foreground hover:bg-ios-orange-light/40 hover:text-ios-orange-dark'
-                                : 'text-muted-foreground/30 cursor-pointer',
-                          )}
-                        >
-                          {/* Section number */}
-                          <span className={cn(
-                            'shrink-0 font-mono text-[9px]',
-                            isActive ? 'text-ios-orange-dark/60' : isChapter1 ? 'text-muted-foreground/40' : 'text-muted-foreground/20'
-                          )}>
-                            {chapter.num}.{idx + 1}
-                          </span>
-
-                          {/* Section title */}
-                          <span
+                        <div key={section.id}>
+                          <button
+                            onClick={() => {
+                              onSelect(section.id)
+                              setOpenChapters((prev) => ({ ...prev, [chapter.id]: true }))
+                            }}
                             className={cn(
-                              'min-w-0 flex-1 truncate font-mono text-[11px] leading-tight',
-                              isActive ? 'font-bold' : isChapter1 ? 'font-medium' : 'font-normal'
+                              'group flex w-full items-center gap-2 px-3 py-1.5 text-left transition-colors rounded-r-md',
+                              isActive
+                                ? 'bg-ios-orange-light text-ios-orange-dark'
+                                : isChapter1
+                                  ? 'text-muted-foreground hover:bg-ios-orange-light/40 hover:text-ios-orange-dark'
+                                  : 'text-muted-foreground/30 cursor-pointer',
                             )}
                           >
-                            {section.title[lang]}
-                          </span>
-
-                          {/* Simulator badge */}
-                          {isSimulator && (
+                            {/* Section number */}
                             <span className={cn(
-                              'shrink-0 rounded-full px-1.5 py-0.5 font-mono text-[8px] font-bold uppercase',
-                              isActive ? 'bg-ios-orange/20 text-ios-orange-dark' : isChapter1 ? 'bg-muted text-muted-foreground' : 'bg-muted/40 text-muted-foreground/30'
+                              'shrink-0 font-mono text-[9px]',
+                              isActive ? 'text-ios-orange-dark/60' : isChapter1 ? 'text-muted-foreground/40' : 'text-muted-foreground/20'
                             )}>
-                              SIM
+                              {idx + 1}
                             </span>
-                          )}
 
-                          {/* Active indicator */}
-                          {isActive && (
-                            <motion.span
-                              layoutId="toc-active"
-                              className="h-1.5 w-1.5 shrink-0 rounded-full bg-ios-orange"
-                            />
+                            {/* Section title */}
+                            <span
+                              className={cn(
+                                'min-w-0 flex-1 truncate font-mono text-[11px] leading-tight',
+                                isActive ? 'font-bold' : isChapter1 ? 'font-medium' : 'font-normal'
+                              )}
+                            >
+                              {section.title[lang]}
+                            </span>
+
+                            {/* Simulator badge */}
+                            {isSimulator && (
+                              <span className={cn(
+                                'shrink-0 rounded-full px-1.5 py-0.5 font-mono text-[8px] font-bold uppercase',
+                                isActive ? 'bg-ios-orange/20 text-ios-orange-dark' : isChapter1 ? 'bg-muted text-muted-foreground' : 'bg-muted/40 text-muted-foreground/30'
+                              )}>
+                                SIM
+                              </span>
+                            )}
+
+                            {/* Active indicator */}
+                            {isActive && (
+                              <motion.span
+                                layoutId="toc-active"
+                                className="h-1.5 w-1.5 shrink-0 rounded-full bg-ios-orange"
+                              />
+                            )}
+                          </button>
+
+                          {/* Children — shown when parent or a child is active */}
+                          {hasChildren && (isActive || childActive) && (
+                            <div className="ml-[1.1rem] border-l border-border/30">
+                              {section.children!.map((child, cidx) => {
+                                const isChildActive = child.id === activeSectionId
+                                return (
+                                  <button
+                                    key={child.id}
+                                    onClick={() => {
+                                      onSelect(child.id)
+                                      setOpenChapters((prev) => ({ ...prev, [chapter.id]: true }))
+                                    }}
+                                    className={cn(
+                                      'group flex w-full items-center gap-2 px-3 py-1.5 text-left transition-colors rounded-r-md',
+                                      isChildActive
+                                        ? 'bg-ios-orange-light text-ios-orange-dark'
+                                        : isChapter1
+                                          ? 'text-muted-foreground hover:bg-ios-orange-light/40 hover:text-ios-orange-dark'
+                                          : 'text-muted-foreground/30 cursor-pointer',
+                                    )}
+                                  >
+                                    <span className={cn(
+                                      'shrink-0 font-mono text-[9px]',
+                                      isChildActive ? 'text-ios-orange-dark/60' : isChapter1 ? 'text-muted-foreground/40' : 'text-muted-foreground/20'
+                                    )}>
+                                      {idx + 1}.{cidx + 1}
+                                    </span>
+                                    <span className={cn(
+                                      'min-w-0 flex-1 truncate font-mono text-[11px] leading-tight',
+                                      isChildActive ? 'font-bold' : isChapter1 ? 'font-medium' : 'font-normal'
+                                    )}>
+                                      {child.title[lang]}
+                                    </span>
+                                    {isChildActive && (
+                                      <motion.span
+                                        layoutId="toc-active"
+                                        className="h-1.5 w-1.5 shrink-0 rounded-full bg-ios-orange"
+                                      />
+                                    )}
+                                  </button>
+                                )
+                              })}
+                            </div>
                           )}
-                        </button>
+                        </div>
                       )
                     })}
                   </div>

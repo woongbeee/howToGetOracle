@@ -1,7 +1,8 @@
 // Shared UI primitives for book chapter pages
-import { type ReactNode, useEffect, useRef } from 'react'
+import { type ReactNode, useEffect, useRef, useState } from 'react'
 import { cn } from '@/lib/utils'
 import { useSimulationStore } from '@/store/simulationStore'
+import { SqlHighlight } from './sql-basics/dml-more/SqlHighlight'
 
 export function WipBanner() {
   const lang = useSimulationStore((s) => s.lang)
@@ -53,7 +54,7 @@ export function SubTitle({ children }: { children: ReactNode }) {
 
 export function Prose({ children, className }: { children: ReactNode; className?: string }) {
   return (
-    <p className={cn('mb-4 text-sm leading-relaxed text-muted-foreground', className)}>{children}</p>
+    <p className={cn('mb-4 text-sm leading-relaxed text-muted-foreground whitespace-pre-line', className)}>{children}</p>
   )
 }
 
@@ -194,6 +195,89 @@ export function SimulatorPlaceholder({ label, color = 'blue' }: { label: string;
 
 export function Divider() {
   return <div className="my-8 border-t" />
+}
+
+// ── AccordionSection ──────────────────────────────────────────────────────────
+// 클릭하면 열리고 닫히는 섹션. title 아래 항상 border-b 표시.
+export function AccordionSection({
+  title,
+  children,
+  defaultOpen = false,
+}: {
+  title: string
+  children: ReactNode
+  defaultOpen?: boolean
+}) {
+  const [open, setOpen] = useState(defaultOpen)
+  const [hovered, setHovered] = useState(false)
+  return (
+    <div className="bg-card">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        style={{ backgroundColor: hovered ? 'rgba(255,243,224,0.4)' : '' }}
+        className="flex w-full items-center justify-between px-5 py-4 text-left transition-colors duration-150"
+      >
+        <span className="text-base font-bold tracking-tight">{title}</span>
+        <span className={cn('font-mono text-sm text-muted-foreground transition-transform duration-200', open && 'rotate-180')}>
+          ▾
+        </span>
+      </button>
+      <div className="border-b" />
+      {open && <div className="px-5 py-5">{children}</div>}
+    </div>
+  )
+}
+
+// ── SqlBlock ─────────────────────────────────────────────────────────────────
+// SQL 코드 블록. header/badge/desc가 있으면 카드 형태, 없으면 단순 코드 영역.
+const SQL_BADGE: Record<string, string> = {
+  violet:  'bg-violet-100 text-violet-700 border-violet-200',
+  blue:    'bg-blue-100 text-blue-700 border-blue-200',
+  emerald: 'bg-emerald-100 text-emerald-700 border-emerald-200',
+  orange:  'bg-orange-100 text-orange-700 border-orange-200',
+  cyan:    'bg-cyan-100 text-cyan-700 border-cyan-200',
+  rose:    'bg-rose-100 text-rose-700 border-rose-200',
+}
+
+export function SqlBlock({
+  sql,
+  activeClause,
+  badge,
+  badgeColor = 'blue',
+  desc,
+  className,
+}: {
+  sql: string
+  activeClause?: string
+  badge?: string
+  badgeColor?: string
+  desc?: string
+  className?: string
+}) {
+  if (!badge && !desc) {
+    return (
+      <div className={cn('overflow-x-auto rounded-xl border bg-muted/30 px-4 py-3', className)}>
+        <SqlHighlight sql={sql} activeClause={activeClause} />
+      </div>
+    )
+  }
+  return (
+    <div className={cn('rounded-xl border bg-card', className)}>
+      <div className="flex items-start gap-3 border-b px-4 py-3">
+        {badge && (
+          <span className={cn('rounded border px-2 py-0.5 font-mono text-xs font-bold', SQL_BADGE[badgeColor] ?? SQL_BADGE.blue)}>
+            {badge}
+          </span>
+        )}
+        {desc && <p className="mb-0 text-sm font-bold text-foreground/90">{desc}</p>}
+      </div>
+      <div className="overflow-x-auto rounded-b-xl bg-muted/30 px-4 py-3">
+        <SqlHighlight sql={sql} activeClause={activeClause} />
+      </div>
+    </div>
+  )
 }
 
 // ── TermPopup ────────────────────────────────────────────────────────────────

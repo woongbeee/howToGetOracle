@@ -1,7 +1,7 @@
 import {
   PageContainer, ChapterTitle, SectionTitle,
   Prose, InfoBox, Divider,
-} from '../shared'
+} from '../../shared'
 import { CLAUSE_DEMOS } from './shared'
 import { ClickableSyntaxRow, SyntaxRow } from './MiniSimulator'
 

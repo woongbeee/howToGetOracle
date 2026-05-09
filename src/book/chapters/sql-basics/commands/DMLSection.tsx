@@ -1,16 +1,16 @@
 import {
   PageContainer, ChapterTitle, SectionTitle,
   Prose, InfoBox, Divider,
-} from '../shared'
+} from '../../shared'
 import { cn } from '@/lib/utils'
-import { CLAUSE_COLOR, CLAUSE_DEMOS } from './shared'
-import { ClickableSyntaxRow, SyntaxRow } from './MiniSimulator'
+import { CLAUSE_COLOR, CLAUSE_DEMOS } from '../dml-more/shared'
+import { ClickableSyntaxRow, SyntaxRow } from '../dml-more/MiniSimulator'
 
 const T = {
   ko: {
-    chapterTitle: '기본 문법 — SELECT / FROM / WHERE',
+    chapterTitle: 'DML - Data Manipulation Language',
     chapterSubtitle:
-      'SQL은 관계형 데이터 베이스를 다루는 표준 언어입니다. 데이터를 조회·수정·삭제하는 가장 기본적인 명령어인 SELECT, FROM, WHERE, UPDATE, DELETE 를 알아봅니다.',
+      '데이터를 조회·수정·삭제하는 가장 기본적인 명령어인 SELECT, FROM, WHERE, UPDATE, DELETE 를 알아봅니다.',
     clauseTitle: '핵심 절(Clause) 정리',
     clauses: [
       {
@@ -94,7 +94,7 @@ const T = {
   en: {
     chapterTitle: 'Core Syntax — SELECT / FROM / WHERE',
     chapterSubtitle:
-      'SQL is the standard language for relational databases. Learn the most fundamental commands for querying, modifying, and deleting data — SELECT, FROM, WHERE, UPDATE, and DELETE.',
+      'Learn the most fundamental commands for querying, modifying, and deleting data — SELECT, FROM, WHERE, UPDATE, and DELETE.',
     clauseTitle: 'Key Clause Reference',
     clauses: [
       {
@@ -180,7 +180,7 @@ const T = {
   },
 }
 
-export function SyntaxSection({ lang, t }: { lang: 'ko' | 'en'; t: typeof T['ko'] }) {
+export function DMLSection({ lang, t }: { lang: 'ko' | 'en'; t: typeof T['ko'] }) {
   const introDemo    = CLAUSE_DEMOS.find((d) => d.sectionKey === 'intro')!
   const selectDemo   = CLAUSE_DEMOS.find((d) => d.sectionKey === 'select')!
   const distinctDemo = CLAUSE_DEMOS.find((d) => d.sectionKey === 'distinct')!
@@ -307,4 +307,4 @@ export function SyntaxSection({ lang, t }: { lang: 'ko' | 'en'; t: typeof T['ko'
   )
 }
 
-export { T as SyntaxT }
+export { T as DMLT }

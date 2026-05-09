@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import {
   PageContainer, ChapterTitle, Prose, InfoBox, SectionTitle, SubTitle,
-} from '../shared'
+} from '../../shared'
 import { SqlHighlight } from './SqlHighlight'
 import { useSimulationStore } from '@/store/simulationStore'
 

@@ -1,13 +1,14 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
-import { PageContainer, ChapterTitle, Prose, Divider } from '../shared'
+import { PageContainer, ChapterTitle, Prose, Divider } from '../../shared'
 import { SqlHighlight } from './SqlHighlight'
-import { EMPLOYEES } from './shared'
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
 interface ResultTable {
+  sourceHeaders: string[]
+  sourceRows: (string | null)[][]
   resultHeaders: string[]
   resultRows: (string | null)[][]
 }
@@ -16,20 +17,23 @@ interface FuncItem {
   name: string
   signature: string
   desc: { ko: string; en: string }
-  example: string
+example: string
   tables: ResultTable
   note?: { ko: string; en: string }
 }
 
-// ── Sample data (first 10 from shared EMPLOYEES) ────────────────────────────
+// ── Sample data ─────────────────────────────────────────────────────────────
 
-const EMP_ROWS: (string | null)[][] = EMPLOYEES.slice(0, 10).map((e) => [
-  String(e.emp_id),
-  e.first_name,
-  String(e.dept_id),
-  String(e.salary),
-  e.manager_id != null ? String(e.manager_id) : 'null',
-])
+const EMP_ROWS: (string | null)[][] = [
+  ['101', 'Alice',  '10', '7200', 'null'],
+  ['102', 'Bob',    '20', '5400', '101' ],
+  ['103', 'Carol',  '10', '8100', '101' ],
+  ['104', 'David',  '30', '4900', '102' ],
+  ['105', 'Eva',    '20', '6300', '101' ],
+  ['106', 'Frank',  '30', '3800', '102' ],
+  ['107', 'Grace',  '10', '9500', 'null'],
+  ['108', 'Henry',  '20', '5900', '101' ],
+]
 
 // ── Data ───────────────────────────────────────────────────────────────────
 
@@ -44,6 +48,8 @@ const FUNC_ITEMS: FuncItem[] = [
     example:
       "SELECT first_name, salary,\n       CASE\n         WHEN salary >= 8000 THEN 'Senior'\n         WHEN salary >= 5000 THEN 'Mid'\n         ELSE 'Junior'\n       END AS grade\nFROM   employees",
     tables: {
+      sourceHeaders: ['first_name', 'salary'],
+      sourceRows: EMP_ROWS.map((r) => [r[1], r[3]]),
       resultHeaders: ['first_name', 'salary', 'grade'],
       resultRows: EMP_ROWS.map((r) => {
         const sal = Number(r[3])
@@ -66,12 +72,14 @@ const FUNC_ITEMS: FuncItem[] = [
     example:
       "SELECT first_name, dept_id,\n       DECODE(dept_id,\n              10, 'Engineering',\n              20, 'Analytics',\n              30, 'Support',\n              'Other') AS dept_label\nFROM   employees",
     tables: {
+      sourceHeaders: ['first_name', 'dept_id'],
+      sourceRows: EMP_ROWS.map((r) => [r[1], r[2]]),
       resultHeaders: ['first_name', 'dept_id', 'dept_label'],
       resultRows: EMP_ROWS.map((r) => {
         const label =
           r[2] === '10' ? 'Engineering' :
           r[2] === '20' ? 'Analytics'   :
-          r[2] === '30' ? 'Support'     : 'Other'
+          r[2] === '30' ? 'Support'      : 'Other'
         return [r[1], r[2], label]
       }),
     },
@@ -90,6 +98,8 @@ const FUNC_ITEMS: FuncItem[] = [
     example:
       'SELECT first_name,\n       manager_id,\n       NVL(manager_id, 0) AS mgr\nFROM   employees',
     tables: {
+      sourceHeaders: ['first_name', 'manager_id'],
+      sourceRows: EMP_ROWS.map((r) => [r[1], r[4]]),
       resultHeaders: ['first_name', 'manager_id', 'mgr'],
       resultRows: EMP_ROWS.map((r) => [r[1], r[4], r[4] === 'null' ? '0' : r[4]]),
     },
@@ -108,35 +118,14 @@ const FUNC_ITEMS: FuncItem[] = [
     example:
       "SELECT first_name,\n       manager_id,\n       NVL2(manager_id, 'Member', 'Leader') AS role\nFROM   employees",
     tables: {
+      sourceHeaders: ['first_name', 'manager_id'],
+      sourceRows: EMP_ROWS.map((r) => [r[1], r[4]]),
       resultHeaders: ['first_name', 'manager_id', 'role'],
       resultRows: EMP_ROWS.map((r) => [r[1], r[4], r[4] === 'null' ? 'Leader' : 'Member']),
     },
     note: {
       ko: 'NVL2는 Oracle 전용 함수입니다. 표준 SQL에서는 CASE WHEN expr IS NULL THEN … ELSE … END로 동일하게 표현할 수 있습니다.',
       en: 'NVL2 is Oracle-specific. In standard SQL, the equivalent is CASE WHEN expr IS NULL THEN … ELSE … END.',
-    },
-  },
-  {
-    name: 'COALESCE',
-    signature: 'COALESCE(expr1, expr2, …)',
-    desc: {
-      ko: '인자 목록을 왼쪽에서 오른쪽으로 순서대로 평가하여 처음으로 NULL이 아닌 값을 반환합니다. 모든 인자가 NULL이면 NULL을 반환합니다. ANSI 표준 함수이므로 Oracle 외 다른 데이터베이스에서도 동일하게 사용할 수 있습니다.\n\nNVL은 인자가 2개로 고정되어 있지만 COALESCE는 인자를 3개 이상 나열할 수 있습니다. 여러 컬럼 중 첫 번째 유효값을 골라야 하는 상황에서 NVL을 중첩하는 대신 COALESCE 하나로 간결하게 표현할 수 있습니다.',
-      en: 'Evaluates arguments left to right and returns the first non-NULL value. Returns NULL if all arguments are NULL. COALESCE is an ANSI standard function and works identically across Oracle and other databases.\n\nUnlike NVL which is limited to two arguments, COALESCE accepts any number. When you need the first valid value across multiple columns, COALESCE replaces nested NVL calls with a single, readable expression.',
-    },
-    example:
-      "-- 여러 fallback 컬럼 중 첫 번째 유효값 선택\nSELECT first_name,\n       manager_id,\n       dept_id,\n       COALESCE(manager_id, dept_id, 0) AS fallback_id\nFROM   employees",
-    tables: {
-      resultHeaders: ['first_name', 'manager_id', 'dept_id', 'fallback_id'],
-      resultRows: EMP_ROWS.map((r) => {
-        const mgr   = r[4] === 'null' ? null : r[4]
-        const dept  = r[2]
-        const fb    = mgr ?? dept ?? '0'
-        return [r[1], r[4] === 'null' ? 'null' : r[4], r[2], fb]
-      }),
-    },
-    note: {
-      ko: 'NVL(NVL(a, b), c)처럼 중첩 NVL을 써야 하는 상황은 COALESCE(a, b, c)로 대체할 수 있습니다. 가독성이 높고 표준 SQL이므로 신규 코드에서는 COALESCE를 권장합니다.',
-      en: 'Nested NVL calls like NVL(NVL(a, b), c) can be replaced by COALESCE(a, b, c). COALESCE is more readable and portable — prefer it in new code.',
     },
   },
 ]
@@ -181,9 +170,9 @@ function MiniTable({ headers, rows, highlightLast }: {
                     key={ci}
                     className={cn(
                       'px-2.5 py-1 font-mono text-[11px]',
-                      isNull      ? 'italic text-muted-foreground/40' :
-                      isHighlight ? 'font-bold text-ios-blue-dark'      :
-                                    'text-foreground/80',
+                      isNull       ? 'italic text-muted-foreground/40' :
+                      isHighlight  ? 'font-bold text-ios-blue-dark'      :
+                                     'text-foreground/80',
                     )}
                   >
                     {isNull ? 'NULL' : cell}
@@ -198,37 +187,23 @@ function MiniTable({ headers, rows, highlightLast }: {
   )
 }
 
-const T = {
-  ko: {
-    chapterTitle: 'NULL 을 다루는 법',
-    chapterSubtitle: 'NULL 처리와 조건 분기에 자주 쓰이는 CASE WHEN, DECODE, NVL, NVL2를 알아봅니다.',
-    categoryLabel: '조건 / NULL 처리 함수',
-    exampleQuery: '예시 쿼리',
-    result: '실행 결과',
-  },
-  en: {
-    chapterTitle: 'NULL 을 다루는 법',
-    chapterSubtitle: 'Learn CASE WHEN, DECODE, NVL, and NVL2 — the most-used functions for conditional logic and NULL handling in SQL.',
-    categoryLabel: 'Conditional / NULL Functions',
-    exampleQuery: 'Example Query',
-    result: 'Result',
-  },
-}
+// ── FunctionsSection ────────────────────────────────────────────────────────
 
-// ── NullSection ─────────────────────────────────────────────────────────────
-
-export function NullSection({ lang }: { lang: 'ko' | 'en' }) {
-  const t = T[lang]
+export function FunctionsSection({ lang }: { lang: 'ko' | 'en' }) {
   const [openItem, setOpenItem] = useState<string>(FUNC_ITEMS[0].name)
   const item = FUNC_ITEMS.find((f) => f.name === openItem)!
 
   return (
-    <PageContainer className="max-w-5xl">
+    <PageContainer>
       <ChapterTitle
         icon="📋"
         num={1}
-        title={t.chapterTitle}
-        subtitle={t.chapterSubtitle}
+        title={lang === 'ko' ? 'Oracle 주요 함수' : 'Oracle Key Functions'}
+        subtitle={
+          lang === 'ko'
+            ? 'SQL에서 조건 분기와 NULL 처리에 자주 쓰이는 CASE WHEN, DECODE, NVL, NVL2를 알아봅니다.'
+            : 'Learn CASE WHEN, DECODE, NVL, and NVL2 — the most-used functions for conditional logic and NULL handling in SQL.'
+        }
       />
 
       <div className="grid grid-cols-[160px_1fr] items-start gap-4">
@@ -264,7 +239,7 @@ export function NullSection({ lang }: { lang: 'ko' | 'en' }) {
             {/* 헤더 */}
             <div className={cn('rounded-xl border px-4 py-3', C.bg, C.border, C.text)}>
               <div className="mb-1 font-mono text-[10px] font-bold uppercase tracking-wider opacity-60">
-                {t.categoryLabel}
+                {lang === 'ko' ? '조건 / NULL 처리 함수' : 'Conditional / NULL Functions'}
               </div>
               <div className="font-mono text-xl font-black">{item.name}</div>
               <div className={cn('mt-1.5 inline-block rounded border px-2 py-0.5 font-mono text-[11px]', C.active)}>
@@ -280,7 +255,7 @@ export function NullSection({ lang }: { lang: 'ko' | 'en' }) {
             {/* 예시 쿼리 */}
             <div>
               <p className="mb-1.5 font-mono text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-                {t.exampleQuery}
+                {lang === 'ko' ? '예시 쿼리' : 'Example Query'}
               </p>
               <div className={cn('rounded-xl border px-4 py-3', C.code)}>
                 <SqlHighlight sql={item.example} />
@@ -290,7 +265,7 @@ export function NullSection({ lang }: { lang: 'ko' | 'en' }) {
             {/* 실행 결과 */}
             <div>
               <p className="mb-2 font-mono text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-                {t.result}
+                {lang === 'ko' ? '실행 결과' : 'Result'}
               </p>
               <MiniTable
                 headers={item.tables.resultHeaders}
@@ -314,5 +289,3 @@ export function NullSection({ lang }: { lang: 'ko' | 'en' }) {
     </PageContainer>
   )
 }
-
-export { T as NullT }
