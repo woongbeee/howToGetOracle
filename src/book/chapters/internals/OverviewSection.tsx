@@ -1,5 +1,5 @@
 import { useSimulationStore } from '@/store/simulationStore'
-import { ChapterTitle, Prose, ConceptGrid } from '../shared'
+import { ChapterTitle, Prose, ConceptGrid, WipBanner } from '../shared'
 import { TwoColLayout, MapPanel } from './shared'
 
 const T = {
@@ -37,6 +37,7 @@ export function OverviewSection() {
 
   return (
     <TwoColLayout map={<MapPanel title={t.mapTitle} highlightIds={[]} callout={t.overviewCallout} />}>
+      <WipBanner />
       <ChapterTitle title={t.overviewTitle} subtitle={t.overviewDesc} />
       <Prose>{t.overviewDesc2}</Prose>
       <ConceptGrid items={t.instanceItems} />

@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { BOOK_CHAPTERS } from './bookStructure'
+import { BOOK_CHAPTERS } from './bookStructure.tsx'
 import { useSimulationStore } from '@/store/simulationStore'
 import { cn } from '@/lib/utils'
+import { IconChevronRight, IconChevronsLeft, IconExternalLink } from '@tabler/icons-react'
 
 interface Props {
   activeSectionId: string
@@ -37,9 +38,9 @@ export function TableOfContents({ activeSectionId, onSelect, onToggle }: Props) 
         <button
           onClick={onToggle}
           title={lang === 'ko' ? '목차 닫기' : 'Close TOC'}
-          className="flex items-center gap-0.5 rounded px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground/50 transition-colors hover:bg-muted hover:text-muted-foreground"
+          className="flex items-center gap-0.5 rounded p-1 text-muted-foreground/50 transition-colors hover:bg-muted hover:text-muted-foreground"
         >
-          ‹‹
+          <IconChevronsLeft size={14} />
         </button>
       </div>
 
@@ -50,7 +51,7 @@ export function TableOfContents({ activeSectionId, onSelect, onToggle }: Props) 
         const hasActive   = chapter.sections.some(
           (s) => s.id === activeSectionId || s.children?.some((c) => c.id === activeSectionId)
         )
-        const isChapter1  = chapter.num === 1
+        const isChapter1  = chapter.num <= 1
 
         return (
           <div key={chapter.id} className="flex flex-col">
@@ -67,16 +68,18 @@ export function TableOfContents({ activeSectionId, onSelect, onToggle }: Props) 
               <motion.span
                 animate={{ rotate: isOpen ? 90 : 0 }}
                 transition={{ duration: 0.18 }}
-                className={cn('shrink-0 font-mono text-[9px]', isChapter1 ? 'text-muted-foreground/60' : 'text-muted-foreground/25')}
+                className={cn('shrink-0', isChapter1 ? 'text-muted-foreground/60' : 'text-muted-foreground/25')}
               >
-                ▶
+                <IconChevronRight size={12} />
               </motion.span>
 
               {/* Chapter icon + number */}
-              <span className={cn('shrink-0 text-sm leading-none', isChapter1 ? '' : 'opacity-30')}>{chapter.icon}</span>
-              <span className={cn('font-mono text-[10px] font-bold shrink-0', isChapter1 ? 'text-muted-foreground/50' : 'text-muted-foreground/25')}>
-                {String(chapter.num).padStart(2, '0')}
-              </span>
+              <span className={cn('shrink-0 flex items-center', isChapter1 ? '' : 'opacity-30')}>{chapter.icon}</span>
+              {chapter.num > 0 && (
+                <span className={cn('font-mono text-[10px] font-bold shrink-0', isChapter1 ? 'text-muted-foreground/50' : 'text-muted-foreground/25')}>
+                  {String(chapter.num).padStart(2, '0')}
+                </span>
+              )}
 
               {/* Chapter title */}
               <span
@@ -109,7 +112,7 @@ export function TableOfContents({ activeSectionId, onSelect, onToggle }: Props) 
                     {chapter.sections.map((section, idx) => {
                       const isActive    = section.id === activeSectionId
                       const isSimulator = section.hasSimulator
-                      const isChapter1  = chapter.num === 1
+                      const isChapter1  = chapter.num <= 1
                       const hasChildren = !!section.children?.length
                       const childActive = section.children?.some((c) => c.id === activeSectionId) ?? false
 
@@ -236,9 +239,7 @@ export function TableOfContents({ activeSectionId, onSelect, onToggle }: Props) 
           <span className="font-mono text-[10px] font-semibold text-muted-foreground transition-colors group-hover:text-foreground">
             Woongbee
           </span>
-          <span className="ml-auto font-mono text-[9px] text-muted-foreground/30 transition-colors group-hover:text-muted-foreground/60">
-            ↗
-          </span>
+          <IconExternalLink size={11} className="ml-auto text-muted-foreground/30 transition-colors group-hover:text-muted-foreground/60" />
         </a>
       </div>
     </div>

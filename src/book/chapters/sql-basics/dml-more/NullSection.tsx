@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import { PageContainer, ChapterTitle, Prose, Divider } from '../../shared'
+import { IconMathOff } from '@tabler/icons-react'
 import { SqlHighlight } from './SqlHighlight'
 import { EMPLOYEES } from './shared'
 
@@ -225,8 +226,7 @@ export function NullSection({ lang }: { lang: 'ko' | 'en' }) {
   return (
     <PageContainer className="max-w-5xl">
       <ChapterTitle
-        icon="📋"
-        num={1}
+        icon={<IconMathOff size={36} color="#8b5cf6" stroke={1.5} />}
         title={t.chapterTitle}
         subtitle={t.chapterSubtitle}
       />

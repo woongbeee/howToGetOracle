@@ -7,6 +7,7 @@ import {
   Table,
   AccordionSection,
 } from '../../shared'
+import { IconShieldLock } from '@tabler/icons-react'
 
 const T = {
   ko: {
@@ -179,7 +180,7 @@ export function DCLSection({ lang }: { lang: 'ko' | 'en' }) {
   const t = T[lang]
   return (
     <PageContainer>
-      <ChapterTitle title={t.chapterTitle} subtitle={t.chapterSubtitle} />
+      <ChapterTitle icon={<IconShieldLock size={36} color="#10b981" stroke={1.5} />} title={t.chapterTitle} subtitle={t.chapterSubtitle} />
 
       <div className="mt-6">
         {/* 권한 종류 */}

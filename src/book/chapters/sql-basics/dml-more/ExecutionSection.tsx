@@ -3,6 +3,7 @@ import { cn } from '@/lib/utils'
 import {
   PageContainer, ChapterTitle, SectionTitle, Prose,
 } from '../../shared'
+import { IconPlayerPlay } from '@tabler/icons-react'
 import {
   EMPLOYEES, EXAMPLE_QUERIES, SELECT_STEPS, UPDATE_STEPS, DELETE_STEPS,
   STEP_COLOR, parseAndExecute, type ParsedQuery, type ExampleQuery,
@@ -390,7 +391,7 @@ export function ExecutionSimulator({ lang, t }: { lang: 'ko' | 'en'; t: typeof T
 
   return (
     <PageContainer className="max-w-[1200px]">
-      <ChapterTitle icon="📋" num={1} title={t.chapterTitle} subtitle={t.chapterSubtitle} />
+      <ChapterTitle icon={<IconPlayerPlay size={36} color="#22c55e" stroke={1.5} />} title={t.chapterTitle} subtitle={t.chapterSubtitle} />
 
       {/* Query picker */}
       <div className="mb-6">

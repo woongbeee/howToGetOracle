@@ -1,7 +1,10 @@
 import {
-  PageContainer, ChapterTitle, SectionTitle,
-  Prose, InfoBox, Divider,
+  PageContainer, ChapterTitle,
+  Prose, InfoBox, AccordionSection,
 } from '../../shared'
+import {
+  IconEdit, IconTable, IconFilter, IconTrash, IconPlayerPlay,
+} from '@tabler/icons-react'
 import { cn } from '@/lib/utils'
 import { CLAUSE_COLOR, CLAUSE_DEMOS } from '../dml-more/shared'
 import { ClickableSyntaxRow, SyntaxRow } from '../dml-more/MiniSimulator'
@@ -16,35 +19,35 @@ const T = {
       {
         kw: 'SELECT',
         color: 'blue',
-        icon: '📤',
+        icon: <IconPlayerPlay size={16} color="#2563eb" stroke={1.5} />,
         title: '컬럼 선택',
         desc: '조회할 컬럼명을 적습니다. 여러개의 컬럼명을 적을 때는 쉼표로 연결합니다. *는 전체 컬럼을 조회합니다.',
       },
       {
         kw: 'FROM',
         color: 'violet',
-        icon: '📦',
+        icon: <IconTable size={16} color="#7c3aed" stroke={1.5} />,
         title: '테이블 지정',
         desc: '데이터를 가져올 테이블(또는 뷰)을 지정합니다.',
       },
       {
         kw: 'WHERE',
         color: 'orange',
-        icon: '🔎',
+        icon: <IconFilter size={16} color="#d97706" stroke={1.5} />,
         title: '데이터 필터',
         desc: 'FROM절에 지정한 테이블에서 어떤 행을 가져올 지 조건을 적습니다.',
       },
       {
         kw: 'UPDATE',
         color: 'amber',
-        icon: '✏️',
+        icon: <IconEdit size={16} color="#b45309" stroke={1.5} />,
         title: '데이터 수정',
         desc: '테이블에 저장되어 있던 데이터를 수정하는 명령어 입니다.',
       },
       {
         kw: 'DELETE',
         color: 'rose',
-        icon: '🗑️',
+        icon: <IconTrash size={16} color="#e11d48" stroke={1.5} />,
         title: '데이터 삭제',
         desc: '테이블에 저장되어 있던 데이터를 삭제하는 명령어 입니다.',
       },
@@ -100,35 +103,35 @@ const T = {
       {
         kw: 'SELECT',
         color: 'blue',
-        icon: '📤',
+        icon: <IconPlayerPlay size={16} color="#2563eb" stroke={1.5} />,
         title: 'Column Selection',
         desc: 'Write the column names to retrieve. Separate multiple columns with commas. * retrieves all columns.',
       },
       {
         kw: 'FROM',
         color: 'violet',
-        icon: '📦',
+        icon: <IconTable size={16} color="#7c3aed" stroke={1.5} />,
         title: 'Table Source',
         desc: 'Specifies the table or view to retrieve data from.',
       },
       {
         kw: 'WHERE',
         color: 'orange',
-        icon: '🔎',
+        icon: <IconFilter size={16} color="#d97706" stroke={1.5} />,
         title: 'Data Filter',
         desc: 'Write the condition that determines which rows to retrieve from the table specified in FROM.',
       },
       {
         kw: 'UPDATE',
         color: 'amber',
-        icon: '✏️',
+        icon: <IconEdit size={16} color="#b45309" stroke={1.5} />,
         title: 'Data Modification',
         desc: 'A command that modifies data already stored in a table.',
       },
       {
         kw: 'DELETE',
         color: 'rose',
-        icon: '🗑️',
+        icon: <IconTrash size={16} color="#e11d48" stroke={1.5} />,
         title: 'Data Deletion',
         desc: 'A command that deletes data already stored in a table.',
       },
@@ -190,7 +193,7 @@ export function DMLSection({ lang, t }: { lang: 'ko' | 'en'; t: typeof T['ko'] }
 
   return (
     <PageContainer className="max-w-6xl">
-      <ChapterTitle icon="📋" num={1} title={t.chapterTitle} subtitle={t.chapterSubtitle} />
+      <ChapterTitle icon={<IconEdit size={36} color="#3b82f6" stroke={1.5} />} title={t.chapterTitle} subtitle={t.chapterSubtitle} />
 
       {/* ── Intro: clause overview ── */}
       <SyntaxRow
@@ -214,95 +217,81 @@ export function DMLSection({ lang, t }: { lang: 'ko' | 'en'; t: typeof T['ko'] }
         }
       />
 
-      <Divider />
 
       {/* ── SELECT ── */}
-      <SyntaxRow
-        lang={lang}
-        demo={selectDemo}
-        left={
-          <>
-            <SectionTitle>{t.selectTitle}</SectionTitle>
-            <Prose>{t.selectDesc}</Prose>
-          </>
-        }
-      />
+      <AccordionSection title={t.selectTitle} defaultOpen>
+        <SyntaxRow
+          lang={lang}
+          demo={selectDemo}
+          left={<Prose>{t.selectDesc}</Prose>}
+        />
+      </AccordionSection>
 
-      <Divider />
 
       {/* ── DISTINCT ── */}
-      <ClickableSyntaxRow
-        lang={lang}
-        demo={distinctDemo}
-        header={t.distinctOps[0]}
-        rows={t.distinctOps.slice(1)}
-        topContent={
-          <>
-            <SectionTitle>{t.distinctTitle}</SectionTitle>
-            <Prose>{t.distinctDesc}</Prose>
-          </>
-        }
-        bottomContent={
-          <InfoBox variant="tip" lang={lang}>
-            {t.distinctTip}
-          </InfoBox>
-        }
-      />
+      <AccordionSection title={t.distinctTitle}>
+        <ClickableSyntaxRow
+          lang={lang}
+          demo={distinctDemo}
+          header={t.distinctOps[0]}
+          rows={t.distinctOps.slice(1)}
+          topContent={<Prose>{t.distinctDesc}</Prose>}
+          bottomContent={
+            <InfoBox variant="tip" lang={lang}>
+              {t.distinctTip}
+            </InfoBox>
+          }
+        />
+      </AccordionSection>
 
-      <Divider />
 
       {/* ── WHERE ── */}
-      <ClickableSyntaxRow
-        lang={lang}
-        demo={whereDemo}
-        header={t.whereOps[0]}
-        rows={t.whereOps.slice(1)}
-        topContent={
-          <>
-            <SectionTitle>{t.whereTitle}</SectionTitle>
-            <Prose>{t.whereDesc}</Prose>
-          </>
-        }
-        bottomContent={
-          <InfoBox variant="note" lang={lang}>
-            {t.whereNullTip}
-          </InfoBox>
-        }
-      />
-
-      <Divider />
+      <AccordionSection title={t.whereTitle}>
+        <ClickableSyntaxRow
+          lang={lang}
+          demo={whereDemo}
+          header={t.whereOps[0]}
+          rows={t.whereOps.slice(1)}
+          topContent={<Prose>{t.whereDesc}</Prose>}
+          bottomContent={
+            <InfoBox variant="note" lang={lang}>
+              {t.whereNullTip}
+            </InfoBox>
+          }
+        />
+      </AccordionSection>
 
       {/* ── UPDATE ── */}
-      <SyntaxRow
-        lang={lang}
-        demo={updateDemo}
-        left={
-          <>
-            <SectionTitle>{t.updateTitle}</SectionTitle>
-            <Prose>{t.updateDesc}</Prose>
-            <InfoBox variant="warning" lang={lang}>
-              {t.updateWarning}
-            </InfoBox>
-          </>
-        }
-      />
-
-      <Divider />
+      <AccordionSection title={t.updateTitle}>
+        <SyntaxRow
+          lang={lang}
+          demo={updateDemo}
+          left={
+            <>
+              <Prose>{t.updateDesc}</Prose>
+              <InfoBox variant="warning" lang={lang}>
+                {t.updateWarning}
+              </InfoBox>
+            </>
+          }
+        />
+      </AccordionSection>
 
       {/* ── DELETE ── */}
-      <SyntaxRow
-        lang={lang}
-        demo={deleteDemo}
-        left={
-          <>
-            <SectionTitle>{t.deleteTitle}</SectionTitle>
-            <Prose>{t.deleteDesc}</Prose>
-            <InfoBox variant="tip" lang={lang}>
-              <span style={{ whiteSpace: 'pre-line' }}>{t.deleteTip}</span>
-            </InfoBox>
-          </>
-        }
-      />
+      <AccordionSection title={t.deleteTitle}>
+        <SyntaxRow
+          lang={lang}
+          demo={deleteDemo}
+          left={
+            <>
+              <Prose>{t.deleteDesc}</Prose>
+              <InfoBox variant="tip" lang={lang}>
+                <span style={{ whiteSpace: 'pre-line' }}>{t.deleteTip}</span>
+              </InfoBox>
+            </>
+          }
+        />
+      </AccordionSection>
     </PageContainer>
   )
 }

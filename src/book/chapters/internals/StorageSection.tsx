@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useSimulationStore } from '@/store/simulationStore'
 import {
   ChapterTitle, SubTitle, Prose,
-  InfoBox, Table, ConceptGrid, Divider,
+  InfoBox, Table, ConceptGrid, Divider, WipBanner,
 } from '../shared'
 import { cn } from '@/lib/utils'
 
@@ -587,6 +587,7 @@ export function StorageSection() {
 
   return (
     <div className="mx-auto max-w-screen-2xl px-10 py-10">
+      <WipBanner />
       <ChapterTitle title={t.sectionTitle} subtitle={t.sectionDesc} />
 
       {/* Overview: 4-tier hierarchy */}

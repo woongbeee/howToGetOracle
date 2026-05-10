@@ -6,6 +6,7 @@ import { TableOfContents } from './TableOfContents'
 import { BookContent } from './BookContent'
 import { GlossaryPanel } from './GlossaryPanel'
 import { Badge } from '@/components/ui/badge'
+import { IconLanguage, IconSettings, IconChevronRight } from '@tabler/icons-react'
 
 interface Props {
   onHome: () => void
@@ -48,9 +49,9 @@ const TocTab = memo(function TocTab({ onToggle }: { onToggle: () => void }) {
     >
       <motion.span
         animate={{ rotate: 0 }}
-        className="text-[11px] leading-none"
+        className="leading-none"
       >
-        ›
+        <IconChevronRight size={13} />
       </motion.span>
       <span
         className="select-none font-mono text-[9px] font-bold uppercase tracking-widest"
@@ -70,7 +71,7 @@ export function BookLayout({ onHome }: Props) {
   const [tocOpen, setTocOpen]         = useState(true)
   const [tocWidth, setTocWidth]       = useState(DEFAULT_WIDTH)
   const [glossaryOpen, setGlossaryOpen] = useState(false)
-  const [activeSectionId, setActiveSectionId] = useState('sql-basics-syntax')
+  const [activeSectionId, setActiveSectionId] = useState('intro-overview')
 
   const toggleToc      = useCallback(() => setTocOpen((v) => !v), [])
   const toggleGlossary = () => setGlossaryOpen((v) => !v)
@@ -133,15 +134,16 @@ export function BookLayout({ onHome }: Props) {
             onClick={() => window.open(`${window.location.pathname}#simulator`, '_blank', 'width=1400,height=900')}
             className="flex items-center gap-1.5 rounded-full border bg-muted px-2.5 py-0.5 font-mono text-[10px] font-medium text-muted-foreground transition-colors hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300"
           >
-            <span>⚙</span>
+            <IconSettings size={12} />
             {t.simulator}
           </button>
           <div className="h-3 w-px bg-border" />
           <button
             onClick={toggleLang}
-            className="flex items-center gap-1 rounded-full border bg-muted px-2.5 py-0.5 font-mono text-[10px] font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            className="flex items-center gap-1.5 rounded-full border bg-muted px-2.5 py-0.5 font-mono text-[10px] font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
           >
-            🌐 {t.langToggle}
+            <IconLanguage size={12} />
+            {t.langToggle}
           </button>
           <SimulationBadge />
         </div>

@@ -1,9 +1,13 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, type ReactNode } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import {
   PageContainer, ChapterTitle, Prose, InfoBox, SectionTitle, SubTitle,
 } from '../../shared'
+import {
+  IconArrowMerge, IconArrowsJoin, IconArrowBarToLeft, IconArrowBarToRight,
+  IconArrowsHorizontal, IconGridDots,
+} from '@tabler/icons-react'
 import { SqlHighlight } from './SqlHighlight'
 import { useSimulationStore } from '@/store/simulationStore'
 
@@ -121,11 +125,11 @@ const T = {
       { key: 'hierarchy', label: '계층형 질의' },
     ],
     joinTypes: [
-      { key: 'inner', icon: '⟕', title: 'INNER JOIN',       desc: '양쪽 테이블 모두에서 조건을 만족하는 행만 반환합니다. 가장 일반적인 JOIN입니다.' },
-      { key: 'left',  icon: '⟕', title: 'LEFT OUTER JOIN',  desc: '왼쪽 테이블의 모든 행 + 오른쪽 테이블에서 조건에 맞는 행. 오른쪽 테이블에 조건을 만족하는 행이 없으면 NULL.' },
-      { key: 'right', icon: '⟖', title: 'RIGHT OUTER JOIN', desc: '오른쪽 테이블의 모든 행 + 왼쪽 테이블에서 조건에 맞는 행. 왼쪽 테이블에 조건을 만족하는 행이 없으면 NULL.' },
-      { key: 'full',  icon: '⟗', title: 'FULL OUTER JOIN',  desc: '양쪽 테이블의 모든 행. 조건을 만족하지 않는 쪽은 NULL로 채웁니다.' },
-      { key: 'cross', icon: '×',  title: 'CROSS JOIN',       desc: '모든 행의 조합(CARTESIAN JOIN)을 반환합니다. ON 절이 없습니다.' },
+      { key: 'inner', icon: <IconArrowsJoin size={16} color="#2563eb" stroke={1.5} />, title: 'INNER JOIN',       desc: '양쪽 테이블 모두에서 조건을 만족하는 행만 반환합니다. 가장 일반적인 JOIN입니다.' },
+      { key: 'left',  icon: <IconArrowBarToLeft size={16} color="#059669" stroke={1.5} />, title: 'LEFT OUTER JOIN',  desc: '왼쪽 테이블의 모든 행 + 오른쪽 테이블에서 조건에 맞는 행. 오른쪽 테이블에 조건을 만족하는 행이 없으면 NULL.' },
+      { key: 'right', icon: <IconArrowBarToRight size={16} color="#d97706" stroke={1.5} />, title: 'RIGHT OUTER JOIN', desc: '오른쪽 테이블의 모든 행 + 왼쪽 테이블에서 조건에 맞는 행. 왼쪽 테이블에 조건을 만족하는 행이 없으면 NULL.' },
+      { key: 'full',  icon: <IconArrowsHorizontal size={16} color="#7c3aed" stroke={1.5} />, title: 'FULL OUTER JOIN',  desc: '양쪽 테이블의 모든 행. 조건을 만족하지 않는 쪽은 NULL로 채웁니다.' },
+      { key: 'cross', icon: <IconGridDots size={16} color="#e11d48" stroke={1.5} />, title: 'CROSS JOIN',       desc: '모든 행의 조합(CARTESIAN JOIN)을 반환합니다. ON 절이 없습니다.' },
     ],
     joinQueryDesc: {
       inner: 'employees(직원) 테이블과 departments(부서) 테이블에서 dept_id(부서 번호)가 같은 행을 찾습니다.',
@@ -172,11 +176,11 @@ const T = {
       { key: 'hierarchy', label: 'Hierarchical Query' },
     ],
     joinTypes: [
-      { key: 'inner', icon: '⟕', title: 'INNER JOIN',       desc: 'Returns only rows with matching values in both tables. The most common join type.' },
-      { key: 'left',  icon: '⟕', title: 'LEFT OUTER JOIN',  desc: 'All rows from the left table, plus matching rows from the right. Non-matching right rows become NULL.' },
-      { key: 'right', icon: '⟖', title: 'RIGHT OUTER JOIN', desc: 'All rows from the right table, plus matching rows from the left. Non-matching left rows become NULL.' },
-      { key: 'full',  icon: '⟗', title: 'FULL OUTER JOIN',  desc: 'All rows from both tables. Non-matching rows on either side are filled with NULL.' },
-      { key: 'cross', icon: '×',  title: 'CROSS JOIN',       desc: 'Returns every combination of rows (Cartesian product). No ON clause.' },
+      { key: 'inner', icon: <IconArrowsJoin size={16} color="#2563eb" stroke={1.5} />, title: 'INNER JOIN',       desc: 'Returns only rows with matching values in both tables. The most common join type.' },
+      { key: 'left',  icon: <IconArrowBarToLeft size={16} color="#059669" stroke={1.5} />, title: 'LEFT OUTER JOIN',  desc: 'All rows from the left table, plus matching rows from the right. Non-matching right rows become NULL.' },
+      { key: 'right', icon: <IconArrowBarToRight size={16} color="#d97706" stroke={1.5} />, title: 'RIGHT OUTER JOIN', desc: 'All rows from the right table, plus matching rows from the left. Non-matching left rows become NULL.' },
+      { key: 'full',  icon: <IconArrowsHorizontal size={16} color="#7c3aed" stroke={1.5} />, title: 'FULL OUTER JOIN',  desc: 'All rows from both tables. Non-matching rows on either side are filled with NULL.' },
+      { key: 'cross', icon: <IconGridDots size={16} color="#e11d48" stroke={1.5} />, title: 'CROSS JOIN',       desc: 'Returns every combination of rows (Cartesian product). No ON clause.' },
     ],
     joinQueryDesc: {
       inner: 'Finds rows where dept_id matches in both the employees table and the departments table.',
@@ -747,7 +751,7 @@ export function JoinSection() {
 
   return (
     <PageContainer className="max-w-6xl">
-      <ChapterTitle icon="📋" num={1} title={t.chapterTitle} subtitle={t.joinSectionSubtitle} />
+      <ChapterTitle icon={<IconArrowMerge size={36} color="#06b6d4" stroke={1.5} />} title={t.chapterTitle} subtitle={t.joinSectionSubtitle} />
 
       {/* Top-level page tab switcher */}
       <div className="flex gap-2 border-b border-border pb-3">
@@ -785,7 +789,7 @@ export function JoinSection() {
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-[280px_1fr] lg:items-start">
               {/* LEFT: JOIN type selector */}
               <div className="flex flex-col gap-2">
-                {(t.joinTypes as Array<{ key: string; icon: string; title: string; desc: string }>).map((jt) => {
+                {(t.joinTypes as Array<{ key: string; icon: ReactNode; title: string; desc: string }>).map((jt) => {
                   const jk = jt.key as JoinType
                   const isActive = activeJoin === jk
                   return (

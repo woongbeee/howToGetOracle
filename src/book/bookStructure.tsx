@@ -1,5 +1,18 @@
 // Book structure — Table of Contents definition
 // Each chapter has sections; sections can have a simulator slot
+import type { ReactNode } from 'react'
+import {
+  IconDatabase,
+  IconCode,
+  IconCpu,
+  IconListSearch,
+  IconArrowMerge,
+  IconBolt,
+  IconTransform,
+  IconArrowsSort,
+  IconLayoutGrid,
+  IconGitFork,
+} from '@tabler/icons-react'
 
 export interface BookSection {
   id: string
@@ -15,16 +28,29 @@ export interface BookChapter {
   id: string
   num: number
   title: { ko: string; en: string }
-  icon: string
+  icon: ReactNode
   color: string // tailwind color key
   sections: BookSection[]
 }
 
 export const BOOK_CHAPTERS: BookChapter[] = [
   {
+    id: 'introduction',
+    num: 0,
+    icon: <IconDatabase size={15} className="text-blue-600" />,
+    color: 'brand-navy',
+    title: { ko: '오라클이란?', en: 'What is Oracle?' },
+    sections: [
+      {
+        id: 'intro-overview',
+        title: { ko: '오라클 소개', en: 'Introduction to Oracle' },
+      },
+    ],
+  },
+  {
     id: 'sql-basics',
     num: 1,
-    icon: '📋',
+    icon: <IconCode size={15} className="text-blue-600" />,
     color: 'brand-navy',
     title: { ko: 'SQL 문법', en: 'SQL Syntax Fundamentals' },
     sections: [
@@ -130,7 +156,7 @@ export const BOOK_CHAPTERS: BookChapter[] = [
   {
     id: 'internals',
     num: 2,
-    icon: '⚙',
+    icon: <IconCpu size={15} className="text-blue-500" />,
     color: 'blue',
     title: {
       ko: '오라클 내부 구조와 프로세스',
@@ -168,7 +194,7 @@ export const BOOK_CHAPTERS: BookChapter[] = [
   {
     id: 'index',
     num: 3,
-    icon: '🔍',
+    icon: <IconListSearch size={15} className="text-violet-500" />,
     color: 'violet',
     title: {
       ko: '인덱스 원리와 활용, 스캔 방식',
@@ -205,7 +231,7 @@ export const BOOK_CHAPTERS: BookChapter[] = [
   {
     id: 'join',
     num: 4,
-    icon: '🔗',
+    icon: <IconArrowMerge size={15} className="text-emerald-500" />,
     color: 'emerald',
     title: { ko: '조인 원리와 활용', en: 'Join Principles & Usage' },
     sections: [
@@ -239,7 +265,7 @@ export const BOOK_CHAPTERS: BookChapter[] = [
   {
     id: 'optimizer',
     num: 5,
-    icon: '⚡',
+    icon: <IconBolt size={15} className="text-orange-500" />,
     color: 'orange',
     title: { ko: '옵티마이저 원리', en: 'Optimizer Principles' },
     sections: [
@@ -273,7 +299,7 @@ export const BOOK_CHAPTERS: BookChapter[] = [
   {
     id: 'query-transform',
     num: 6,
-    icon: '🔄',
+    icon: <IconTransform size={15} className="text-cyan-500" />,
     color: 'cyan',
     title: { ko: '쿼리 변환', en: 'Query Transformation' },
     sections: [
@@ -310,7 +336,7 @@ export const BOOK_CHAPTERS: BookChapter[] = [
   {
     id: 'sort',
     num: 7,
-    icon: '↕',
+    icon: <IconArrowsSort size={15} className="text-rose-500" />,
     color: 'rose',
     title: { ko: '소트 튜닝', en: 'Sort Tuning' },
     sections: [
@@ -343,7 +369,7 @@ export const BOOK_CHAPTERS: BookChapter[] = [
   {
     id: 'partition',
     num: 8,
-    icon: '▦',
+    icon: <IconLayoutGrid size={15} className="text-amber-500" />,
     color: 'amber',
     title: { ko: '파티셔닝', en: 'Partitioning' },
     sections: [
@@ -376,7 +402,7 @@ export const BOOK_CHAPTERS: BookChapter[] = [
   {
     id: 'parallel',
     num: 9,
-    icon: '⫴',
+    icon: <IconGitFork size={15} className="text-teal-500" />,
     color: 'teal',
     title: { ko: '병렬 처리', en: 'Parallel Processing' },
     sections: [

@@ -171,7 +171,7 @@ const T = {
   - `sql-basics/commands/` — 명령어 종류 섹션 (섹션 1.x):
     - `DdlDmlDclSection.tsx` — 개요 (1)
     - `DDLSection.tsx` — DDL 상세 (1.1): AccordionSection 5개, 데이터 타입·제약조건 표, `SqlBlock` 주석 포함
-    - `DMLSection.tsx` — DML 상세 (1.2, 구 `SyntaxSection.tsx`)
+    - `DMLSection.tsx` — DML 상세 (1.2): SELECT(defaultOpen)·DISTINCT·WHERE·UPDATE·DELETE 5개 AccordionSection
     - `DCLSection.tsx` — DCL 상세 (1.3): GRANT·REVOKE·Role
     - `TCLSection.tsx` — TCL 상세 (1.4): 트랜잭션·COMMIT·ROLLBACK·SAVEPOINT
   - `sql-basics/dml-more/` — DML 심화 섹션 (섹션 2.x) + 공유 헬퍼:
@@ -205,7 +205,10 @@ const T = {
 `PageContainer`, `ChapterTitle`, `SectionTitle`, `SubTitle`, `Prose`, `InfoBox`, `Table`, `ConceptGrid`, `Divider`, `SimulatorPlaceholder`, `WipBanner`, `TermPopup`, `AccordionSection`, `SqlBlock` 등 챕터 내 모든 공통 레이아웃 프리미티브. 새 챕터 콘텐츠 작성 시 이 컴포넌트들을 우선 사용한다.
 
 - `Prose` — `whitespace-pre-line` 포함. 문자열에 `\n` 넣으면 줄바꿈 렌더링됨
+- `ChapterTitle` — `icon?: ReactNode` prop 지원. Tabler 아이콘 JSX를 넘기면 제목 왼쪽에 렌더링됨. `size={36}` 권장
+- `ConceptGrid` — `icon: ReactNode` (JSX 아이콘). `size={20}` 권장
 - `AccordionSection` — 기본 접힘. `defaultOpen` prop으로 펼친 상태로 시작 가능. 버튼 hover 시 `rgba(255,243,224,0.4)` 배경(TOC hover 색과 동일), 펼쳐진 내용 영역은 배경 변경 없음
+- `InfoBox` — `variant` 별 아이콘 색상은 배경색의 **보색**으로 지정되어 있음 (`stroke={2}`). variant별 보색: `tip`→rose, `note`/`summary`→orange, `warning`→blue, `usage`→violet, `danger`→cyan
 - `SqlBlock` — `badge`/`badgeColor`/`desc` 없으면 코드 블록만, 있으면 헤더가 붙은 카드로 렌더링. 내부적으로 `SqlHighlight` 사용
 - `SqlHighlight` (`sql-basics/dml-more/SqlHighlight.tsx`) — `--` 이후를 회색 이탤릭 주석으로 처리. `shared.tsx`가 이 파일을 직접 import함 (`from './sql-basics/dml-more/SqlHighlight'`)
 - `WipBanner` — 아직 작성 중인 챕터 최상단에 표시하는 경고 배너
@@ -237,7 +240,8 @@ const T = {
 - `zustand` — 전역 상태 관리
 - `@xyflow/react` — ERD React Flow 기반 그래프 렌더링 (`SchemaDiagram`)
 - `framer-motion` — 시뮬레이션 애니메이션 (화살표, 컴포넌트 하이라이트 전환)
-- `lucide-react` — 아이콘 라이브러리
+- `@tabler/icons-react` — **기본 아이콘 라이브러리**. 모든 챕터 페이지 아이콘은 Tabler 컬러 아이콘 사용. `ChapterTitle`은 `size={36}`, `ConceptGrid`·데이터 배열 내 아이콘은 `size={20}`, 인라인 소형 아이콘은 `size={16}`. 모두 `stroke={1.5}` 기본값 사용
+- `lucide-react` — 일부 구형 컴포넌트에서 잔존. 새 코드에서는 Tabler 사용
 - `@base-ui/react` + `shadcn` — UI 컴포넌트 기반
 - `tailwindcss` v4 — CSS-first 설정 방식 (`@import "tailwindcss"` in `index.css`)
 - `react-scan` — 개발 전용 렌더링 성능 모니터. 프로덕션 빌드에 포함되지 않도록 주의

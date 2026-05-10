@@ -7,6 +7,9 @@ import {
   AccordionSection,
 } from '../../shared'
 import { cn } from '@/lib/utils'
+import {
+  IconCategory, IconTable, IconEdit, IconShieldLock, IconGitCommit,
+} from '@tabler/icons-react'
 
 const T = {
   ko: {
@@ -21,7 +24,7 @@ const T = {
         abbr: 'DDL',
         full: 'Data Definition Language',
         color: 'violet',
-        icon: '🏗️',
+        icon: <IconTable size={20} color="#7c3aed" stroke={1.5} />,
         title: '데이터 정의어',
         desc: '테이블·인덱스·뷰 등 데이터를 어떤 형태로 저장할 지 정의하거나 변경합니다.',
         cmds: ['CREATE', 'ALTER', 'DROP', 'TRUNCATE', 'RENAME'],
@@ -30,7 +33,7 @@ const T = {
         abbr: 'DML',
         full: 'Data Manipulation Language',
         color: 'blue',
-        icon: '✏️',
+        icon: <IconEdit size={20} color="#2563eb" stroke={1.5} />,
         title: '데이터 조작어',
         desc: '테이블에 저장된 실제 데이터를 조회·삽입·수정·삭제합니다.',
         cmds: ['SELECT', 'INSERT', 'UPDATE', 'DELETE', 'MERGE'],
@@ -39,7 +42,7 @@ const T = {
         abbr: 'DCL',
         full: 'Data Control Language',
         color: 'emerald',
-        icon: '🔐',
+        icon: <IconShieldLock size={20} color="#059669" stroke={1.5} />,
         title: '데이터 제어어',
         desc: '사용자에게 권한을 부여하거나 회수하여 데이터 접근을 제어하는 명령어입니다. 이 명령어로 사용자 별로 데이터 접근 권한을 다르게 부여할 수 있습니다. ',
         cmds: ['GRANT', 'REVOKE'],
@@ -48,7 +51,7 @@ const T = {
         abbr: 'TCL',
         full: 'Transaction Control Language',
         color: 'orange',
-        icon: '🔄',
+        icon: <IconGitCommit size={20} color="#d97706" stroke={1.5} />,
         title: '트랜잭션 제어어',
         desc: 'DML로 변경한 데이터를 확정하거나 이전 상태로 되돌립니다.',
         cmds: ['COMMIT', 'ROLLBACK', 'SAVEPOINT'],
@@ -239,7 +242,7 @@ COMMIT;`,
         abbr: 'DDL',
         full: 'Data Definition Language',
         color: 'violet',
-        icon: '🏗️',
+        icon: <IconTable size={20} color="#7c3aed" stroke={1.5} />,
         title: 'Data Definition',
         desc: 'Defines or modifies the structure of database objects such as tables, indexes, and views.',
         cmds: ['CREATE', 'ALTER', 'DROP', 'TRUNCATE', 'RENAME'],
@@ -248,7 +251,7 @@ COMMIT;`,
         abbr: 'DML',
         full: 'Data Manipulation Language',
         color: 'blue',
-        icon: '✏️',
+        icon: <IconEdit size={20} color="#2563eb" stroke={1.5} />,
         title: 'Data Manipulation',
         desc: 'Queries, inserts, updates, and deletes actual data stored in tables.',
         cmds: ['SELECT', 'INSERT', 'UPDATE', 'DELETE', 'MERGE'],
@@ -257,7 +260,7 @@ COMMIT;`,
         abbr: 'DCL',
         full: 'Data Control Language',
         color: 'emerald',
-        icon: '🔐',
+        icon: <IconShieldLock size={20} color="#059669" stroke={1.5} />,
         title: 'Data Control',
         desc: 'Grants or revokes privileges on database objects to control data access.',
         cmds: ['GRANT', 'REVOKE'],
@@ -266,7 +269,7 @@ COMMIT;`,
         abbr: 'TCL',
         full: 'Transaction Control Language',
         color: 'orange',
-        icon: '🔄',
+        icon: <IconGitCommit size={20} color="#d97706" stroke={1.5} />,
         title: 'Transaction Control',
         desc: 'Commits DML changes permanently or rolls them back to a previous state.',
         cmds: ['COMMIT', 'ROLLBACK', 'SAVEPOINT'],
@@ -464,7 +467,7 @@ export function DdlDmlDclSection({ lang }: { lang: 'ko' | 'en' }) {
 
   return (
     <PageContainer className="max-w-5xl">
-      <ChapterTitle title={t.chapterTitle} subtitle={t.chapterSubtitle} />
+      <ChapterTitle icon={<IconCategory size={36} color="#6366f1" stroke={1.5} />} title={t.chapterTitle} subtitle={t.chapterSubtitle} />
 
       {/* ── Overview cards ── */}
       <h2 className="mb-4 mt-8 text-xl font-bold tracking-tight">{t.overviewTitle}</h2>

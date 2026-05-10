@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useSimulationStore } from '@/store/simulationStore'
-import { PageContainer, ChapterTitle, SimulatorPlaceholder } from '../shared'
+import { PageContainer, ChapterTitle, SimulatorPlaceholder, WipBanner } from '../shared'
 import { IndexTypesOverview } from './IndexTypesOverview'
 import { BTreeSection } from './BTreeSection'
 import { BitmapSection } from './BitmapSection'
@@ -28,6 +28,7 @@ function IndexLayout({ sectionId, children }: { sectionId: string; children: Rea
   return (
     <div className="flex h-full overflow-hidden">
       <div className="min-w-0 flex-1 overflow-x-hidden overflow-y-auto">
+        <WipBanner />
         {children}
       </div>
       <GlossaryPanel
@@ -80,6 +81,7 @@ export function IndexChapterPage({ sectionId }: { sectionId: string }) {
   if (sectionId === 'index-simulator') {
     return (
       <PageContainer>
+        <WipBanner />
         <ChapterTitle icon="🔍" num={2} title="Index Simulator" subtitle={t.simDesc} />
         <SimulatorPlaceholder label="Index Simulator" color="violet" />
       </PageContainer>

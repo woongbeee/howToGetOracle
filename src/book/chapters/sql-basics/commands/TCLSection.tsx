@@ -7,6 +7,7 @@ import {
   Table,
   AccordionSection,
 } from '../../shared'
+import { IconGitCommit } from '@tabler/icons-react'
 
 const T = {
   ko: {
@@ -185,7 +186,7 @@ export function TCLSection({ lang }: { lang: 'ko' | 'en' }) {
   const t = T[lang]
   return (
     <PageContainer>
-      <ChapterTitle title={t.chapterTitle} subtitle={t.chapterSubtitle} />
+      <ChapterTitle icon={<IconGitCommit size={36} color="#f97316" stroke={1.5} />} title={t.chapterTitle} subtitle={t.chapterSubtitle} />
 
       <div className="mt-6">
         {/* 트랜잭션 개념 */}

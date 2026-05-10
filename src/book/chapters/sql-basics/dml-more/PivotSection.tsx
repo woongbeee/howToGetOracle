@@ -3,6 +3,7 @@ import { cn } from '@/lib/utils'
 import {
   PageContainer, ChapterTitle, SectionTitle, SubTitle, Prose, InfoBox, Divider,
 } from '../../shared'
+import { IconLayoutColumns } from '@tabler/icons-react'
 import { SqlHighlight } from './SqlHighlight'
 import { EMPLOYEES } from './shared'
 
@@ -231,7 +232,7 @@ export function PivotSection({ lang }: { lang: 'ko' | 'en' }) {
 
   return (
     <PageContainer className="max-w-5xl">
-      <ChapterTitle icon="🔄" num={1} title={t.chapterTitle} subtitle={t.chapterSubtitle} />
+      <ChapterTitle icon={<IconLayoutColumns size={36} color="#14b8a6" stroke={1.5} />} title={t.chapterTitle} subtitle={t.chapterSubtitle} />
 
       {/* Tab bar */}
       <div className="mb-6 flex gap-2">

@@ -2,6 +2,7 @@ import {
   PageContainer, ChapterTitle, SectionTitle,
   Prose, InfoBox, Divider,
 } from '../../shared'
+import { IconSortAscending } from '@tabler/icons-react'
 import { CLAUSE_DEMOS } from './shared'
 import { ClickableSyntaxRow, SyntaxRow } from './MiniSimulator'
 
@@ -72,8 +73,7 @@ export function ClausesSection({ lang, t }: { lang: 'ko' | 'en'; t: typeof T['ko
   return (
     <PageContainer className="max-w-6xl">
       <ChapterTitle
-        icon="📋"
-        num={1}
+        icon={<IconSortAscending size={36} color="#6366f1" stroke={1.5} />}
         title={t.chapterTitle}
         subtitle={t.clausesSectionSubtitle}
       />

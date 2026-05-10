@@ -7,6 +7,7 @@ import {
   Table,
   AccordionSection,
 } from '../../shared'
+import { IconTable } from '@tabler/icons-react'
 
 const T = {
   ko: {
@@ -343,7 +344,7 @@ export function DDLSection({ lang }: { lang: 'ko' | 'en' }) {
   const t = T[lang]
   return (
     <PageContainer>
-      <ChapterTitle title={t.chapterTitle} subtitle={t.chapterSubtitle} />
+      <ChapterTitle icon={<IconTable size={36} color="#f59e0b" stroke={1.5} />} title={t.chapterTitle} subtitle={t.chapterSubtitle} />
 
       <div className="mt-6">
         {/* 데이터 타입 & 제약 조건 */}
@@ -387,7 +388,7 @@ export function DDLSection({ lang }: { lang: 'ko' | 'en' }) {
         {/* Other DDL */}
         <AccordionSection title={t.otherTitle}>
           <Prose>{t.otherDesc}</Prose>
-          <InfoBox variant="note" lang={lang}>
+          <InfoBox variant="note" lang={lang}>/
             <span style={{ whiteSpace: 'pre-line' }}>{t.otherPreview}</span>
           </InfoBox>
           <div className="space-y-5">

@@ -2,6 +2,7 @@ import { cn } from '@/lib/utils'
 import {
   PageContainer, ChapterTitle, SectionTitle, SubTitle, Prose, InfoBox, Divider,
 } from '../../shared'
+import { IconGitMerge, IconRefresh, IconPackageImport, IconTrash } from '@tabler/icons-react'
 import { SqlHighlight } from './SqlHighlight'
 
 const T = {
@@ -32,17 +33,17 @@ const T = {
     usecaseTitle: '언제 쓰나요?',
     usecases: [
       {
-        icon: '🔄',
+        icon: <IconRefresh size={16} color="#2563eb" stroke={1.5} />,
         title: '동기화',
         desc: '외부 시스템에서 받아온 데이터를 내부 테이블에 반영할 때',
       },
       {
-        icon: '📥',
+        icon: <IconPackageImport size={16} color="#059669" stroke={1.5} />,
         title: 'Upsert',
         desc: '있으면 업데이트, 없으면 삽입 — 중복 체크 없이 한 번에',
       },
       {
-        icon: '🧹',
+        icon: <IconTrash size={16} color="#e11d48" stroke={1.5} />,
         title: '조건부 삭제',
         desc: '특정 조건을 만족하는 행을 업데이트 후 삭제할 때',
       },
@@ -89,17 +90,17 @@ const T = {
     usecaseTitle: 'When to use it?',
     usecases: [
       {
-        icon: '🔄',
+        icon: <IconRefresh size={16} color="#2563eb" stroke={1.5} />,
         title: 'Sync',
         desc: 'Apply incoming data from an external system to an internal table',
       },
       {
-        icon: '📥',
+        icon: <IconPackageImport size={16} color="#059669" stroke={1.5} />,
         title: 'Upsert',
         desc: 'Update if exists, insert if not — no duplicate checks needed',
       },
       {
-        icon: '🧹',
+        icon: <IconTrash size={16} color="#e11d48" stroke={1.5} />,
         title: 'Conditional delete',
         desc: 'Delete rows that meet a condition after an update',
       },
@@ -538,7 +539,7 @@ export function MergeSection({ lang }: { lang: 'ko' | 'en' }) {
 
   return (
     <PageContainer className="max-w-5xl">
-      <ChapterTitle icon="🔀" num={1} title={t.chapterTitle} subtitle={t.chapterSubtitle} />
+      <ChapterTitle icon={<IconGitMerge size={36} color="#ec4899" stroke={1.5} />} title={t.chapterTitle} subtitle={t.chapterSubtitle} />
 
       <InfoBox variant="usage" lang={lang}>
         <div className="flex flex-col gap-2 mt-1">

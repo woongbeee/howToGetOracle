@@ -1,7 +1,6 @@
 import { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { cn } from '@/lib/utils'
-import { PageContainer, ChapterTitle, Prose, Divider, InfoBox, TermPopup } from '../../shared'
+import { PageContainer, ChapterTitle, Prose, Divider, InfoBox, TermPopup, AccordionSection } from '../../shared'
+import { IconCalendarEvent } from '@tabler/icons-react'
 import { SqlHighlight } from './SqlHighlight'
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -411,8 +410,6 @@ const FUNC_ITEMS: FuncItem[] = [
   },
 ]
 
-const C = { bg: 'bg-muted/40', border: 'border-border', text: 'text-foreground/80', active: 'bg-ios-blue-light text-ios-blue-dark', code: 'bg-muted/30 border-border' }
-
 // ── ResultTable ──────────────────────────────────────────────────────────────
 
 function ResultTable({ headers, rows }: { headers: string[]; rows: string[][] }) {
@@ -541,219 +538,193 @@ const T = {
   },
 }
 
+// ── FuncContent ──────────────────────────────────────────────────────────────
+
+function FuncContent({ item, lang, t }: { item: FuncItem; lang: 'ko' | 'en'; t: typeof T['ko'] }) {
+  const [tzModalOpen, setTzModalOpen] = useState(false)
+
+  return (
+    <div className="flex flex-col gap-4">
+      {/* 시그니처 */}
+      <div>
+        <span className="inline-block rounded border bg-ios-blue-light px-2 py-0.5 font-mono text-[11px] text-ios-blue-dark">
+          {item.signature}
+        </span>
+      </div>
+
+      {/* 설명 */}
+      <div>
+        {item.desc[lang].split('\n\n').map((para, i) => (
+          <Prose key={i}>{para}</Prose>
+        ))}
+        {item.tzInfo && (
+          <div className="mt-1">
+            <TermPopup
+              label={lang === 'ko' ? '타임존이란?' : 'What is a Timezone?'}
+              title={lang === 'ko' ? '타임존이란?' : 'What is a Timezone?'}
+              icon="🌏"
+              color="info"
+              open={tzModalOpen}
+              onOpen={() => setTzModalOpen(true)}
+              onClose={() => setTzModalOpen(false)}
+            >
+              <span style={{ whiteSpace: 'pre-line' }}>{item.tzInfo[lang]}</span>
+            </TermPopup>
+          </div>
+        )}
+      </div>
+
+      {/* DUAL 설명 InfoBox */}
+      {item.dualInfo && (
+        <InfoBox variant="note" lang={lang}>
+          {item.dualInfo[lang]}
+        </InfoBox>
+      )}
+
+      {/* 예시 쿼리 */}
+      <div>
+        <p className="mb-1.5 font-mono text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+          {t.exampleQuery}
+        </p>
+        <div className="rounded-xl border bg-muted/30 px-4 py-3">
+          <SqlHighlight sql={item.example} />
+        </div>
+      </div>
+
+      {/* 실행 결과 */}
+      <div>
+        <p className="mb-2 font-mono text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+          {t.result}
+        </p>
+        <ResultTable headers={item.resultHeaders} rows={item.resultRows} />
+      </div>
+
+      {/* SYSDATE ↔ TIMESTAMP 변환 예시 */}
+      {item.castExample && (
+        <div>
+          <p className="mb-1.5 font-mono text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+            {lang === 'ko' ? 'SYSDATE ↔ TIMESTAMP 변환' : 'SYSDATE ↔ TIMESTAMP Conversion'}
+          </p>
+          <div className="mb-3 rounded-xl border bg-muted/30 px-4 py-3">
+            <SqlHighlight sql={item.castExample.sql} />
+          </div>
+          <ResultTable headers={item.castExample.headers} rows={item.castExample.rows} />
+        </div>
+      )}
+
+      {/* 산술 연산 표 */}
+      {item.arith && (
+        <ArithTable title={item.arith.title} rows={item.arith.rows} lang={lang} />
+      )}
+
+      {/* SYSTIMESTAMP 끼리의 연산 예시 */}
+      {item.arith2 && (
+        <div>
+          <p className="mb-1.5 font-mono text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+            {t.arith2Title}
+          </p>
+          <div className="mb-3 rounded-xl border bg-muted/30 px-4 py-3">
+            <SqlHighlight sql={
+              "-- 두 SYSTIMESTAMP 값 사이의 경과 시간 측정\nSELECT ts_end - ts_start                              AS diff_interval,\n       EXTRACT(MINUTE FROM ts_end - ts_start)          AS diff_min,\n       EXTRACT(SECOND FROM ts_end - ts_start)          AS diff_sec\nFROM (\n  SELECT SYSTIMESTAMP                          AS ts_start,\n         SYSTIMESTAMP + INTERVAL '0:2:35.847' MINUTE TO SECOND AS ts_end\n  FROM DUAL\n)"
+            } />
+          </div>
+          <ArithTable title={item.arith2.title} rows={item.arith2.rows} lang={lang} />
+        </div>
+      )}
+
+      {/* 타임존 변환 */}
+      {item.tzConvert && (
+        <>
+          <Divider />
+          <div>
+            <p className="mb-2 font-mono text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+              {t.tzConvertTitle}
+            </p>
+            <div className="mb-3 rounded-xl border bg-card px-4 py-3">
+              <Prose>{item.tzConvert.desc[lang]}</Prose>
+            </div>
+            <div className="mb-3 rounded-xl border bg-muted/30 px-4 py-3">
+              <SqlHighlight sql={item.tzConvert.example} />
+            </div>
+            <ResultTable headers={item.tzConvert.resultHeaders} rows={item.tzConvert.resultRows} />
+          </div>
+
+          {item.tzConvert.tzSetup.map((block) => (
+            <div key={block.title.ko}>
+              <p className="mb-1.5 font-mono text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                {block.title[lang]}
+              </p>
+              <div className="overflow-x-auto rounded-xl border bg-muted/30 px-4 py-3">
+                <table className="w-full text-xs">
+                  <tbody>
+                    {block.lines.map((line, i) => (
+                      <tr key={i}>
+                        <td className="whitespace-nowrap py-0.5 pr-4 font-mono text-[11px] text-blue-700">
+                          {line.code}
+                        </td>
+                        {line.comment[lang] && (
+                          <td className="py-0.5 font-mono text-[11px] text-muted-foreground">
+                            {`-- ${line.comment[lang]}`}
+                          </td>
+                        )}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          ))}
+        </>
+      )}
+
+      {/* 포맷 마스크 표 */}
+      {item.formatMasks && (
+        <FormatMaskTable title={item.formatMasks.title} rows={item.formatMasks.rows} lang={lang} />
+      )}
+
+      {/* vs 비교 노트 */}
+      {item.vsNote && (
+        <InfoBox variant="warning" lang={lang}>
+          {item.vsNote[lang]}
+        </InfoBox>
+      )}
+
+      {/* NLS 설명 InfoBox */}
+      {item.nlsNote && (
+        <InfoBox variant="tip" lang={lang}>
+          <span style={{ whiteSpace: 'pre-line' }}>{item.nlsNote[lang]}</span>
+        </InfoBox>
+      )}
+
+      {/* 참고 */}
+      {item.note && (
+        <div className="rounded-xl border bg-muted/40 px-4 py-3 text-xs leading-relaxed text-foreground/80">
+          <span className="mr-1.5 font-bold">💡</span>{item.note[lang]}
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ── DateSection ─────────────────────────────────────────────────────────────
 
 export function DateSection({ lang }: { lang: 'ko' | 'en' }) {
   const t = T[lang]
-  const [openItem, setOpenItem] = useState<string>(FUNC_ITEMS[0].name)
-  const [tzModalOpen, setTzModalOpen] = useState(false)
-  const item = FUNC_ITEMS.find((f) => f.name === openItem)!
 
   return (
-    <PageContainer className="max-w-6xl">
+    <PageContainer className="max-w-5xl">
       <ChapterTitle
-        icon="📋"
-        num={1}
+        icon={<IconCalendarEvent size={36} color="#0ea5e9" stroke={1.5} />}
         title={t.chapterTitle}
         subtitle={t.chapterSubtitle}
       />
 
-      <div className="grid grid-cols-[160px_1fr] items-start gap-4">
-        {/* LEFT: 함수 목록 */}
-        <div className="flex flex-col gap-1 rounded-xl border bg-muted/30 p-2">
-          {FUNC_ITEMS.map((f) => {
-            const isActive = f.name === openItem
-            return (
-              <button
-                key={f.name}
-                onClick={() => setOpenItem(f.name)}
-                className={cn(
-                  'rounded-lg px-3 py-2 text-left font-mono text-xs font-bold transition-all',
-                  isActive ? C.active : 'text-muted-foreground hover:bg-muted',
-                )}
-              >
-                {f.name}
-              </button>
-            )
-          })}
-        </div>
-
-        {/* RIGHT: 상세 */}
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={item.name}
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -6 }}
-            transition={{ duration: 0.18 }}
-            className="flex min-w-0 flex-col gap-4"
-          >
-            {/* 헤더 */}
-            <div className={cn('rounded-xl border px-4 py-3', C.bg, C.border, C.text)}>
-              <div className="mb-1 font-mono text-[10px] font-bold uppercase tracking-wider opacity-60">
-                {t.categoryLabel}
-              </div>
-              <div className="font-mono text-xl font-black">{item.name}</div>
-              <div className={cn('mt-1.5 inline-block rounded border px-2 py-0.5 font-mono text-[11px]', C.active)}>
-                {item.signature}
-              </div>
-            </div>
-
-            {/* 설명 */}
-            <div className="rounded-xl border bg-card px-4 py-3">
-              {item.desc[lang].split('\n\n').map((para, i) => (
-                <Prose key={i}>{para}</Prose>
-              ))}
-              {item.tzInfo && (
-                <div className="mt-1">
-                  <TermPopup
-                    label={lang === 'ko' ? '타임존이란?' : 'What is a Timezone?'}
-                    title={lang === 'ko' ? '타임존이란?' : 'What is a Timezone?'}
-                    icon="🌏"
-                    color="info"
-                    open={tzModalOpen}
-                    onOpen={() => setTzModalOpen(true)}
-                    onClose={() => setTzModalOpen(false)}
-                  >
-                    <span style={{ whiteSpace: 'pre-line' }}>{item.tzInfo[lang]}</span>
-                  </TermPopup>
-                </div>
-              )}
-            </div>
-
-            {/* DUAL 설명 InfoBox (SYSDATE 항목에만) */}
-            {item.dualInfo && (
-              <InfoBox variant="note" lang={lang}>
-                {item.dualInfo[lang]}
-              </InfoBox>
-            )}
-
-            {/* 예시 쿼리 */}
-            <div>
-              <p className="mb-1.5 font-mono text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-                {t.exampleQuery}
-              </p>
-              <div className={cn('rounded-xl border px-4 py-3', C.code)}>
-                <SqlHighlight sql={item.example} />
-              </div>
-            </div>
-
-            {/* 실행 결과 */}
-            <div>
-              <p className="mb-2 font-mono text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-                {t.result}
-              </p>
-              <ResultTable headers={item.resultHeaders} rows={item.resultRows} />
-            </div>
-
-            {/* SYSDATE → TIMESTAMP 변환 예시 */}
-            {item.castExample && (
-              <div>
-                <p className="mb-1.5 font-mono text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-                  {lang === 'ko' ? 'SYSDATE ↔ TIMESTAMP 변환' : 'SYSDATE ↔ TIMESTAMP Conversion'}
-                </p>
-                <div className={cn('rounded-xl border px-4 py-3 mb-3', C.code)}>
-                  <SqlHighlight sql={item.castExample.sql} />
-                </div>
-                <ResultTable headers={item.castExample.headers} rows={item.castExample.rows} />
-              </div>
-            )}
-
-            {/* 산술 연산 표 */}
-            {item.arith && (
-              <ArithTable title={item.arith.title} rows={item.arith.rows} lang={lang} />
-            )}
-
-            {/* SYSTIMESTAMP 끼리의 연산 예시 */}
-            {item.arith2 && (
-              <div>
-                <p className="mb-1.5 font-mono text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-                  {t.arith2Title}
-                </p>
-                <div className={cn('mb-3 rounded-xl border px-4 py-3', C.code)}>
-                  <SqlHighlight sql={
-                    "-- 두 SYSTIMESTAMP 값 사이의 경과 시간 측정\nSELECT ts_end - ts_start                              AS diff_interval,\n       EXTRACT(MINUTE FROM ts_end - ts_start)          AS diff_min,\n       EXTRACT(SECOND FROM ts_end - ts_start)          AS diff_sec\nFROM (\n  SELECT SYSTIMESTAMP                          AS ts_start,\n         SYSTIMESTAMP + INTERVAL '0:2:35.847' MINUTE TO SECOND AS ts_end\n  FROM DUAL\n)"
-                  } />
-                </div>
-                <ArithTable title={item.arith2.title} rows={item.arith2.rows} lang={lang} />
-              </div>
-            )}
-
-            {/* 타임존 변환 (SYSTIMESTAMP 항목 내) */}
-            {item.tzConvert && (
-              <>
-                <Divider />
-                <div>
-                  <p className="mb-2 font-mono text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-                    {t.tzConvertTitle}
-                  </p>
-                  <div className="mb-3 rounded-xl border bg-card px-4 py-3">
-                    <Prose>{item.tzConvert.desc[lang]}</Prose>
-                  </div>
-                  <div className={cn('mb-3 rounded-xl border px-4 py-3', C.code)}>
-                    <SqlHighlight sql={item.tzConvert.example} />
-                  </div>
-                  <ResultTable headers={item.tzConvert.resultHeaders} rows={item.tzConvert.resultRows} />
-                </div>
-
-                {item.tzConvert.tzSetup.map((block) => (
-                  <div key={block.title.ko}>
-                    <p className="mb-1.5 font-mono text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-                      {block.title[lang]}
-                    </p>
-                    <div className={cn('overflow-x-auto rounded-xl border px-4 py-3', C.code)}>
-                      <table className="w-full text-xs">
-                        <tbody>
-                          {block.lines.map((line, i) => (
-                            <tr key={i}>
-                              <td className="whitespace-nowrap py-0.5 pr-4 font-mono text-[11px] text-blue-700">
-                                {line.code}
-                              </td>
-                              {line.comment[lang] && (
-                                <td className="py-0.5 font-mono text-[11px] text-muted-foreground">
-                                  {`-- ${line.comment[lang]}`}
-                                </td>
-                              )}
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                ))}
-              </>
-            )}
-
-            {/* 포맷 마스크 표 */}
-            {item.formatMasks && (
-              <FormatMaskTable title={item.formatMasks.title} rows={item.formatMasks.rows} lang={lang} />
-            )}
-
-            {/* vs 비교 노트 */}
-            {item.vsNote && (
-              <InfoBox variant="warning" lang={lang}>
-                {item.vsNote[lang]}
-              </InfoBox>
-            )}
-
-            {/* NLS 설명 InfoBox (SYSDATE 항목에만) */}
-            {item.nlsNote && (
-              <InfoBox variant="tip" lang={lang}>
-                <span style={{ whiteSpace: 'pre-line' }}>{item.nlsNote[lang]}</span>
-              </InfoBox>
-            )}
-
-            {/* 참고 */}
-            {item.note && (
-              <>
-                <Divider />
-                <div className={cn('rounded-xl border px-4 py-3 text-xs leading-relaxed', C.bg, C.border, C.text)}>
-                  <span className="mr-1.5 font-bold">💡</span>{item.note[lang]}
-                </div>
-              </>
-            )}
-          </motion.div>
-        </AnimatePresence>
+      <div className="flex flex-col gap-2">
+        {FUNC_ITEMS.map((item, idx) => (
+          <AccordionSection key={item.name} title={`${item.name}  —  ${item.signature}`} defaultOpen={idx === 0}>
+            <FuncContent item={item} lang={lang} t={t} />
+          </AccordionSection>
+        ))}
       </div>
     </PageContainer>
   )

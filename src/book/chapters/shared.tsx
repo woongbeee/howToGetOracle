@@ -3,20 +3,32 @@ import { type ReactNode, useEffect, useRef, useState } from 'react'
 import { cn } from '@/lib/utils'
 import { useSimulationStore } from '@/store/simulationStore'
 import { SqlHighlight } from './sql-basics/dml-more/SqlHighlight'
+import {
+  IconBulb,
+  IconPin,
+  IconAlertTriangle,
+  IconTool,
+  IconRuler2,
+  IconAlertCircle,
+  IconHammer,
+  IconChevronDown,
+  IconChevronUp,
+  IconX,
+} from '@tabler/icons-react'
 
 export function WipBanner() {
   const lang = useSimulationStore((s) => s.lang)
   return (
     <div className="mb-6 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50/70 px-4 py-3 dark:border-amber-800/40 dark:bg-amber-950/20">
-      <span className="mt-0.5 text-lg leading-none">🚧</span>
+      <IconHammer size={18} className="mt-0.5 shrink-0 text-amber-600" />
       <div>
         <p className="font-mono text-[11px] font-bold text-amber-700 dark:text-amber-400">
-          {lang === 'ko' ? 'Work In Progress' : 'Work In Progress'}
+          Work In Progress
         </p>
         <p className="mt-0.5 font-mono text-[11px] leading-relaxed text-amber-600/80 dark:text-amber-500/70">
           {lang === 'ko'
-            ? '이 챕터는 아직 작성 중이에요. 내용이 불완전하거나 변경될 수 있습니다. 🐣'
-            : "This chapter is still being written. Content may be incomplete or change. 🐣"}
+            ? '이 챕터는 아직 작성 중이에요. 내용이 불완전하거나 변경될 수 있습니다.'
+            : 'This chapter is still being written. Content may be incomplete or change.'}
         </p>
       </div>
     </div>
@@ -31,10 +43,13 @@ export function PageContainer({ children, className }: { children: ReactNode; cl
   )
 }
 
-export function ChapterTitle({ title, subtitle }: { icon?: string; num?: number; title: string; subtitle?: string }) {
+export function ChapterTitle({ icon, title, subtitle }: { icon?: ReactNode; num?: number; title: string; subtitle?: string }) {
   return (
     <div className="mb-5">
-      <h1 className="text-3xl font-bold tracking-tight leading-tight">{title}</h1>
+      <div className="flex items-center gap-3">
+        {icon && <span className="shrink-0">{icon}</span>}
+        <h1 className="text-3xl font-bold tracking-tight leading-tight">{title}</h1>
+      </div>
       {subtitle && <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{subtitle}</p>}
     </div>
   )
@@ -63,18 +78,26 @@ type InfoColor   = 'info' | 'tip' | 'warning' | 'danger'
 
 interface VariantDef {
   color: string
-  icon:  string
   ko:    string
   en:    string
 }
 
+const VARIANT_ICON: Record<InfoVariant, ReactNode> = {
+  tip:     <IconBulb          size={13} color="#e11d48" stroke={2} />,
+  note:    <IconPin           size={13} color="#ea580c" stroke={2} />,
+  warning: <IconAlertTriangle size={13} color="#1d4ed8" stroke={2} />,
+  usage:   <IconTool          size={13} color="#7c3aed" stroke={2} />,
+  summary: <IconRuler2        size={13} color="#ea580c" stroke={2} />,
+  danger:  <IconAlertCircle   size={13} color="#0891b2" stroke={2} />,
+}
+
 const VARIANT_DEFS: Record<InfoVariant, VariantDef> = {
-  tip:     { color: 'bg-ios-teal-light   border-ios-teal/20   text-ios-teal-dark',   icon: '💡', ko: '더 알아보기',        en: 'Advanced' },
-  note:    { color: 'bg-ios-blue-light   border-ios-blue/20   text-ios-blue-dark',   icon: '📌', ko: '참고',              en: 'Note' },
-  warning: { color: 'bg-ios-orange-light border-ios-orange/25 text-ios-orange-dark', icon: '⚠️', ko: '주의',              en: 'Caution' },
-  usage:   { color: 'bg-ios-green-light  border-ios-green/20  text-ios-green-dark',  icon: '🛠️', ko: '어디서 사용할까?',   en: 'When to Use' },
-  summary: { color: 'bg-ios-blue-light   border-ios-blue/20   text-ios-blue-dark',   icon: '📐', ko: '핵심 정리',          en: 'Summary' },
-  danger:  { color: 'bg-ios-red-light    border-ios-red/20    text-ios-red-dark',    icon: '🚨', ko: '위험',              en: 'Danger' },
+  tip:     { color: 'bg-ios-teal-light   border-ios-teal/20   text-ios-teal-dark',   ko: '더 알아보기',        en: 'Advanced' },
+  note:    { color: 'bg-ios-blue-light   border-ios-blue/20   text-ios-blue-dark',   ko: '참고',              en: 'Note' },
+  warning: { color: 'bg-ios-orange-light border-ios-orange/25 text-ios-orange-dark', ko: '주의',              en: 'Caution' },
+  usage:   { color: 'bg-ios-green-light  border-ios-green/20  text-ios-green-dark',  ko: '어디서 사용할까?',   en: 'When to Use' },
+  summary: { color: 'bg-ios-blue-light   border-ios-blue/20   text-ios-blue-dark',   ko: '핵심 정리',          en: 'Summary' },
+  danger:  { color: 'bg-ios-red-light    border-ios-red/20    text-ios-red-dark',    ko: '위험',              en: 'Danger' },
 }
 
 const LEGACY_COLOR: Record<InfoColor, string> = {
@@ -98,7 +121,7 @@ export function InfoBox({ variant, lang, color, icon, title, children }: {
     return (
       <div className={cn('mt-4 mb-4 rounded-lg border p-4', def.color)}>
         <div className="mb-1.5 flex items-center gap-1.5 font-mono text-xs font-bold uppercase tracking-wider">
-          <span>{def.icon}</span>
+          {VARIANT_ICON[variant]}
           {def[l]}
         </div>
         <div className="text-xs leading-relaxed">{children}</div>
@@ -149,7 +172,7 @@ export function Table({ headers, rows }: { headers: string[]; rows: string[][] }
   )
 }
 
-export function ConceptGrid({ items }: { items: Array<{ icon: string; title: string; desc: string; color?: string }> }) {
+export function ConceptGrid({ items }: { items: Array<{ icon: ReactNode; title: string; desc: string; color?: string }> }) {
   const colorMap: Record<string, string> = {
     info:    'border-ios-blue/20 bg-ios-blue-light/60',
     tip:     'border-ios-teal/20 bg-ios-teal-light/60',
@@ -220,9 +243,10 @@ export function AccordionSection({
         className="flex w-full items-center justify-between px-5 py-4 text-left transition-colors duration-150"
       >
         <span className="text-base font-bold tracking-tight">{title}</span>
-        <span className={cn('font-mono text-sm text-muted-foreground transition-transform duration-200', open && 'rotate-180')}>
-          ▾
-        </span>
+        <IconChevronDown
+          size={16}
+          className={cn('shrink-0 text-muted-foreground transition-transform duration-200', open && 'rotate-180')}
+        />
       </button>
       <div className="border-b" />
       {open && <div className="px-5 py-5">{children}</div>}
@@ -344,7 +368,7 @@ export function TermPopup({ label, title, icon, color = 'tip', open, onOpen, onC
       >
         {icon && <span>{icon}</span>}
         {label}
-        <span className="opacity-50">{open ? '▲' : '▼'}</span>
+        {open ? <IconChevronUp size={11} className="opacity-50" /> : <IconChevronDown size={11} className="opacity-50" />}
       </button>
 
       {open && (
@@ -362,10 +386,10 @@ export function TermPopup({ label, title, icon, color = 'tip', open, onOpen, onC
               <span className="font-mono text-xs font-bold">{title}</span>
               <button
                 onClick={onClose}
-                className="ml-auto text-[11px] opacity-50 hover:opacity-100"
+                className="ml-auto opacity-50 hover:opacity-100"
                 aria-label="닫기"
               >
-                ✕
+                <IconX size={13} />
               </button>
             </div>
             <div className="px-4 py-3.5 text-xs leading-relaxed text-gray-700">

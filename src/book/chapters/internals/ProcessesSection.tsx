@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useSimulationStore } from '@/store/simulationStore'
 import type { InstanceComponentId } from './OracleInstanceMap'
-import { ChapterTitle, InfoBox, Table } from '../shared'
+import { ChapterTitle, InfoBox, Table, WipBanner } from '../shared'
 import { TwoColLayout, MapPanel, TourPanel } from './shared'
 import type { TourItem } from './shared'
 
@@ -86,6 +86,7 @@ export function ProcessesSection() {
         />
       }
     >
+      <WipBanner />
       <ChapterTitle title={t.processTitle} subtitle={t.processDesc} />
 
       <TourPanel

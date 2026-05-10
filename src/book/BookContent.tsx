@@ -1,10 +1,12 @@
 import { memo, useMemo } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useSimulationStore } from '@/store/simulationStore'
-import { getAdjacentSections, getSectionById } from './bookStructure'
+import { getAdjacentSections, getSectionById } from './bookStructure.tsx'
 import { cn } from '@/lib/utils'
+import { IconArrowLeft, IconArrowRight, IconChevronRight } from '@tabler/icons-react'
 
 // Chapter pages
+import { IntroductionPage } from './chapters/introduction/IntroductionPage'
 import { SqlBasicsPage } from './chapters/sql-basics'
 import { InternalsPage } from './chapters/internals'
 import { IndexChapterPage } from './chapters/chapter3'
@@ -50,10 +52,11 @@ export const BookContent = memo(function BookContent({ sectionId, onNavigate }: 
     <div className="flex h-full flex-col overflow-hidden">
       {/* Breadcrumb */}
       <div className="flex h-[35px] shrink-0 items-center gap-1.5 border-b bg-muted/30 px-6">
-        <span className={cn('font-mono text-[10px] font-medium', c.text)}>
-          {chapter.icon} {chapter.num.toString().padStart(2, '0')}. {chapter.title[lang]}
+        <span className={cn('flex items-center gap-1 font-mono text-[10px] font-medium', c.text)}>
+          {chapter.icon}
+          {chapter.num > 0 ? `${chapter.num.toString().padStart(2, '0')}.` : ''} {chapter.title[lang]}
         </span>
-        <span className="font-mono text-[10px] text-muted-foreground/50">›</span>
+        <IconChevronRight size={11} className="text-muted-foreground/50" />
         <span className="font-mono text-[10px] text-muted-foreground">
           {info.section.title[lang]}
         </span>
@@ -83,7 +86,7 @@ export const BookContent = memo(function BookContent({ sectionId, onNavigate }: 
               onClick={() => onNavigate(adjacent.prev!.section.id)}
               className="group flex items-center gap-2 text-left"
             >
-              <span className="font-mono text-xs text-muted-foreground transition-colors group-hover:text-foreground">←</span>
+              <IconArrowLeft size={14} className="text-muted-foreground transition-colors group-hover:text-foreground" />
               <div className="flex flex-col">
                 <span className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground/50">
                   {lang === 'ko' ? '이전' : 'Previous'}
@@ -110,7 +113,7 @@ export const BookContent = memo(function BookContent({ sectionId, onNavigate }: 
                   {adjacent.next.section.title[lang]}
                 </span>
               </div>
-              <span className="font-mono text-xs text-muted-foreground transition-colors group-hover:text-foreground">→</span>
+              <IconArrowRight size={14} className="text-muted-foreground transition-colors group-hover:text-foreground" />
             </button>
           )}
         </div>
@@ -121,6 +124,7 @@ export const BookContent = memo(function BookContent({ sectionId, onNavigate }: 
 
 // Route each sectionId to the right chapter page component
 function SectionRouter({ sectionId }: { sectionId: string }) {
+  if (sectionId.startsWith('intro-'))      return <IntroductionPage />
   if (sectionId.startsWith('sql-basics-'))  return <SqlBasicsPage sectionId={sectionId} />
   if (sectionId.startsWith('internals-')) return <InternalsPage sectionId={sectionId} />
   if (sectionId.startsWith('index-'))     return <IndexChapterPage sectionId={sectionId} />

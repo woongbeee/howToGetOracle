@@ -2,6 +2,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useSimulationStore } from '@/store/simulationStore'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { IconLanguage, IconBook2, IconArrowRight, IconExternalLink } from '@tabler/icons-react'
 
 const T = {
   ko: {
@@ -70,7 +71,7 @@ export function LandingPage({ onEnter }: Props) {
             'transition-colors hover:bg-accent hover:text-foreground'
           )}
         >
-          <span className="text-[10px]">🌐</span>
+          <IconLanguage size={13} />
           <AnimatePresence mode="wait">
             <motion.span
               key={lang}
@@ -139,7 +140,7 @@ export function LandingPage({ onEnter }: Props) {
               onClick={onEnter}
               className="relative h-13 gap-3 rounded-[10px] px-10 font-mono text-base font-bold transition-transform duration-150 hover:scale-[1.03] active:scale-[0.97]"
             >
-              <span>📖</span>
+              <IconBook2 size={18} />
               <AnimatePresence mode="wait">
                 <motion.span key={`${lang}-cta`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }}>
                   {t.cta}
@@ -149,7 +150,7 @@ export function LandingPage({ onEnter }: Props) {
                 animate={{ x: [0, 4, 0] }}
                 transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
               >
-                →
+                <IconArrowRight size={16} />
               </motion.span>
             </Button>
           </div>
@@ -189,7 +190,7 @@ export function LandingPage({ onEnter }: Props) {
           className="mt-1.5 inline-flex items-center gap-1 font-mono text-[11px] text-muted-foreground/40 transition-colors hover:text-muted-foreground"
         >
           created by <span className="font-semibold">Woongbee</span>
-          <span className="text-[10px]">↗</span>
+          <IconExternalLink size={11} />
         </a>
       </footer>
     </div>
