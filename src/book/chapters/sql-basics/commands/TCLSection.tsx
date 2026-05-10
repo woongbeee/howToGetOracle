@@ -7,6 +7,7 @@ import {
   Table,
   AccordionSection,
 } from '../../shared'
+import { useSimulationStore } from '@/store/simulationStore'
 import { IconGitCommit } from '@tabler/icons-react'
 
 const T = {
@@ -182,7 +183,8 @@ COMMIT;`,
   },
 }
 
-export function TCLSection({ lang }: { lang: 'ko' | 'en' }) {
+export function TCLSection() {
+  const lang = useSimulationStore((s) => s.lang)
   const t = T[lang]
   return (
     <PageContainer>
@@ -196,7 +198,7 @@ export function TCLSection({ lang }: { lang: 'ko' | 'en' }) {
             {lang === 'ko' ? 'ACID 특성' : 'ACID Properties'}
           </p>
           <Table headers={t.txPropHeaders} rows={t.txPropRows} />
-          <InfoBox variant="note" lang={lang}>
+          <InfoBox variant="note">
             <span style={{ whiteSpace: 'pre-line' }}>{t.txNote}</span>
           </InfoBox>
         </AccordionSection>
@@ -205,7 +207,7 @@ export function TCLSection({ lang }: { lang: 'ko' | 'en' }) {
         <AccordionSection title={t.commitTitle}>
           <Prose>{t.commitDesc}</Prose>
           <SqlBlock sql={t.commitExample} />
-          <InfoBox variant="warning" lang={lang}>
+          <InfoBox variant="warning">
             {t.commitTip}
           </InfoBox>
         </AccordionSection>
@@ -220,7 +222,7 @@ export function TCLSection({ lang }: { lang: 'ko' | 'en' }) {
         <AccordionSection title={t.savepointTitle}>
           <Prose>{t.savepointDesc}</Prose>
           <SqlBlock sql={t.savepointExample} />
-          <InfoBox variant="tip" lang={lang}>
+          <InfoBox variant="tip">
             {t.savepointTip}
           </InfoBox>
         </AccordionSection>

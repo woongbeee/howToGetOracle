@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { useSimulationStore, type Lang } from '@/store/simulationStore'
+import { useSimulationStore } from '@/store/simulationStore'
 import {
   PageContainer, ChapterTitle, SectionTitle, Prose,
   InfoBox, Table, ConceptGrid, SimulatorPlaceholder, Divider, WipBanner
@@ -97,25 +97,26 @@ export function PartitionPage({ sectionId }: { sectionId: string }) {
             rows={t.typeTable}
           />
           <Divider />
-          <PartitionVisual lang={lang} />
+          <PartitionVisual />
         </>
       )}
       {sectionId === 'partition-pruning' && (
         <>
           <SectionTitle>{t.pruningTitle}</SectionTitle>
           <Prose>{t.pruningDesc}</Prose>
-          <InfoBox variant="tip" lang={lang}>
+          <InfoBox variant="tip">
             {t.pruningInfo}
           </InfoBox>
           <Divider />
-          <PruningDemo lang={lang} />
+          <PruningDemo />
         </>
       )}
     </PageContainer>
   )
 }
 
-function PartitionVisual({ lang }: { lang: Lang }) {
+function PartitionVisual() {
+  const lang = useSimulationStore((s) => s.lang)
   const partitions = [
     { label: lang === 'ko' ? '2023-Q1' : '2023-Q1', range: 'Jan~Mar 2023', color: 'bg-blue-50 border-blue-200' },
     { label: lang === 'ko' ? '2023-Q2' : '2023-Q2', range: 'Apr~Jun 2023', color: 'bg-violet-50 border-violet-200' },
@@ -146,7 +147,8 @@ function PartitionVisual({ lang }: { lang: Lang }) {
   )
 }
 
-function PruningDemo({ lang }: { lang: Lang }) {
+function PruningDemo() {
+  const lang = useSimulationStore((s) => s.lang)
   const [activeQ, setActiveQ] = useState(0)
   const queries = [
     {

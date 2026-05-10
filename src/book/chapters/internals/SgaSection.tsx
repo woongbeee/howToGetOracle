@@ -155,7 +155,7 @@ export function SgaSection() {
       />
 
       <Table headers={[t.tableHeaderComponent, t.tableHeaderRole]} rows={t.sgaComponents} />
-      <InfoBox variant="tip" lang={lang}>{t.sgaInfo}</InfoBox>
+      <InfoBox variant="tip">{t.sgaInfo}</InfoBox>
 
       <Divider />
       <SubTitle>{t.bufferCacheTitle}</SubTitle>

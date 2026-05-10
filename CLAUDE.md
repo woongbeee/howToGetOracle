@@ -4,9 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 프로젝트 개요
 
-사용자와 상호작용하는 Dynamic Oracle 교육서. 좌측 사이드바 목차(TOC)에서 9개 챕터를 탐색하고, 각 섹션에서 개념 설명 + 인터랙티브 애니메이션 + 챕터별 시뮬레이터를 통해 Oracle 내부를 학습한다.
+사용자와 상호작용하는 Dynamic Oracle 교육서. 좌측 사이드바 목차(TOC)에서 챕터를 탐색하고, 각 섹션에서 개념 설명 + 인터랙티브 애니메이션 + 챕터별 시뮬레이터를 통해 Oracle 내부를 학습한다.
 
-**9개 챕터:** SQL 기본 문법 → 인덱스 → 조인 → 옵티마이저 → 쿼리 변환 → 소트 튜닝 → 파티셔닝 → 병렬 처리 → 오라클 내부 구조·프로세스
+**챕터 구성 (num 0~9):** 오라클이란?(0) → SQL 기본 문법(1) → 오라클 내부 구조·프로세스(2) → 인덱스(3) → 조인(4) → 옵티마이저(5) → 쿼리 변환(6) → 소트 튜닝(7) → 파티셔닝(8) → 병렬 처리(9)
 
 ## 명령어
 
@@ -49,12 +49,14 @@ interface Props {
 
 `BookSection`은 `children?: BookSection[]`을 가질 수 있어 2단계 계층 구조를 지원한다. `flattenSections()`가 children을 포함해 평탄화하므로 `getSectionById()`·`getAdjacentSections()`·Prev/Next 모두 children까지 올바르게 동작한다. **현재 최대 2단계(부모-자식)까지만 지원**하며, 자식 섹션이 다시 children을 가지는 3단계 구조는 `flattenSections()`가 처리하지 않는다.
 
-앱 첫 진입 시 활성 섹션은 `sql-basics-ddl-dml-dcl` (Chapter 1 첫 섹션, `BookLayout.tsx`의 `useState` 초기값).
+앱 첫 진입 시 활성 섹션은 `intro-overview` (Chapter 0 첫 섹션, `BookLayout.tsx`의 `useState` 초기값).
 
 현재 `SectionRouter` 접두사 → 컴포넌트 매핑:
 | 접두사 | 컴포넌트 | 진입점 |
 |--------|----------|--------|
+| `intro-` | `IntroductionPage` | `src/book/chapters/introduction/IntroductionPage.tsx` |
 | `sql-basics-` | `SqlBasicsPage` | `src/book/chapters/sql-basics/index.tsx` |
+| `internals-` | `InternalsPage` | `src/book/chapters/internals/index.tsx` |
 | `index-` | `IndexChapterPage` | `src/book/chapters/chapter3/index.tsx` |
 | `join-` | `JoinPage` | `src/book/chapters/join/index.tsx` |
 | `optimizer-` | `OptimizerChapterPage` | `src/book/chapters/optimizer/index.tsx` |
@@ -62,7 +64,6 @@ interface Props {
 | `sort-` | `SortPage` | `src/book/chapters/sort/index.tsx` |
 | `partition-` | `PartitionPage` | `src/book/chapters/partition/index.tsx` |
 | `parallel-` | `ParallelPage` | `src/book/chapters/parallel/index.tsx` |
-| `internals-` | `InternalsPage` | `src/book/chapters/internals/index.tsx` |
 
 각 챕터 페이지는 `sectionId`를 받아 내부적으로 `if/switch`로 섹션별 콘텐츠를 분기한다.
 
@@ -125,18 +126,18 @@ Internals 시뮬레이터를 구성하는 핵심 컴포넌트들:
 - `OptimizerPanel.tsx` — CBO 실행 계획 3단계 시각화
 - `DataPanel.tsx` — 스키마·샘플 데이터 브라우저 (`SchemaView`, `TableView` named export)
 - `SchemaDiagram.tsx` — React Flow 기반 ERD
-- `components/index/` — 현재 존재하지 않음. Index 챕터 전용 서브 컴포넌트들(`BTreeSection`, `BitmapSection`, `CompositeSection`, `IndexTypesOverview`)은 `src/book/chapters/chapter3/`에 위치. `IndexPage.tsx`는 현재 미사용(dead code)
+- Index 챕터 전용 서브 컴포넌트들(`BTreeSection`, `BitmapSection`, `CompositeSection`, `IndexTypesOverview`)은 `src/book/chapters/chapter3/`에 위치. `IndexPage.tsx`도 같은 폴더에 존재하지만 미사용(dead code); 실제 진입점은 `index.tsx`의 `IndexChapterPage`
 
 ### 데이터 스키마 (`src/data/`)
 
 - `types.ts` — 공유 TypeScript 인터페이스: `SchemaTable`, `Schema`, `ColumnDef`, `ForeignKey`, `RowData`. `hrSchema`·`coSchema`·`SchemaDiagram` 등이 이 타입을 공통으로 사용
 - `hrSchema.ts` — HR 스키마 7개 테이블 + 샘플 데이터
 - `coSchema.ts` — CO(Customer Orders) 스키마 5개 테이블 + 샘플 데이터
-- `largeDataGenerator.ts` — IndexPage용 대용량 가상 데이터 생성기 (Mulberry32 PRNG, 시드 기반). 모듈 import 시 1회 생성 후 캐시됨
+- `largeDataGenerator.ts` — 대용량 가상 데이터 생성기 (Mulberry32 PRNG, 시드 기반). `BitmapSection` 등 Index 챕터 서브 컴포넌트에서 사용. 모듈 import 시 1회 생성 후 캐시됨
 - `index.ts` — 배럴 파일. `SCHEMAS`, `SAMPLE_QUERIES`, 두 스키마, `largeDataGenerator`를 re-export
 - `dataset.ts` — 삭제됨. `hrSchema`/`coSchema`가 유일한 데이터 소스임
 
-`sql-basics/shared.ts`는 `sql-basics` 챕터 전용 공유 헬퍼다: `Employee` / `ExampleQuery` / `ExecStep` 인터페이스, `EMPLOYEES` 샘플 데이터 배열, 섹션 간에 공통으로 쓰이는 순수 유틸 함수들이 정의되어 있다.
+`src/book/chapters/sql-basics/dml-more/shared.ts`는 `sql-basics` 챕터 전용 공유 헬퍼다: `Employee` / `ExampleQuery` / `ExecStep` 인터페이스, `EMPLOYEES` 샘플 데이터 배열, 섹션 간에 공통으로 쓰이는 순수 유틸 함수들이 정의되어 있다.
 
 ### 용어 사전 (`src/data/glossary.ts`, `src/book/GlossaryPanel.tsx`)
 
@@ -162,7 +163,7 @@ const T = {
 
 ### 복잡한 챕터의 서브 컴포넌트 분리
 
-콘텐츠가 많은 챕터(Index 등)는 섹션별 서브 컴포넌트를 `src/components/<챕터명>/`에 분리한다. 예: `src/components/index/` — `BTreeSection.tsx`, `BitmapSection.tsx`, `CompositeSection.tsx`, `IndexTypesOverview.tsx`. 챕터 페이지(`IndexChapterPage.tsx`)가 이를 import해 조합한다.
+콘텐츠가 많은 챕터(Index 등)는 섹션별 서브 컴포넌트를 챕터 폴더 안에 분리한다. 예: Index 챕터는 `src/book/chapters/chapter3/` 안에 `BTreeSection.tsx`, `BitmapSection.tsx`, `CompositeSection.tsx`, `IndexTypesOverview.tsx`를 둔다. 챕터 페이지(`IndexChapterPage.tsx`)가 이를 import해 조합한다.
 
 콘텐츠가 많은 챕터는 섹션별 파일로 추가 분리된다:
 

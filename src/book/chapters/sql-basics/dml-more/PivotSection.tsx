@@ -5,6 +5,7 @@ import {
 } from '../../shared'
 import { IconLayoutColumns } from '@tabler/icons-react'
 import { SqlHighlight } from './SqlHighlight'
+import { useSimulationStore } from '@/store/simulationStore'
 import { EMPLOYEES } from './shared'
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -219,7 +220,8 @@ function UnpivotTable() {
 
 // ── Main component ─────────────────────────────────────────────────────────
 
-export function PivotSection({ lang }: { lang: 'ko' | 'en' }) {
+export function PivotSection() {
+  const lang = useSimulationStore((s) => s.lang)
   const t = T[lang]
   const [tab, setTab] = useState<Tab>('pivot')
 
@@ -255,7 +257,7 @@ export function PivotSection({ lang }: { lang: 'ko' | 'en' }) {
         <>
           <SectionTitle>{t.pivotTitle}</SectionTitle>
           <Prose>{t.pivotDesc}</Prose>
-          <InfoBox variant="summary" lang={lang}>
+          <InfoBox variant="summary">
             {t.pivotInfo}
           </InfoBox>
 
@@ -288,7 +290,7 @@ export function PivotSection({ lang }: { lang: 'ko' | 'en' }) {
           <div className="mb-4">
             <PivotTable />
           </div>
-          <InfoBox variant="note" lang={lang}>
+          <InfoBox variant="note">
             {t.pivotInfo}
           </InfoBox>
         </>
@@ -299,7 +301,7 @@ export function PivotSection({ lang }: { lang: 'ko' | 'en' }) {
         <>
           <SectionTitle>{t.unpivotTitle}</SectionTitle>
           <Prose>{t.unpivotDesc}</Prose>
-          <InfoBox variant="summary" lang={lang}>
+          <InfoBox variant="summary">
             {t.unpivotInfo}
           </InfoBox>
 
@@ -350,7 +352,7 @@ export function PivotSection({ lang }: { lang: 'ko' | 'en' }) {
             </table>
           </div>
 
-          <InfoBox variant="tip" lang={lang}>
+          <InfoBox variant="tip">
             {t.unpivotNullTip}
           </InfoBox>
         </>

@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import { PageContainer, ChapterTitle, Prose, Divider } from '../../shared'
 import { SqlHighlight } from './SqlHighlight'
+import { useSimulationStore } from '@/store/simulationStore'
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -189,7 +190,8 @@ function MiniTable({ headers, rows, highlightLast }: {
 
 // ── FunctionsSection ────────────────────────────────────────────────────────
 
-export function FunctionsSection({ lang }: { lang: 'ko' | 'en' }) {
+export function FunctionsSection() {
+  const lang = useSimulationStore((s) => s.lang)
   const [openItem, setOpenItem] = useState<string>(FUNC_ITEMS[0].name)
   const item = FUNC_ITEMS.find((f) => f.name === openItem)!
 

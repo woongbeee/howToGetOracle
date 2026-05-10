@@ -4,6 +4,7 @@ import {
 } from '../../shared'
 import { IconGitMerge, IconRefresh, IconPackageImport, IconTrash } from '@tabler/icons-react'
 import { SqlHighlight } from './SqlHighlight'
+import { useSimulationStore } from '@/store/simulationStore'
 
 const T = {
   ko: {
@@ -122,7 +123,6 @@ const T = {
   },
 }
 
-export { T as MergeT }
 
 // ── Data ──────────────────────────────────────────────────────────────────────
 
@@ -534,14 +534,15 @@ function MergeTables2({ t }: { t: typeof T['ko'] }) {
 
 // ── Main component ─────────────────────────────────────────────────────────────
 
-export function MergeSection({ lang }: { lang: 'ko' | 'en' }) {
+export function MergeSection() {
+  const lang = useSimulationStore((s) => s.lang)
   const t = T[lang]
 
   return (
     <PageContainer className="max-w-5xl">
       <ChapterTitle icon={<IconGitMerge size={36} color="#ec4899" stroke={1.5} />} title={t.chapterTitle} subtitle={t.chapterSubtitle} />
 
-      <InfoBox variant="usage" lang={lang}>
+      <InfoBox variant="usage">
         <div className="flex flex-col gap-2 mt-1">
           {t.usecases.map((u, i) => (
             <div key={i} className="flex gap-2 items-start">
@@ -610,7 +611,7 @@ export function MergeSection({ lang }: { lang: 'ko' | 'en' }) {
       {/* ON column restriction */}
       <SectionTitle>{t.onColumnTitle}</SectionTitle>
       <Prose>{t.onColumnDesc}</Prose>
-      <InfoBox variant="note" lang={lang}>
+      <InfoBox variant="note">
         <span>{t.onColumnWhy}</span>
       </InfoBox>
 
@@ -641,7 +642,7 @@ export function MergeSection({ lang }: { lang: 'ko' | 'en' }) {
       <Divider />
 
       {/* Notes */}
-      <InfoBox variant="warning" lang={lang}>
+      <InfoBox variant="warning">
         <ul className="flex flex-col gap-1 mt-1 list-disc list-inside">
           {t.noteItems.map((item, i) => (
             <li key={i}>{item}</li>

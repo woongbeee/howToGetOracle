@@ -2,6 +2,7 @@ import {
   PageContainer, ChapterTitle, SectionTitle,
   Prose, InfoBox, Divider,
 } from '../../shared'
+import { useSimulationStore } from '@/store/simulationStore'
 import { IconSortAscending } from '@tabler/icons-react'
 import { CLAUSE_DEMOS } from './shared'
 import { ClickableSyntaxRow, SyntaxRow } from './MiniSimulator'
@@ -65,7 +66,9 @@ const T = {
   },
 }
 
-export function ClausesSection({ lang, t }: { lang: 'ko' | 'en'; t: typeof T['ko'] }) {
+export function ClausesSection() {
+  const lang = useSimulationStore((s) => s.lang)
+  const t = T[lang]
   const orderByDemo = CLAUSE_DEMOS.find((d) => d.sectionKey === 'orderby')!
   const groupByDemo = CLAUSE_DEMOS.find((d) => d.sectionKey === 'groupby')!
   const havingDemo  = CLAUSE_DEMOS.find((d) => d.sectionKey === 'having')!
@@ -80,7 +83,6 @@ export function ClausesSection({ lang, t }: { lang: 'ko' | 'en'; t: typeof T['ko
 
       {/* ── ORDER BY ── */}
       <ClickableSyntaxRow
-        lang={lang}
         demo={orderByDemo}
         header={t.orderByOps[0]}
         rows={t.orderByOps.slice(1)}
@@ -96,7 +98,6 @@ export function ClausesSection({ lang, t }: { lang: 'ko' | 'en'; t: typeof T['ko
 
       {/* ── GROUP BY ── */}
       <ClickableSyntaxRow
-        lang={lang}
         demo={groupByDemo}
         header={t.groupByOps[0]}
         rows={t.groupByOps.slice(1)}
@@ -107,7 +108,7 @@ export function ClausesSection({ lang, t }: { lang: 'ko' | 'en'; t: typeof T['ko
           </>
         }
         bottomContent={
-          <InfoBox variant="tip" lang={lang}>
+          <InfoBox variant="tip">
             {t.groupByAliasTip}
           </InfoBox>
         }
@@ -117,13 +118,12 @@ export function ClausesSection({ lang, t }: { lang: 'ko' | 'en'; t: typeof T['ko
 
       {/* ── HAVING ── */}
       <SyntaxRow
-        lang={lang}
         demo={havingDemo}
         left={
           <>
             <SectionTitle>{t.havingTitle}</SectionTitle>
             <Prose>{t.havingDesc}</Prose>
-            <InfoBox variant="tip" lang={lang}>
+            <InfoBox variant="tip">
               {t.havingTip}
             </InfoBox>
           </>
@@ -133,4 +133,3 @@ export function ClausesSection({ lang, t }: { lang: 'ko' | 'en'; t: typeof T['ko
   )
 }
 
-export { T as ClausesT }

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import type { Lang } from '@/store/simulationStore'
+import { useSimulationStore } from '@/store/simulationStore'
 import { cn } from '@/lib/utils'
 import { SectionTitle, SubTitle, Prose, InfoBox, Divider } from '../shared'
 
@@ -410,9 +410,9 @@ function StateTable({ rows, headers }: { rows: StateRow[]; headers: StateHeaders
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-interface Props { lang: Lang }
 
-export function IndexTypesOverview({ lang }: Props) {
+export function IndexTypesOverview() {
+  const lang = useSimulationStore((s) => s.lang)
   const t = T[lang]
   const [expandedType, setExpandedType] = useState<string | null>(null)
 
@@ -439,7 +439,7 @@ export function IndexTypesOverview({ lang }: Props) {
         ))}
       </div>
 
-      <InfoBox variant="note" lang={lang}>{t.noteIndependent}</InfoBox>
+      <InfoBox variant="note">{t.noteIndependent}</InfoBox>
 
       <Divider />
 
@@ -479,7 +479,7 @@ export function IndexTypesOverview({ lang }: Props) {
         ))}
       </div>
 
-      <InfoBox variant="warning" lang={lang}>{t.noteDMLCost}</InfoBox>
+      <InfoBox variant="warning">{t.noteDMLCost}</InfoBox>
 
       <Divider />
 
@@ -544,7 +544,7 @@ export function IndexTypesOverview({ lang }: Props) {
         headers={{ aspect: t.stateHeaderAspect, dml: t.stateHeaderDml, optimizer: t.stateHeaderOpt, space: t.stateHeaderSpace, use: t.stateHeaderUse }}
       />
 
-      <InfoBox variant="tip" lang={lang}>
+      <InfoBox variant="tip">
         {lang === 'ko'
           ? 'Invisible 인덱스는 DML 유지는 하면서 옵티마이저에게만 숨깁니다. 운영 중인 인덱스를 삭제하기 전에 Invisible로 전환해 성능 영향을 먼저 확인하는 용도로 활용합니다.'
           : 'An Invisible index is still maintained by DML but hidden from the optimizer. Use it to safely test the impact of dropping an index in production before actually removing it.'}
@@ -578,7 +578,7 @@ export function IndexTypesOverview({ lang }: Props) {
         ))}
       </div>
 
-      <InfoBox variant="warning" lang={lang}>{t.noteNullWarning}</InfoBox>
+      <InfoBox variant="warning">{t.noteNullWarning}</InfoBox>
 
       <Divider />
 

@@ -49,7 +49,7 @@ export function IndexChapterPage({ sectionId }: { sectionId: string }) {
   if (sectionId === 'index-overview') {
     return (
       <IndexLayout sectionId={sectionId}>
-        <IndexTypesOverview lang={lang} />
+        <IndexTypesOverview />
       </IndexLayout>
     )
   }
@@ -57,7 +57,7 @@ export function IndexChapterPage({ sectionId }: { sectionId: string }) {
   if (sectionId === 'index-btree') {
     return (
       <IndexLayout sectionId={sectionId}>
-        <BTreeSection lang={lang} />
+        <BTreeSection />
       </IndexLayout>
     )
   }
@@ -65,7 +65,7 @@ export function IndexChapterPage({ sectionId }: { sectionId: string }) {
   if (sectionId === 'index-bitmap') {
     return (
       <IndexLayout sectionId={sectionId}>
-        <BitmapSection lang={lang} />
+        <BitmapSection />
       </IndexLayout>
     )
   }
@@ -73,7 +73,7 @@ export function IndexChapterPage({ sectionId }: { sectionId: string }) {
   if (sectionId === 'index-composite') {
     return (
       <IndexLayout sectionId={sectionId}>
-        <CompositeSection lang={lang} />
+        <CompositeSection />
       </IndexLayout>
     )
   }

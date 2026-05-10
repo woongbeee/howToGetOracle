@@ -730,10 +730,10 @@ function HierarchyPage() {
       </div>
 
       <div className="flex flex-col gap-3">
-        <InfoBox variant="warning" lang={lang}>
+        <InfoBox variant="warning">
           {t.hierPriorNote}
         </InfoBox>
-        <InfoBox variant="tip" lang={lang}>
+        <InfoBox variant="tip">
           {t.hierNote}
         </InfoBox>
       </div>
@@ -841,10 +841,10 @@ export function JoinSection() {
             </div>
 
             <div className="flex flex-col gap-3">
-              <InfoBox variant="note" lang={lang}>
+              <InfoBox variant="note">
                 {t.ansiDesc}
               </InfoBox>
-              <InfoBox variant="tip" lang={lang}>
+              <InfoBox variant="tip">
                 {t.oracleTip}
               </InfoBox>
             </div>
@@ -867,4 +867,3 @@ export function JoinSection() {
   )
 }
 
-export { T as JoinT }

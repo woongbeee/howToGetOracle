@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils'
 import { PageContainer, ChapterTitle, Prose, Divider } from '../../shared'
 import { IconMathOff } from '@tabler/icons-react'
 import { SqlHighlight } from './SqlHighlight'
+import { useSimulationStore } from '@/store/simulationStore'
 import { EMPLOYEES } from './shared'
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -218,7 +219,8 @@ const T = {
 
 // ── NullSection ─────────────────────────────────────────────────────────────
 
-export function NullSection({ lang }: { lang: 'ko' | 'en' }) {
+export function NullSection() {
+  const lang = useSimulationStore((s) => s.lang)
   const t = T[lang]
   const [openItem, setOpenItem] = useState<string>(FUNC_ITEMS[0].name)
   const item = FUNC_ITEMS.find((f) => f.name === openItem)!
@@ -315,4 +317,3 @@ export function NullSection({ lang }: { lang: 'ko' | 'en' }) {
   )
 }
 
-export { T as NullT }

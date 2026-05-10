@@ -6,6 +6,7 @@ import {
   SqlBlock,
   AccordionSection,
 } from '../../shared'
+import { useSimulationStore } from '@/store/simulationStore'
 import { cn } from '@/lib/utils'
 import {
   IconCategory, IconTable, IconEdit, IconShieldLock, IconGitCommit,
@@ -462,7 +463,8 @@ const COLOR_MAP: Record<string, { card: string; badge: string; tag: string }> = 
   orange:  { card: 'border-orange-200 bg-orange-50/60',  badge: 'bg-orange-100 text-orange-700',  tag: 'bg-orange-100 text-orange-600' },
 }
 
-export function DdlDmlDclSection({ lang }: { lang: 'ko' | 'en' }) {
+export function DdlDmlDclSection() {
+  const lang = useSimulationStore((s) => s.lang)
   const t = T[lang]
 
   return (
@@ -501,7 +503,7 @@ export function DdlDmlDclSection({ lang }: { lang: 'ko' | 'en' }) {
         {/* ── DDL ── */}
         <AccordionSection title={t.ddlTitle}>
           <Prose>{t.ddlDesc}</Prose>
-          <InfoBox variant="warning" lang={lang}>{t.ddlAutoCommit}</InfoBox>
+          <InfoBox variant="warning">{t.ddlAutoCommit}</InfoBox>
           <div className="mt-4 space-y-5">
             {t.ddlCmds.map((item) => (
               <SqlBlock key={item.cmd} badge={item.cmd} desc={item.desc} sql={item.example} badgeColor="violet" />
@@ -518,11 +520,11 @@ export function DdlDmlDclSection({ lang }: { lang: 'ko' | 'en' }) {
             ))}
           </div>
           <div className="mt-6 space-y-4">
-            <InfoBox variant="tip" lang={lang}>
+            <InfoBox variant="tip">
               <span className="font-bold">{t.deleteCompareTitle}</span>
               <span style={{ whiteSpace: 'pre-line' }}>{'\n\n' + t.deleteCompareBody}</span>
             </InfoBox>
-            <InfoBox variant="note" lang={lang}>
+            <InfoBox variant="note">
               <span className="font-bold">{t.undoLogTitle}</span>
               <span style={{ whiteSpace: 'pre-line' }}>{'\n\n' + t.undoLogBody}</span>
             </InfoBox>
@@ -538,7 +540,7 @@ export function DdlDmlDclSection({ lang }: { lang: 'ko' | 'en' }) {
             ))}
           </div>
           <div className="mt-6">
-            <InfoBox variant="tip" lang={lang}>
+            <InfoBox variant="tip">
               <span className="font-bold">{t.roleTitle}</span>
               <span style={{ whiteSpace: 'pre-line' }}>{'\n\n' + t.roleBody}</span>
             </InfoBox>
@@ -548,7 +550,7 @@ export function DdlDmlDclSection({ lang }: { lang: 'ko' | 'en' }) {
         {/* ── TCL ── */}
         <AccordionSection title={t.tclTitle}>
           <Prose>{t.tclDesc}</Prose>
-          <InfoBox variant="note" lang={lang}>{t.tclTip}</InfoBox>
+          <InfoBox variant="note">{t.tclTip}</InfoBox>
           <div className="mt-4 space-y-5">
             {t.tclCmds.map((item) => (
               <SqlBlock key={item.cmd} badge={item.cmd} desc={item.desc} sql={item.example} badgeColor="orange" />

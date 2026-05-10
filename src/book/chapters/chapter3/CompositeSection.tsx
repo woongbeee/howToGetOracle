@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import type { Lang } from '@/store/simulationStore'
+import { useSimulationStore } from '@/store/simulationStore'
 import { cn } from '@/lib/utils'
 
 // ── Text ──────────────────────────────────────────────────────────────────────
@@ -98,9 +98,9 @@ const T = {
   },
 }
 
-interface Props { lang: Lang }
 
-export function CompositeSection({ lang }: Props) {
+export function CompositeSection() {
+  const lang = useSimulationStore((s) => s.lang)
   const t = T[lang]
   const [skipPhase, setSkipPhase] = useState(-1)
   const [isSkipRunning, setIsSkipRunning] = useState(false)
@@ -143,7 +143,7 @@ export function CompositeSection({ lang }: Props) {
         </div>
 
         {/* Index on (DEPT_ID, JOB_ID) visual */}
-        <CompositeIndexVisual lang={lang} />
+        <CompositeIndexVisual />
       </section>
 
       {/* Skip Scan */}
@@ -168,7 +168,7 @@ export function CompositeSection({ lang }: Props) {
         </div>
 
         {/* Skip scan visualization */}
-        <SkipScanViz phase={skipPhase} lang={lang} />
+        <SkipScanViz phase={skipPhase} />
 
         {/* Steps */}
         <div className="mt-4 space-y-1">
@@ -295,7 +295,8 @@ export function CompositeSection({ lang }: Props) {
 
 // ── Composite Index Visual ─────────────────────────────────────────────────────
 
-function CompositeIndexVisual({ lang }: { lang: Lang }) {
+function CompositeIndexVisual() {
+  const lang = useSimulationStore((s) => s.lang)
   const entries = [
     { dept: 10, job: 'AD_ASST', rowid: 'AAA001' },
     { dept: 20, job: 'MK_MAN',  rowid: 'AAA002' },
@@ -351,7 +352,8 @@ function CompositeIndexVisual({ lang }: { lang: Lang }) {
 
 // ── Skip Scan Visualization ────────────────────────────────────────────────────
 
-function SkipScanViz({ phase, lang }: { phase: number; lang: Lang }) {
+function SkipScanViz({ phase }: { phase: number }) {
+  const lang = useSimulationStore((s) => s.lang)
   // Composite index on (GENDER, EMAIL) — 2 distinct genders
   const mEntries = ['a@co', 'b@co', 'f@co', 'j@co', 'r@co']
   const fEntries = ['c@co', 'd@co', 'g@co', 'k@co', 's@co']

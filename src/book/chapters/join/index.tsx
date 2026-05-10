@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { useSimulationStore, type Lang } from '@/store/simulationStore'
+import { useSimulationStore } from '@/store/simulationStore'
 import {
   PageContainer, ChapterTitle, SectionTitle, Prose,
   InfoBox, Table, ConceptGrid, SimulatorPlaceholder, Divider, WipBanner
@@ -115,7 +115,7 @@ export function JoinPage({ sectionId }: { sectionId: string }) {
           <Prose>{t.overviewDesc}</Prose>
           <ConceptGrid items={t.overviewItems} />
           <Divider />
-          <JoinComparisonTable lang={lang} />
+          <JoinComparisonTable />
         </>
       )}
       {sectionId === 'join-nested-loop' && (
@@ -124,7 +124,7 @@ export function JoinPage({ sectionId }: { sectionId: string }) {
           <Prose>{t.nlDesc}</Prose>
           <Table headers={[lang === 'ko' ? '항목' : 'Item', lang === 'ko' ? '설명' : 'Description']} rows={t.nlTable} />
           <Divider />
-          <NestedLoopAnimation lang={lang} />
+          <NestedLoopAnimation />
         </>
       )}
       {sectionId === 'join-hash' && (
@@ -132,11 +132,11 @@ export function JoinPage({ sectionId }: { sectionId: string }) {
           <SectionTitle>{t.hashTitle}</SectionTitle>
           <Prose>{t.hashDesc}</Prose>
           <Table headers={[lang === 'ko' ? '항목' : 'Item', lang === 'ko' ? '설명' : 'Description']} rows={t.hashTable} />
-          <InfoBox variant="tip" lang={lang}>
+          <InfoBox variant="tip">
             {t.hashInfo}
           </InfoBox>
           <Divider />
-          <HashJoinAnimation lang={lang} />
+          <HashJoinAnimation />
         </>
       )}
       {sectionId === 'join-sort-merge' && (
@@ -150,7 +150,8 @@ export function JoinPage({ sectionId }: { sectionId: string }) {
   )
 }
 
-function JoinComparisonTable({ lang }: { lang: Lang }) {
+function JoinComparisonTable() {
+  const lang = useSimulationStore((s) => s.lang)
   const rows = lang === 'ko'
     ? [
         ['Nested Loop', '소량 + 인덱스', '낮음', 'O(N×M)', '온라인 트랜잭션'],
@@ -172,7 +173,8 @@ function JoinComparisonTable({ lang }: { lang: Lang }) {
   )
 }
 
-function NestedLoopAnimation({ lang }: { lang: Lang }) {
+function NestedLoopAnimation() {
+  const lang = useSimulationStore((s) => s.lang)
   const outerRows = ['A1', 'A2', 'A3']
   const innerRows = ['B1', 'B2', 'B3']
   const [step, setStep] = useState(0)
@@ -250,7 +252,8 @@ function NestedLoopAnimation({ lang }: { lang: Lang }) {
   )
 }
 
-function HashJoinAnimation({ lang }: { lang: Lang }) {
+function HashJoinAnimation() {
+  const lang = useSimulationStore((s) => s.lang)
   const buildRows = [
     { key: 10, val: 'Alice' },
     { key: 20, val: 'Bob' },

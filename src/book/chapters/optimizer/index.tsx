@@ -160,7 +160,7 @@ export function OptimizerChapterPage({ sectionId }: { sectionId: string }) {
         <>
           <SectionTitle>{t.planTitle}</SectionTitle>
           <Prose>{t.planDesc}</Prose>
-          <InfoBox variant="tip" lang={lang}>
+          <InfoBox variant="tip">
             {t.planInfo}
           </InfoBox>
         </>

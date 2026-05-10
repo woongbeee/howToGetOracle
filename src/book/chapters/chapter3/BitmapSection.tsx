@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import type { Lang } from '@/store/simulationStore'
+import { useSimulationStore } from '@/store/simulationStore'
 import { cn } from '@/lib/utils'
 import { getLargeTable } from '@/data/largeDataGenerator'
 
@@ -138,9 +138,9 @@ function buildVectors(table: ReturnType<typeof getLargeTable>, colName: string):
   }))
 }
 
-interface Props { lang: Lang }
 
-export function BitmapSection({ lang }: Props) {
+export function BitmapSection() {
+  const lang = useSimulationStore((s) => s.lang)
   const t = T[lang]
   const table = getLargeTable('EMPLOYEES')
   const colDefs = buildBitmapColumns(table)

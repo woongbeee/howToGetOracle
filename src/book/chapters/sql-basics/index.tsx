@@ -1,10 +1,10 @@
 import { useSimulationStore } from '@/store/simulationStore'
 import { DdlDmlDclSection } from './commands/DdlDmlDclSection'
 import { DDLSection } from './commands/DDLSection'
-import { DMLSection, DMLT } from './commands/DMLSection'
+import { DMLSection } from './commands/DMLSection'
 import { DCLSection } from './commands/DCLSection'
 import { TCLSection } from './commands/TCLSection'
-import { ClausesSection, ClausesT } from './dml-more/ClausesSection'
+import { ClausesSection } from './dml-more/ClausesSection'
 import { JoinSection } from './dml-more/JoinSection'
 import { NullSection } from './dml-more/NullSection'
 import { DateSection } from './dml-more/DateSection'
@@ -12,7 +12,7 @@ import { WindowFuncSection } from './dml-more/WindowFuncSection'
 import { MergeSection } from './dml-more/MergeSection'
 import { RollupSection } from './dml-more/RollupSection'
 import { PivotSection } from './dml-more/PivotSection'
-import { ExecutionSimulator, ExecutionT } from './dml-more/ExecutionSection'
+import { ExecutionSimulator } from './dml-more/ExecutionSection'
 import { PageContainer, ChapterTitle, Prose, InfoBox, ConceptGrid, SectionTitle } from '../shared'
 import {
   IconDatabase, IconSortAscending, IconArrowMerge, IconMathOff,
@@ -63,11 +63,11 @@ interface Props {
 export function SqlBasicsPage({ sectionId }: Props) {
   const lang = useSimulationStore((s) => s.lang)
 
-  if (sectionId === 'sql-basics-ddl-dml-dcl') return <DdlDmlDclSection lang={lang} />
-  if (sectionId === 'sql-basics-ddl')          return <DDLSection lang={lang} />
-  if (sectionId === 'sql-basics-dml')          return <DMLSection lang={lang} t={DMLT[lang]} />
-  if (sectionId === 'sql-basics-dcl')          return <DCLSection lang={lang} />
-  if (sectionId === 'sql-basics-tcl')          return <TCLSection lang={lang} />
+  if (sectionId === 'sql-basics-ddl-dml-dcl') return <DdlDmlDclSection />
+  if (sectionId === 'sql-basics-ddl')          return <DDLSection />
+  if (sectionId === 'sql-basics-dml')          return <DMLSection />
+  if (sectionId === 'sql-basics-dcl')          return <DCLSection />
+  if (sectionId === 'sql-basics-tcl')          return <TCLSection />
   if (sectionId === 'sql-basics-dml-more') {
     const t = DmlMoreT[lang]
     return (
@@ -75,7 +75,7 @@ export function SqlBasicsPage({ sectionId }: Props) {
         <ChapterTitle icon={<IconDatabase size={36} color="#3b82f6" stroke={1.5} />} title={t.title} subtitle={t.subtitle} />
         <SectionTitle>{t.whyTitle}</SectionTitle>
         <Prose>{t.why}</Prose>
-        <InfoBox variant="usage" lang={lang}>
+        <InfoBox variant="usage">
           {lang === 'ko'
             ? 'DDL로 테이블 구조를 설계했다면, 이제 그 안의 데이터를 실제로 활용하는 단계입니다. 이 챕터를 마치면 Oracle 데이터를 조회·집계·분석하는 대부분의 업무를 처리할 수 있습니다.'
             : 'You have designed the table structure with DDL — now it is time to actually work with the data inside. After this chapter you will be able to handle the vast majority of real-world Oracle query work.'}
@@ -85,14 +85,14 @@ export function SqlBasicsPage({ sectionId }: Props) {
       </PageContainer>
     )
   }
-  if (sectionId === 'sql-basics-clauses')      return <ClausesSection lang={lang} t={ClausesT[lang]} />
+  if (sectionId === 'sql-basics-clauses')      return <ClausesSection />
   if (sectionId === 'sql-basics-join')       return <JoinSection />
-  if (sectionId === 'sql-basics-null')       return <NullSection lang={lang} />
-  if (sectionId === 'sql-basics-date')       return <DateSection lang={lang} />
-  if (sectionId === 'sql-basics-windowFunc') return <WindowFuncSection lang={lang} />
-  if (sectionId === 'sql-basics-merge')      return <MergeSection lang={lang} />
-  if (sectionId === 'sql-basics-rollup')     return <RollupSection lang={lang} />
-  if (sectionId === 'sql-basics-pivot')      return <PivotSection lang={lang} />
-  if (sectionId === 'sql-basics-execution')  return <ExecutionSimulator lang={lang} t={ExecutionT[lang]} />
+  if (sectionId === 'sql-basics-null')       return <NullSection />
+  if (sectionId === 'sql-basics-date')       return <DateSection />
+  if (sectionId === 'sql-basics-windowFunc') return <WindowFuncSection />
+  if (sectionId === 'sql-basics-merge')      return <MergeSection />
+  if (sectionId === 'sql-basics-rollup')     return <RollupSection />
+  if (sectionId === 'sql-basics-pivot')      return <PivotSection />
+  if (sectionId === 'sql-basics-execution')  return <ExecutionSimulator />
   return null
 }

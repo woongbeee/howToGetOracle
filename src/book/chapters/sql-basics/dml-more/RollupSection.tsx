@@ -6,6 +6,7 @@ import {
 } from '../../shared'
 import { IconChartTreemap } from '@tabler/icons-react'
 import { SqlHighlight } from './SqlHighlight'
+import { useSimulationStore } from '@/store/simulationStore'
 import { EMPLOYEES } from './shared'
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -301,7 +302,6 @@ const T = {
   },
 }
 
-export { T as RollupT }
 
 type TShape = typeof T['ko']
 
@@ -1101,7 +1101,8 @@ function NullCell() {
 
 // ── Main component ─────────────────────────────────────────────────────────
 
-export function RollupSection({ lang }: { lang: 'ko' | 'en' }) {
+export function RollupSection() {
+  const lang = useSimulationStore((s) => s.lang)
   const t = T[lang] as TShape
   const [tab, setTab] = useState<Tab>('rollup')
 
@@ -1139,12 +1140,12 @@ export function RollupSection({ lang }: { lang: 'ko' | 'en' }) {
         <>
           <SectionTitle>{t.rollupTitle}</SectionTitle>
           <Prose>{t.rollupDesc}</Prose>
-          <InfoBox variant="summary" lang={lang}>
+          <InfoBox variant="summary">
             {t.rollupInfo}
           </InfoBox>
           <SqlBlock sql={ROLLUP_SQL} />
           <RollupAnimator lang={lang} />
-          <InfoBox variant="note" lang={lang}>
+          <InfoBox variant="note">
             {t.nullMeaning}
           </InfoBox>
 
@@ -1177,7 +1178,7 @@ export function RollupSection({ lang }: { lang: 'ko' | 'en' }) {
         <>
           <SectionTitle>{t.cubeTitle}</SectionTitle>
           <Prose>{t.cubeDesc}</Prose>
-          <InfoBox variant="summary" lang={lang}>
+          <InfoBox variant="summary">
             {t.cubeInfo}
           </InfoBox>
 
@@ -1219,7 +1220,7 @@ export function RollupSection({ lang }: { lang: 'ko' | 'en' }) {
 
           <SqlBlock sql={CUBE_SQL} />
           <CubeAnimator lang={lang} />
-          <InfoBox variant="note" lang={lang}>
+          <InfoBox variant="note">
             {t.nullMeaning}
           </InfoBox>
         </>
@@ -1230,7 +1231,7 @@ export function RollupSection({ lang }: { lang: 'ko' | 'en' }) {
         <>
           <SectionTitle>{t.groupingSetsTitle}</SectionTitle>
           <Prose>{t.groupingSetsDesc}</Prose>
-          <InfoBox variant="summary" lang={lang}>
+          <InfoBox variant="summary">
             {t.groupingSetsInfo}
           </InfoBox>
           <SqlBlock sql={GROUPING_SETS_SQL} />
@@ -1242,7 +1243,7 @@ export function RollupSection({ lang }: { lang: 'ko' | 'en' }) {
           <Prose>{t.groupingSetsEqDesc}</Prose>
           <SqlBlock sql={GROUPING_SETS_EQ_SQL} />
 
-          <InfoBox variant="note" lang={lang}>
+          <InfoBox variant="note">
             {t.nullMeaning}
           </InfoBox>
         </>
@@ -1253,7 +1254,7 @@ export function RollupSection({ lang }: { lang: 'ko' | 'en' }) {
         <>
           <SectionTitle>{t.groupingTitle}</SectionTitle>
           <Prose>{t.groupingDesc}</Prose>
-          <InfoBox variant="summary" lang={lang}>
+          <InfoBox variant="summary">
             {t.groupingInfo}
           </InfoBox>
           <SqlBlock sql={GROUPING_FN_SQL} />

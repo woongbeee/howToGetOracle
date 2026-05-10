@@ -44,7 +44,7 @@ export function PgaSection() {
       <WipBanner />
       <ChapterTitle title={t.pgaTitle} subtitle={t.pgaDesc} />
       <ConceptGrid items={t.pgaItems} />
-      <InfoBox variant="note" lang={lang}>{t.pgaSgaVsDesc}</InfoBox>
+      <InfoBox variant="note">{t.pgaSgaVsDesc}</InfoBox>
     </TwoColLayout>
   )
 }

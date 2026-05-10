@@ -2,6 +2,7 @@ import {
   PageContainer, ChapterTitle,
   Prose, InfoBox, AccordionSection,
 } from '../../shared'
+import { useSimulationStore } from '@/store/simulationStore'
 import {
   IconEdit, IconTable, IconFilter, IconTrash, IconPlayerPlay,
 } from '@tabler/icons-react'
@@ -183,7 +184,9 @@ const T = {
   },
 }
 
-export function DMLSection({ lang, t }: { lang: 'ko' | 'en'; t: typeof T['ko'] }) {
+export function DMLSection() {
+  const lang = useSimulationStore((s) => s.lang)
+  const t = T[lang]
   const introDemo    = CLAUSE_DEMOS.find((d) => d.sectionKey === 'intro')!
   const selectDemo   = CLAUSE_DEMOS.find((d) => d.sectionKey === 'select')!
   const distinctDemo = CLAUSE_DEMOS.find((d) => d.sectionKey === 'distinct')!
@@ -197,7 +200,6 @@ export function DMLSection({ lang, t }: { lang: 'ko' | 'en'; t: typeof T['ko'] }
 
       {/* ── Intro: clause overview ── */}
       <SyntaxRow
-        lang={lang}
         demo={introDemo}
         left={
           <>
@@ -221,7 +223,6 @@ export function DMLSection({ lang, t }: { lang: 'ko' | 'en'; t: typeof T['ko'] }
       {/* ── SELECT ── */}
       <AccordionSection title={t.selectTitle} defaultOpen>
         <SyntaxRow
-          lang={lang}
           demo={selectDemo}
           left={<Prose>{t.selectDesc}</Prose>}
         />
@@ -231,13 +232,12 @@ export function DMLSection({ lang, t }: { lang: 'ko' | 'en'; t: typeof T['ko'] }
       {/* ── DISTINCT ── */}
       <AccordionSection title={t.distinctTitle}>
         <ClickableSyntaxRow
-          lang={lang}
           demo={distinctDemo}
           header={t.distinctOps[0]}
           rows={t.distinctOps.slice(1)}
           topContent={<Prose>{t.distinctDesc}</Prose>}
           bottomContent={
-            <InfoBox variant="tip" lang={lang}>
+            <InfoBox variant="tip">
               {t.distinctTip}
             </InfoBox>
           }
@@ -248,13 +248,12 @@ export function DMLSection({ lang, t }: { lang: 'ko' | 'en'; t: typeof T['ko'] }
       {/* ── WHERE ── */}
       <AccordionSection title={t.whereTitle}>
         <ClickableSyntaxRow
-          lang={lang}
           demo={whereDemo}
           header={t.whereOps[0]}
           rows={t.whereOps.slice(1)}
           topContent={<Prose>{t.whereDesc}</Prose>}
           bottomContent={
-            <InfoBox variant="note" lang={lang}>
+            <InfoBox variant="note">
               {t.whereNullTip}
             </InfoBox>
           }
@@ -264,12 +263,11 @@ export function DMLSection({ lang, t }: { lang: 'ko' | 'en'; t: typeof T['ko'] }
       {/* ── UPDATE ── */}
       <AccordionSection title={t.updateTitle}>
         <SyntaxRow
-          lang={lang}
           demo={updateDemo}
           left={
             <>
               <Prose>{t.updateDesc}</Prose>
-              <InfoBox variant="warning" lang={lang}>
+              <InfoBox variant="warning">
                 {t.updateWarning}
               </InfoBox>
             </>
@@ -280,12 +278,11 @@ export function DMLSection({ lang, t }: { lang: 'ko' | 'en'; t: typeof T['ko'] }
       {/* ── DELETE ── */}
       <AccordionSection title={t.deleteTitle}>
         <SyntaxRow
-          lang={lang}
           demo={deleteDemo}
           left={
             <>
               <Prose>{t.deleteDesc}</Prose>
-              <InfoBox variant="tip" lang={lang}>
+              <InfoBox variant="tip">
                 <span style={{ whiteSpace: 'pre-line' }}>{t.deleteTip}</span>
               </InfoBox>
             </>
@@ -296,4 +293,3 @@ export function DMLSection({ lang, t }: { lang: 'ko' | 'en'; t: typeof T['ko'] }
   )
 }
 
-export { T as DMLT }

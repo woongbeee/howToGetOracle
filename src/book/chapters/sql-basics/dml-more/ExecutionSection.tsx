@@ -3,6 +3,7 @@ import { cn } from '@/lib/utils'
 import {
   PageContainer, ChapterTitle, SectionTitle, Prose,
 } from '../../shared'
+import { useSimulationStore } from '@/store/simulationStore'
 import { IconPlayerPlay } from '@tabler/icons-react'
 import {
   EMPLOYEES, EXAMPLE_QUERIES, SELECT_STEPS, UPDATE_STEPS, DELETE_STEPS,
@@ -46,17 +47,16 @@ const T = {
   },
 }
 
-export { T as ExecutionT }
 
 
 // ── Result table ────────────────────────────────────────────────────────────
 
-function ResultTable({ parsed, t, lang, overrideResult }: {
+function ResultTable({ parsed, overrideResult }: {
   parsed: ParsedQuery
-  t: typeof T['ko']
-  lang: 'ko' | 'en'
   overrideResult?: ExampleQuery['overrideResult']
 }) {
+  const lang = useSimulationStore((s) => s.lang)
+  const t = T[lang]
   const ALL_COLUMNS = ['emp_id', 'first_name', 'last_name', 'dept_id', 'salary', 'job_title', 'manager_id'] as const
   type EmpKey = typeof ALL_COLUMNS[number]
 
@@ -279,10 +279,11 @@ function SimpleTable({ rows, highlightIds, strikeIds, joinKey }: {
   )
 }
 
-function MergePanel({ mergeData, t }: {
+function MergePanel({ mergeData }: {
   mergeData: NonNullable<ExampleQuery['mergeData']>
-  t: typeof T['ko']
 }) {
+  const lang = useSimulationStore((s) => s.lang)
+  const t = T[lang]
   const statusStyle: Record<string, string> = {
     updated:   'bg-ios-orange-light border-ios-orange/30',
     inserted:  'bg-ios-teal-light border-ios-teal/30',
@@ -375,7 +376,9 @@ function MergePanel({ mergeData, t }: {
 
 // ── Main component ──────────────────────────────────────────────────────────
 
-export function ExecutionSimulator({ lang, t }: { lang: 'ko' | 'en'; t: typeof T['ko'] }) {
+export function ExecutionSimulator() {
+  const lang = useSimulationStore((s) => s.lang)
+  const t = T[lang]
   const [selectedId, setSelectedId] = useState<string>(EXAMPLE_QUERIES[0].id)
 
   const selectedQuery = EXAMPLE_QUERIES.find((q) => q.id === selectedId) ?? EXAMPLE_QUERIES[0]
@@ -458,7 +461,7 @@ export function ExecutionSimulator({ lang, t }: { lang: 'ko' | 'en'; t: typeof T
         {/* Right: tables + result — takes remaining space */}
         <div className="min-w-0 flex-1 flex flex-col gap-6">
           {selectedQuery.type === 'MERGE' && selectedQuery.mergeData ? (
-            <MergePanel mergeData={selectedQuery.mergeData} t={t} />
+            <MergePanel mergeData={selectedQuery.mergeData} />
           ) : (
             <>
               <div>
@@ -494,7 +497,7 @@ export function ExecutionSimulator({ lang, t }: { lang: 'ko' | 'en'; t: typeof T
                   </table>
                 </div>
               </div>
-              <ResultTable parsed={parsed} t={t} lang={lang} overrideResult={selectedQuery.overrideResult} />
+              <ResultTable parsed={parsed} overrideResult={selectedQuery.overrideResult} />
             </>
           )}
         </div>

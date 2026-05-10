@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import type { Lang } from '@/store/simulationStore'
+import { useSimulationStore } from '@/store/simulationStore'
 import { cn } from '@/lib/utils'
 import { HR_SCHEMA } from '@/data/hrSchema'
 
@@ -223,9 +223,9 @@ const COL_META: Record<Col, { ndv: number; recommended: string; recommendedEn: s
   DEPARTMENT_ID: { ndv: 10, recommended: 'Bitmap 인덱스', recommendedEn: 'Bitmap Index' },
 }
 
-interface Props { lang: Lang }
 
-export function BTreeSection({ lang }: Props) {
+export function BTreeSection() {
+  const lang = useSimulationStore((s) => s.lang)
   const t = T[lang]
   const isKo = lang === 'ko'
 
@@ -582,7 +582,7 @@ export function BTreeSection({ lang }: Props) {
             <BTreeDiagram
               root={root} branches={branches} leaves={leaves}
               highlighted={highlightedBlocks} matched={matchedKeys}
-              lang={lang} t={t}
+              t={t}
             />
           </div>
         )}
@@ -594,7 +594,6 @@ export function BTreeSection({ lang }: Props) {
               highlightedBlocks={highlightedBlocks}
               matchedBlockIds={new Set(steps.filter((s,i) => i <= currentStep && s.type === 'match').map(s=>s.blockId))}
               skippedBlockIds={new Set(steps.filter((s,i) => i <= currentStep && s.type === 'traverse').map(s=>s.blockId))}
-              lang={lang}
             />
           </div>
         )}
@@ -628,7 +627,7 @@ export function BTreeSection({ lang }: Props) {
 function BTreeDiagram({ root, branches, leaves, highlighted, matched, t }: {
   root: BranchBlock; branches: BranchBlock[]; leaves: LeafBlock[]
   highlighted: Set<string>; matched: Set<number>
-  lang: Lang; t: typeof T['ko']
+  t: typeof T['ko']
 }) {
   return (
     <div className="overflow-x-auto rounded-xl border bg-slate-50 p-4">
@@ -751,14 +750,14 @@ function LeafBBlock({ leaf, highlighted, matched, hasPrev, hasNext }: {
 interface SkipLeafEntry { dept: number; salary: number; name: string; rowid: string }
 interface SkipLeafBlock { id: string; dept: number; entries: SkipLeafEntry[] }
 
-function SkipScanDiagram({ skipLeafBlocks, skipSalary, highlightedBlocks, matchedBlockIds, skippedBlockIds, lang }: {
+function SkipScanDiagram({ skipLeafBlocks, skipSalary, highlightedBlocks, matchedBlockIds, skippedBlockIds }: {
   skipLeafBlocks: SkipLeafBlock[]
   skipSalary: number
   highlightedBlocks: Set<string>
   matchedBlockIds: Set<string>
   skippedBlockIds: Set<string>
-  lang: Lang
 }) {
+  const lang = useSimulationStore((s) => s.lang)
   const isKo = lang === 'ko'
   return (
     <div className="overflow-x-auto rounded-xl border bg-slate-50 p-3">

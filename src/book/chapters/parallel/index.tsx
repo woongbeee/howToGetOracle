@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { useSimulationStore, type Lang } from '@/store/simulationStore'
+import { useSimulationStore } from '@/store/simulationStore'
 import {
   PageContainer, ChapterTitle, SectionTitle, Prose,
   InfoBox, Table, ConceptGrid, SimulatorPlaceholder, Divider, WipBanner
@@ -99,7 +99,7 @@ export function ParallelPage({ sectionId }: { sectionId: string }) {
           <Prose>{t.overviewDesc}</Prose>
           <ConceptGrid items={t.overviewItems} />
           <Divider />
-          <ParallelAnimation lang={lang} />
+          <ParallelAnimation />
         </>
       )}
       {sectionId === 'parallel-dop' && (
@@ -110,7 +110,7 @@ export function ParallelPage({ sectionId }: { sectionId: string }) {
             headers={[lang === 'ko' ? '방법' : 'Method', lang === 'ko' ? '구문' : 'Syntax', lang === 'ko' ? '설명' : 'Description']}
             rows={t.dopTable}
           />
-          <InfoBox variant="usage" lang={lang}>
+          <InfoBox variant="usage">
             {t.dopInfo}
           </InfoBox>
         </>
@@ -129,7 +129,8 @@ export function ParallelPage({ sectionId }: { sectionId: string }) {
   )
 }
 
-function ParallelAnimation({ lang }: { lang: Lang }) {
+function ParallelAnimation() {
+  const lang = useSimulationStore((s) => s.lang)
   const [dop, setDop] = useState(4)
   const [running, setRunning] = useState(false)
   const [progress, setProgress] = useState<number[]>([])

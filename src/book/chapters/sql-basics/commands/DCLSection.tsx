@@ -7,6 +7,7 @@ import {
   Table,
   AccordionSection,
 } from '../../shared'
+import { useSimulationStore } from '@/store/simulationStore'
 import { IconShieldLock } from '@tabler/icons-react'
 
 const T = {
@@ -176,7 +177,8 @@ REVOKE hr_readonly FROM alice;`,
   },
 }
 
-export function DCLSection({ lang }: { lang: 'ko' | 'en' }) {
+export function DCLSection() {
+  const lang = useSimulationStore((s) => s.lang)
   const t = T[lang]
   return (
     <PageContainer>
@@ -197,7 +199,7 @@ export function DCLSection({ lang }: { lang: 'ko' | 'en' }) {
         <AccordionSection title={t.grantTitle}>
           <Prose>{t.grantDesc}</Prose>
           <SqlBlock sql={t.grantExample} />
-          <InfoBox variant="warning" lang={lang}>
+          <InfoBox variant="warning">
             {t.grantTip}
           </InfoBox>
         </AccordionSection>
@@ -212,7 +214,7 @@ export function DCLSection({ lang }: { lang: 'ko' | 'en' }) {
         <AccordionSection title={t.roleTitle}>
           <Prose>{t.roleDesc}</Prose>
           <SqlBlock sql={t.roleExample} />
-          <InfoBox variant="note" lang={lang}>
+          <InfoBox variant="note">
             {t.roleTip}
           </InfoBox>
         </AccordionSection>

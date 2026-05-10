@@ -99,7 +99,7 @@ export function ProcessesSection() {
       />
 
       <Table headers={[t.tableHeaderProcess, t.tableHeaderRole]} rows={t.processTable} />
-      <InfoBox variant="warning" lang={lang}>{t.processWalDesc}</InfoBox>
+      <InfoBox variant="warning">{t.processWalDesc}</InfoBox>
     </TwoColLayout>
   )
 }

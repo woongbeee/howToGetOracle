@@ -12,7 +12,6 @@ import {
   IconAlertCircle,
   IconHammer,
   IconChevronDown,
-  IconChevronUp,
   IconX,
 } from '@tabler/icons-react'
 
@@ -50,7 +49,7 @@ export function ChapterTitle({ icon, title, subtitle }: { icon?: ReactNode; num?
         {icon && <span className="shrink-0">{icon}</span>}
         <h1 className="text-3xl font-bold tracking-tight leading-tight">{title}</h1>
       </div>
-      {subtitle && <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{subtitle}</p>}
+      {subtitle && <p className="mt-2 whitespace-pre-line text-sm text-muted-foreground leading-relaxed">{subtitle}</p>}
     </div>
   )
 }
@@ -107,17 +106,17 @@ const LEGACY_COLOR: Record<InfoColor, string> = {
   danger:  'bg-ios-red-light border-ios-red/20 text-ios-red-dark',
 }
 
-export function InfoBox({ variant, lang, color, icon, title, children }: {
+export function InfoBox({ variant, color, icon, title, children }: {
   variant?: InfoVariant
-  lang?: 'ko' | 'en'
   color?: InfoColor
   icon?: string
   title?: string
   children: ReactNode
 }) {
+  const lang = useSimulationStore((s) => s.lang)
   if (variant) {
     const def = VARIANT_DEFS[variant]
-    const l   = lang ?? 'ko'
+    const l   = lang
     return (
       <div className={cn('mt-4 mb-4 rounded-lg border p-4', def.color)}>
         <div className="mb-1.5 flex items-center gap-1.5 font-mono text-xs font-bold uppercase tracking-wider">
@@ -316,15 +315,13 @@ export function SqlBlock({
 interface TermPopupProps {
   label: string
   title: string
-  icon?: string
-  color?: 'info' | 'tip' | 'warning' | 'danger'
   open: boolean
   onOpen: () => void
   onClose: () => void
   children: ReactNode
 }
 
-export function TermPopup({ label, title, icon, color = 'tip', open, onOpen, onClose, children }: TermPopupProps) {
+export function TermPopup({ label, title, open, onOpen, onClose, children }: TermPopupProps) {
   const wrapperRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -341,52 +338,25 @@ export function TermPopup({ label, title, icon, color = 'tip', open, onOpen, onC
     }
   }, [open, onClose])
 
-  const headerStyles: Record<string, string> = {
-    info:    'bg-ios-blue-light border-ios-blue/20 text-ios-blue-dark',
-    tip:     'bg-ios-teal-light border-ios-teal/20 text-ios-teal-dark',
-    warning: 'bg-ios-orange-light border-ios-orange/25 text-ios-orange-dark',
-    danger:  'bg-ios-red-light border-ios-red/20 text-ios-red-dark',
-  }
-
-  const tailStyles: Record<string, string> = {
-    info:    'border-r-ios-blue/20',
-    tip:     'border-r-ios-teal/20',
-    warning: 'border-r-ios-orange/25',
-    danger:  'border-r-ios-red/20',
-  }
-
   return (
     <div ref={wrapperRef} className="relative inline-block">
       <button
         onClick={() => open ? onClose() : onOpen()}
-        className={cn(
-          'inline-flex items-center gap-1 rounded border border-dashed px-1.5 py-0.5 font-mono text-[11px] font-bold transition-colors',
-          open
-            ? 'border-ios-teal/40 bg-ios-teal-light text-ios-teal-dark'
-            : 'border-ios-teal/30 text-ios-teal-dark hover:bg-ios-teal-light',
-        )}
+        className="cursor-pointer font-bold underline decoration-dotted underline-offset-2 hover:opacity-70 transition-opacity"
       >
-        {icon && <span>{icon}</span>}
         {label}
-        {open ? <IconChevronUp size={11} className="opacity-50" /> : <IconChevronDown size={11} className="opacity-50" />}
       </button>
 
       {open && (
         <div className="absolute left-full top-1/2 z-40 ml-2.5 w-96 -translate-y-1/2">
           {/* 말풍선 꼬리 */}
-          <div
-            className={cn(
-              'absolute -left-2 top-1/2 -translate-y-1/2 border-8 border-transparent',
-              tailStyles[color],
-            )}
-          />
-          <div className="overflow-hidden rounded-xl border bg-white shadow-xl">
-            <div className={cn('flex items-center gap-2 border-b px-4 py-3', headerStyles[color])}>
-              {icon && <span className="text-sm">{icon}</span>}
-              <span className="font-mono text-xs font-bold">{title}</span>
+          <div className="absolute -left-2 top-1/2 -translate-y-1/2 border-8 border-transparent border-r-slate-200" />
+          <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl">
+            <div className="flex items-center gap-2 border-b border-slate-100 bg-slate-50 px-4 py-3">
+              <span className="font-mono text-xs font-bold text-slate-700">{title}</span>
               <button
                 onClick={onClose}
-                className="ml-auto opacity-50 hover:opacity-100"
+                className="ml-auto opacity-40 hover:opacity-80 transition-opacity"
                 aria-label="닫기"
               >
                 <IconX size={13} />

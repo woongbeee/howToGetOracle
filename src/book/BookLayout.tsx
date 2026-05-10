@@ -1,4 +1,4 @@
-import { memo, useState, useRef, useCallback } from 'react'
+import { memo, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useSimulationStore } from '@/store/simulationStore'
 import { useInternalsStore } from '@/store/internalsStore'
@@ -73,33 +73,29 @@ export function BookLayout({ onHome }: Props) {
   const [glossaryOpen, setGlossaryOpen] = useState(false)
   const [activeSectionId, setActiveSectionId] = useState('intro-overview')
 
-  const toggleToc      = useCallback(() => setTocOpen((v) => !v), [])
+  const toggleToc      = () => setTocOpen((v) => !v)
   const toggleGlossary = () => setGlossaryOpen((v) => !v)
   const toggleLang     = () => setLang(lang === 'ko' ? 'en' : 'ko')
 
   // Drag-to-resize
-  const dragging = useRef(false)
-  const startX   = useRef(0)
-  const startW   = useRef(0)
-
-  const onDragStart = useCallback((e: React.MouseEvent) => {
-    dragging.current = true
-    startX.current   = e.clientX
-    startW.current   = tocWidth
+  const onDragStart = (e: React.MouseEvent) => {
+    let dragging = true
+    const startX = e.clientX
+    const startW = tocWidth
 
     const onMove = (ev: MouseEvent) => {
-      if (!dragging.current) return
-      const delta = ev.clientX - startX.current
-      setTocWidth(Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, startW.current + delta)))
+      if (!dragging) return
+      const delta = ev.clientX - startX
+      setTocWidth(Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, startW + delta)))
     }
     const onUp = () => {
-      dragging.current = false
+      dragging = false
       window.removeEventListener('mousemove', onMove)
       window.removeEventListener('mouseup', onUp)
     }
     window.addEventListener('mousemove', onMove)
     window.addEventListener('mouseup', onUp)
-  }, [tocWidth])
+  }
 
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-background text-foreground">

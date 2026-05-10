@@ -7,6 +7,7 @@ import {
   Table,
   AccordionSection,
 } from '../../shared'
+import { useSimulationStore } from '@/store/simulationStore'
 import { IconTable } from '@tabler/icons-react'
 
 const T = {
@@ -340,7 +341,8 @@ VALUES (emp_seq.NEXTVAL, 'Alice');`,
   },
 }
 
-export function DDLSection({ lang }: { lang: 'ko' | 'en' }) {
+export function DDLSection() {
+  const lang = useSimulationStore((s) => s.lang)
   const t = T[lang]
   return (
     <PageContainer>
@@ -352,7 +354,7 @@ export function DDLSection({ lang }: { lang: 'ko' | 'en' }) {
           <Prose>{t.prerequisiteDesc}</Prose>
           <p className="mb-2 text-sm font-bold">{t.dataTypeTitle}</p>
           <Table headers={t.dataTypeHeaders} rows={t.dataTypeRows} />
-          <InfoBox variant="tip" lang={lang}>
+          <InfoBox variant="tip">
             <span style={{ whiteSpace: 'pre-line' }}>{t.varcharVsChar}</span>
           </InfoBox>
           <p className="mb-2 mt-4 text-sm font-bold">{t.constraintTitle}</p>
@@ -370,7 +372,7 @@ export function DDLSection({ lang }: { lang: 'ko' | 'en' }) {
         <AccordionSection title={t.alterTitle}>
           <Prose>{t.alterDesc}</Prose>
           <SqlBlock sql={t.alterExample} />
-          <InfoBox variant="tip" lang={lang}>
+          <InfoBox variant="tip">
             {t.alterTip}
           </InfoBox>
         </AccordionSection>
@@ -388,7 +390,7 @@ export function DDLSection({ lang }: { lang: 'ko' | 'en' }) {
         {/* Other DDL */}
         <AccordionSection title={t.otherTitle}>
           <Prose>{t.otherDesc}</Prose>
-          <InfoBox variant="note" lang={lang}>/
+          <InfoBox variant="note">/
             <span style={{ whiteSpace: 'pre-line' }}>{t.otherPreview}</span>
           </InfoBox>
           <div className="space-y-5">

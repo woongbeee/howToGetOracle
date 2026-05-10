@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { PageContainer, ChapterTitle, Prose, Divider, InfoBox, TermPopup, AccordionSection } from '../../shared'
 import { IconCalendarEvent } from '@tabler/icons-react'
 import { SqlHighlight } from './SqlHighlight'
+import { useSimulationStore } from '@/store/simulationStore'
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -562,8 +563,6 @@ function FuncContent({ item, lang, t }: { item: FuncItem; lang: 'ko' | 'en'; t: 
             <TermPopup
               label={lang === 'ko' ? '타임존이란?' : 'What is a Timezone?'}
               title={lang === 'ko' ? '타임존이란?' : 'What is a Timezone?'}
-              icon="🌏"
-              color="info"
               open={tzModalOpen}
               onOpen={() => setTzModalOpen(true)}
               onClose={() => setTzModalOpen(false)}
@@ -576,7 +575,7 @@ function FuncContent({ item, lang, t }: { item: FuncItem; lang: 'ko' | 'en'; t: 
 
       {/* DUAL 설명 InfoBox */}
       {item.dualInfo && (
-        <InfoBox variant="note" lang={lang}>
+        <InfoBox variant="note">
           {item.dualInfo[lang]}
         </InfoBox>
       )}
@@ -684,14 +683,14 @@ function FuncContent({ item, lang, t }: { item: FuncItem; lang: 'ko' | 'en'; t: 
 
       {/* vs 비교 노트 */}
       {item.vsNote && (
-        <InfoBox variant="warning" lang={lang}>
+        <InfoBox variant="warning">
           {item.vsNote[lang]}
         </InfoBox>
       )}
 
       {/* NLS 설명 InfoBox */}
       {item.nlsNote && (
-        <InfoBox variant="tip" lang={lang}>
+        <InfoBox variant="tip">
           <span style={{ whiteSpace: 'pre-line' }}>{item.nlsNote[lang]}</span>
         </InfoBox>
       )}
@@ -708,7 +707,8 @@ function FuncContent({ item, lang, t }: { item: FuncItem; lang: 'ko' | 'en'; t: 
 
 // ── DateSection ─────────────────────────────────────────────────────────────
 
-export function DateSection({ lang }: { lang: 'ko' | 'en' }) {
+export function DateSection() {
+  const lang = useSimulationStore((s) => s.lang)
   const t = T[lang]
 
   return (
@@ -730,4 +730,3 @@ export function DateSection({ lang }: { lang: 'ko' | 'en' }) {
   )
 }
 
-export { T as DateT }

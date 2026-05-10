@@ -1,12 +1,13 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
+import { useSimulationStore } from '@/store/simulationStore'
 import { EMPLOYEES, parseAndExecute, type ClauseDemo, type Employee, type GroupRow } from './shared'
 import { SqlHighlight } from './SqlHighlight'
 
 // ── MiniSimulatorTable ─────────────────────────────────────────────────────
 
-export function MiniSimulatorTable({ sql }: { sql: string; lang?: 'ko' | 'en' }) {
+export function MiniSimulatorTable({ sql }: { sql: string }) {
   const ALL_COLS: Array<keyof Employee> = ['emp_id', 'first_name', 'last_name', 'dept_id', 'salary', 'job_title', 'manager_id']
   const parsed = parseAndExecute(sql, EMPLOYEES)
 
@@ -183,13 +184,12 @@ export function MiniSimulatorTable({ sql }: { sql: string; lang?: 'ko' | 'en' })
 
 export function MiniSimulator({
   demo,
-  lang,
   variantIdx = 0,
 }: {
   demo: ClauseDemo
-  lang: 'ko' | 'en'
   variantIdx?: number
 }) {
+  const lang = useSimulationStore((s) => s.lang)
   const variants   = demo.variants
   const activeSql  = variants ? variants[variantIdx].sql  : demo.sql
   const activeDesc = variants ? variants[variantIdx].desc[lang] : undefined
@@ -211,7 +211,7 @@ export function MiniSimulator({
           {activeDesc && (
             <p className="font-mono text-[11px] text-muted-foreground leading-relaxed">{activeDesc}</p>
           )}
-          <MiniSimulatorTable sql={activeSql} lang={lang} />
+          <MiniSimulatorTable sql={activeSql} />
         </motion.div>
       </AnimatePresence>
     </div>
@@ -221,14 +221,12 @@ export function MiniSimulator({
 // ── ClickableSyntaxRow ─────────────────────────────────────────────────────
 
 export function ClickableSyntaxRow({
-  lang,
   demo,
   header,
   rows,
   topContent,
   bottomContent,
 }: {
-  lang: 'ko' | 'en'
   demo: ClauseDemo
   header: string[]
   rows: string[][]
@@ -282,7 +280,7 @@ export function ClickableSyntaxRow({
       </div>
 
       <div className="rounded-xl border bg-card p-4 shadow-sm">
-        <MiniSimulator demo={demo} lang={lang} variantIdx={selectedRow} />
+        <MiniSimulator demo={demo} variantIdx={selectedRow} />
       </div>
     </div>
   )
@@ -293,17 +291,15 @@ export function ClickableSyntaxRow({
 export function SyntaxRow({
   left,
   demo,
-  lang,
 }: {
   left: React.ReactNode
   demo: ClauseDemo
-  lang: 'ko' | 'en'
 }) {
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:items-start">
       <div>{left}</div>
       <div className="rounded-xl border bg-card p-4 shadow-sm">
-        <MiniSimulator demo={demo} lang={lang} />
+        <MiniSimulator demo={demo} />
       </div>
     </div>
   )
