@@ -182,13 +182,14 @@ function MapBlock({
 
   return (
     <motion.div
+      data-component-id={id}
       animate={
         isHighlighted && pulse
           ? { scale: [1, 1.04, 1], transition: { repeat: Infinity, duration: 1.2, repeatDelay: 0.3 } }
           : { scale: 1 }
       }
       className={cn(
-        'relative rounded-lg border-2 px-2.5 py-2 transition-all duration-300',
+        'relative cursor-pointer rounded-lg border-2 px-2.5 py-2 transition-all duration-300',
         isHighlighted ? c.highlight : isDimmed ? c.dim : c.base,
         className
       )}
@@ -273,25 +274,31 @@ export function OracleInstanceMap({ highlightIds, callout }: Props) {
       </div>
 
       {/* SGA */}
-      <div className={cn(
-        'rounded-xl border-2 p-3 transition-all duration-300',
-        sgaHighlighted
-          ? 'border-blue-400 bg-blue-50/60 shadow-sm'
-          : sgaDimmed
-          ? 'border-border/20 bg-muted/10'
-          : 'border-blue-200 bg-blue-50/30'
-      )}>
+      <div
+        data-component-id="sga"
+        className={cn(
+          'rounded-xl border-2 p-3 transition-all duration-300',
+          sgaHighlighted
+            ? 'border-blue-400 bg-blue-50/60 shadow-sm'
+            : sgaDimmed
+            ? 'border-border/20 bg-muted/10'
+            : 'border-blue-200 bg-blue-50/30'
+        )}
+      >
         <SectionLabel dimmed={sgaDimmed}>SGA — System Global Area</SectionLabel>
 
         {/* Shared Pool */}
-        <div className={cn(
-          'mb-2.5 rounded-lg border-2 p-2 transition-all duration-300',
-          sharedPoolHighlighted
-            ? 'border-indigo-300 bg-indigo-50/60'
-            : sgaDimmed
-            ? 'border-border/20 bg-transparent'
-            : 'border-indigo-200/70 bg-indigo-50/30'
-        )}>
+        <div
+          data-component-id="shared-pool"
+          className={cn(
+            'mb-2.5 rounded-lg border-2 p-2 transition-all duration-300',
+            sharedPoolHighlighted
+              ? 'border-indigo-300 bg-indigo-50/60'
+              : sgaDimmed
+              ? 'border-border/20 bg-transparent'
+              : 'border-indigo-200/70 bg-indigo-50/30'
+          )}
+        >
           <SectionLabel dimmed={sgaDimmed && !sharedPoolHighlighted}>Shared Pool</SectionLabel>
           <div className="grid grid-cols-2 gap-2">
             <MapBlock id="library-cache" highlightIds={highlightIds} />
@@ -308,14 +315,17 @@ export function OracleInstanceMap({ highlightIds, callout }: Props) {
       </div>
 
       {/* Background Processes */}
-      <div className={cn(
-        'rounded-xl border-2 p-3 transition-all duration-300',
-        bgProcessHighlighted
-          ? 'border-amber-300 bg-amber-50/60 shadow-sm'
-          : bgDimmed
-          ? 'border-border/20 bg-muted/10'
-          : 'border-amber-200/70 bg-amber-50/20'
-      )}>
+      <div
+        data-component-id="dbwr"
+        className={cn(
+          'rounded-xl border-2 p-3 transition-all duration-300',
+          bgProcessHighlighted
+            ? 'border-amber-300 bg-amber-50/60 shadow-sm'
+            : bgDimmed
+            ? 'border-border/20 bg-muted/10'
+            : 'border-amber-200/70 bg-amber-50/20'
+        )}
+      >
         <SectionLabel dimmed={bgDimmed}>Background Processes</SectionLabel>
         <div className="grid grid-cols-5 gap-1.5">
           {(['dbwr', 'lgwr', 'ckpt', 'smon', 'pmon'] as InstanceComponentId[]).map((id) => (
@@ -325,14 +335,17 @@ export function OracleInstanceMap({ highlightIds, callout }: Props) {
       </div>
 
       {/* Disk */}
-      <div className={cn(
-        'rounded-xl border-2 p-3 transition-all duration-300',
-        diskHighlighted
-          ? 'border-slate-400 bg-slate-50/60 shadow-sm'
-          : diskDimmed
-          ? 'border-border/20 bg-muted/10'
-          : 'border-slate-200/70 bg-slate-50/20'
-      )}>
+      <div
+        data-component-id="disk"
+        className={cn(
+          'rounded-xl border-2 p-3 transition-all duration-300',
+          diskHighlighted
+            ? 'border-slate-400 bg-slate-50/60 shadow-sm'
+            : diskDimmed
+            ? 'border-border/20 bg-muted/10'
+            : 'border-slate-200/70 bg-slate-50/20'
+        )}
+      >
         <SectionLabel dimmed={diskDimmed}>Disk Storage</SectionLabel>
         <div className="grid grid-cols-4 gap-1.5">
           {(['disk', 'redo-log-file', 'control-file', 'archive-log'] as InstanceComponentId[]).map((id) => (

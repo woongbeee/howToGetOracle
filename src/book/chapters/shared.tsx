@@ -42,14 +42,18 @@ export function PageContainer({ children, className }: { children: ReactNode; cl
   )
 }
 
-export function ChapterTitle({ icon, title, subtitle }: { icon?: ReactNode; num?: number; title: string; subtitle?: string }) {
+export function ChapterTitle({ icon, title, subtitle }: { icon?: ReactNode; num?: number; title: string; subtitle?: ReactNode }) {
   return (
     <div className="mb-5">
       <div className="flex items-center gap-3">
         {icon && <span className="shrink-0">{icon}</span>}
         <h1 className="text-3xl font-bold tracking-tight leading-tight">{title}</h1>
       </div>
-      {subtitle && <p className="mt-2 whitespace-pre-line text-sm text-muted-foreground leading-relaxed">{subtitle}</p>}
+      {subtitle && (
+        typeof subtitle === 'string'
+          ? <p className="mt-2 whitespace-pre-line text-sm text-muted-foreground leading-relaxed">{subtitle}</p>
+          : <div className="mt-2 text-sm text-muted-foreground leading-relaxed">{subtitle}</div>
+      )}
     </div>
   )
 }

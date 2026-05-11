@@ -164,12 +164,12 @@ export const BOOK_CHAPTERS: BookChapter[] = [
     },
     sections: [
       {
-        id: 'internals-storage',
-        title: { ko: '데이터 저장 구조', en: 'Data Storage Structure' },
+        id: 'internals-overview',
+        title: { ko: '오라클의 내부 구조', en: 'Oracle Internal Structure' },
       },
       {
-        id: 'internals-overview',
-        title: { ko: '아키텍처 개요', en: 'Architecture Overview' },
+        id: 'internals-storage',
+        title: { ko: '데이터 저장 구조', en: 'Data Storage Structure' },
       },
       {
         id: 'internals-sga',

@@ -195,6 +195,17 @@ const T = {
 
 - `internals/` — `StorageSection.tsx`, `OverviewSection.tsx`, `SgaSection.tsx`, `PgaSection.tsx`, `ProcessesSection.tsx`, `SimulatorSection.tsx`, `OracleInstanceMap.tsx` + `shared.tsx`(TwoColLayout, MapPanel, TourPanel)
 
+  **`StorageSection.tsx` 구성 패턴:**
+  - 파일 상단에 `B` / `Hi` 인라인 헬퍼 컴포넌트 정의 (bold·color 강조용)
+  - `INTRO_KO` / `INTRO_EN` JSX 상수로 도입부 단락 작성 → `ChapterTitle` 아래에 직접 렌더
+  - 각 계층(Block·Extent·Segment·Tablespace)은 `AccordionSection` 안에 **전용 Diagram 컴포넌트** + `Prose` 설명 + `Table` 구성
+  - `HierarchyOverview`는 제거됨. 각 Diagram이 해당 계층의 깊이만 표현:
+    - `BlockDiagram` — 블록 내부 구조(Header/ITL/Directory/Free/RowData) 인터랙티브 클릭
+    - `PctDiagram` — PCTFREE/PCTUSED 시각화
+    - `ExtentDiagram` — 하나의 Extent 안에 Block #1~#8 나열 (Segment처럼 여러 Extent를 감싸지 않음)
+    - `SegmentDiagram` — Extent 1개→2개→4개로 성장하는 3단계 흐름 시각화
+    - `TablespaceDiagram` — USERS Tablespace 박스 안에 Segment→Extent→Block 계층 + 하단 .dbf 파일 연결
+
 나머지 챕터(join, optimizer, sort, partition, parallel, query-transform, index-chapter)는 `index.tsx` 단일 파일로 구성된다.
 
 #### Index 챕터 우측 패널 (`HRSchemaPanel`)
