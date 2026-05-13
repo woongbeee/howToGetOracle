@@ -71,7 +71,7 @@ export function PartitionPage({ sectionId }: { sectionId: string }) {
   if (sectionId === 'partition-simulator') {
     return (
       <PageContainer>
-        <ChapterTitle icon="▦" num={7} title="Partition Simulator" subtitle={t.simDesc} />
+        <ChapterTitle icon="▦" title="Partition Simulator" subtitle={t.simDesc} />
         <SimulatorPlaceholder label="Partition Simulator" color="amber" />
       </PageContainer>
     )
@@ -82,7 +82,7 @@ export function PartitionPage({ sectionId }: { sectionId: string }) {
       <WipBanner />
       {sectionId === 'partition-overview' && (
         <>
-          <ChapterTitle icon="▦" num={7} title={t.chapterTitle} subtitle={t.chapterSubtitle} />
+          <ChapterTitle icon="▦" title={t.chapterTitle} subtitle={t.chapterSubtitle} />
           <SectionTitle>{t.overviewTitle}</SectionTitle>
           <Prose>{t.overviewDesc}</Prose>
           <ConceptGrid items={t.overviewItems} />

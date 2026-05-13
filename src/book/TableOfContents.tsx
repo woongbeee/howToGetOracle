@@ -51,7 +51,7 @@ export function TableOfContents({ activeSectionId, onSelect, onToggle }: Props) 
         const hasActive   = chapter.sections.some(
           (s) => s.id === activeSectionId || s.children?.some((c) => c.id === activeSectionId)
         )
-        const isChapter1  = chapter.num <= 1
+        const isReady  = chapter.num <= 2
 
         return (
           <div key={chapter.id} className="flex flex-col">
@@ -60,23 +60,23 @@ export function TableOfContents({ activeSectionId, onSelect, onToggle }: Props) 
               onClick={() => toggleChapter(chapter.id)}
               className={cn(
                 'group flex w-full items-center gap-2 px-3 py-2 text-left transition-colors',
-                isChapter1 ? 'hover:bg-muted/60' : 'hover:bg-muted/30',
-                hasActive && isChapter1 && 'bg-muted/40',
+                isReady ? 'hover:bg-muted/60' : 'hover:bg-muted/30',
+                hasActive && isReady && 'bg-muted/40',
               )}
             >
               {/* Collapse arrow */}
               <motion.span
                 animate={{ rotate: isOpen ? 90 : 0 }}
                 transition={{ duration: 0.18 }}
-                className={cn('shrink-0', isChapter1 ? 'text-muted-foreground/60' : 'text-muted-foreground/25')}
+                className={cn('shrink-0', isReady ? 'text-muted-foreground/60' : 'text-muted-foreground/25')}
               >
                 <IconChevronRight size={12} />
               </motion.span>
 
               {/* Chapter icon + number */}
-              <span className={cn('shrink-0 flex items-center', isChapter1 ? '' : 'opacity-30')}>{chapter.icon}</span>
+              <span className={cn('shrink-0 flex items-center', isReady ? '' : 'opacity-30')}>{chapter.icon}</span>
               {chapter.num > 0 && (
-                <span className={cn('font-mono text-[10px] font-bold shrink-0', isChapter1 ? 'text-muted-foreground/50' : 'text-muted-foreground/25')}>
+                <span className={cn('font-mono text-[10px] font-bold shrink-0', isReady ? 'text-muted-foreground/50' : 'text-muted-foreground/25')}>
                   {String(chapter.num).padStart(2, '0')}
                 </span>
               )}
@@ -85,7 +85,7 @@ export function TableOfContents({ activeSectionId, onSelect, onToggle }: Props) 
               <span
                 className={cn(
                   'min-w-0 flex-1 truncate font-mono text-[11px] leading-tight transition-colors',
-                  isChapter1
+                  isReady
                     ? hasActive ? 'font-bold text-ios-orange-dark' : 'font-bold text-foreground/80 group-hover:text-foreground'
                     : 'font-medium text-muted-foreground/30',
                 )}
@@ -94,7 +94,7 @@ export function TableOfContents({ activeSectionId, onSelect, onToggle }: Props) 
               </span>
 
               {/* Active dot */}
-              {hasActive && isChapter1 && <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-ios-orange" />}
+              {hasActive && isReady && <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-ios-orange" />}
             </button>
 
             {/* Sections */}
@@ -112,7 +112,7 @@ export function TableOfContents({ activeSectionId, onSelect, onToggle }: Props) 
                     {chapter.sections.map((section, idx) => {
                       const isActive    = section.id === activeSectionId
                       const isSimulator = section.hasSimulator
-                      const isChapter1  = chapter.num <= 1
+                      const isReady  = chapter.num <= 2
                       const hasChildren = !!section.children?.length
                       const childActive = section.children?.some((c) => c.id === activeSectionId) ?? false
 
@@ -127,7 +127,7 @@ export function TableOfContents({ activeSectionId, onSelect, onToggle }: Props) 
                               'group flex w-full items-center gap-2 px-3 py-1.5 text-left transition-colors rounded-r-md',
                               isActive
                                 ? 'bg-ios-orange-light text-ios-orange-dark'
-                                : isChapter1
+                                : isReady
                                   ? 'text-muted-foreground hover:bg-ios-orange-light/40 hover:text-ios-orange-dark'
                                   : 'text-muted-foreground/30 cursor-pointer',
                             )}
@@ -135,7 +135,7 @@ export function TableOfContents({ activeSectionId, onSelect, onToggle }: Props) 
                             {/* Section number */}
                             <span className={cn(
                               'shrink-0 font-mono text-[9px]',
-                              isActive ? 'text-ios-orange-dark/60' : isChapter1 ? 'text-muted-foreground/40' : 'text-muted-foreground/20'
+                              isActive ? 'text-ios-orange-dark/60' : isReady ? 'text-muted-foreground/40' : 'text-muted-foreground/20'
                             )}>
                               {idx + 1}
                             </span>
@@ -144,7 +144,7 @@ export function TableOfContents({ activeSectionId, onSelect, onToggle }: Props) 
                             <span
                               className={cn(
                                 'min-w-0 flex-1 truncate font-mono text-[11px] leading-tight',
-                                isActive ? 'font-bold' : isChapter1 ? 'font-medium' : 'font-normal'
+                                isActive ? 'font-bold' : isReady ? 'font-medium' : 'font-normal'
                               )}
                             >
                               {section.title[lang]}
@@ -154,7 +154,7 @@ export function TableOfContents({ activeSectionId, onSelect, onToggle }: Props) 
                             {isSimulator && (
                               <span className={cn(
                                 'shrink-0 rounded-full px-1.5 py-0.5 font-mono text-[8px] font-bold uppercase',
-                                isActive ? 'bg-ios-orange/20 text-ios-orange-dark' : isChapter1 ? 'bg-muted text-muted-foreground' : 'bg-muted/40 text-muted-foreground/30'
+                                isActive ? 'bg-ios-orange/20 text-ios-orange-dark' : isReady ? 'bg-muted text-muted-foreground' : 'bg-muted/40 text-muted-foreground/30'
                               )}>
                                 SIM
                               </span>
@@ -185,20 +185,20 @@ export function TableOfContents({ activeSectionId, onSelect, onToggle }: Props) 
                                       'group flex w-full items-center gap-2 px-3 py-1.5 text-left transition-colors rounded-r-md',
                                       isChildActive
                                         ? 'bg-ios-orange-light text-ios-orange-dark'
-                                        : isChapter1
+                                        : isReady
                                           ? 'text-muted-foreground hover:bg-ios-orange-light/40 hover:text-ios-orange-dark'
                                           : 'text-muted-foreground/30 cursor-pointer',
                                     )}
                                   >
                                     <span className={cn(
                                       'shrink-0 font-mono text-[9px]',
-                                      isChildActive ? 'text-ios-orange-dark/60' : isChapter1 ? 'text-muted-foreground/40' : 'text-muted-foreground/20'
+                                      isChildActive ? 'text-ios-orange-dark/60' : isReady ? 'text-muted-foreground/40' : 'text-muted-foreground/20'
                                     )}>
                                       {idx + 1}.{cidx + 1}
                                     </span>
                                     <span className={cn(
                                       'min-w-0 flex-1 truncate font-mono text-[11px] leading-tight',
-                                      isChildActive ? 'font-bold' : isChapter1 ? 'font-medium' : 'font-normal'
+                                      isChildActive ? 'font-bold' : isReady ? 'font-medium' : 'font-normal'
                                     )}>
                                       {child.title[lang]}
                                     </span>

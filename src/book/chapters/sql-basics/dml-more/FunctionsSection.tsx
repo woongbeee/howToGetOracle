@@ -199,7 +199,7 @@ export function FunctionsSection() {
     <PageContainer>
       <ChapterTitle
         icon="📋"
-        num={1}
+       
         title={lang === 'ko' ? 'Oracle 주요 함수' : 'Oracle Key Functions'}
         subtitle={
           lang === 'ko'

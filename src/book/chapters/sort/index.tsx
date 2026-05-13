@@ -78,7 +78,7 @@ export function SortPage({ sectionId }: { sectionId: string }) {
   if (sectionId === 'sort-simulator') {
     return (
       <PageContainer>
-        <ChapterTitle icon="↕" num={6} title="Sort Simulator" subtitle={t.simDesc} />
+        <ChapterTitle icon="↕" title="Sort Simulator" subtitle={t.simDesc} />
         <SimulatorPlaceholder label="Sort Simulator" color="rose" />
       </PageContainer>
     )
@@ -89,7 +89,7 @@ export function SortPage({ sectionId }: { sectionId: string }) {
       <WipBanner />
       {sectionId === 'sort-overview' && (
         <>
-          <ChapterTitle icon="↕" num={6} title={t.chapterTitle} subtitle={t.chapterSubtitle} />
+          <ChapterTitle icon="↕" title={t.chapterTitle} subtitle={t.chapterSubtitle} />
           <SectionTitle>{t.overviewTitle}</SectionTitle>
           <Prose>{t.overviewDesc}</Prose>
           <ConceptGrid items={t.overviewItems} />

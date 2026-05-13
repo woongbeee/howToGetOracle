@@ -42,7 +42,9 @@ export function PageContainer({ children, className }: { children: ReactNode; cl
   )
 }
 
-export function ChapterTitle({ icon, title, subtitle }: { icon?: ReactNode; num?: number; title: string; subtitle?: ReactNode }) {
+export type Lang = 'ko' | 'en'
+
+export function ChapterTitle({ icon, title, subtitle }: { icon?: ReactNode; title: string; subtitle?: ReactNode }) {
   return (
     <div className="mb-5">
       <div className="flex items-center gap-3">
@@ -51,8 +53,8 @@ export function ChapterTitle({ icon, title, subtitle }: { icon?: ReactNode; num?
       </div>
       {subtitle && (
         typeof subtitle === 'string'
-          ? <p className="mt-2 whitespace-pre-line text-sm text-muted-foreground leading-relaxed">{subtitle}</p>
-          : <div className="mt-2 text-sm text-muted-foreground leading-relaxed">{subtitle}</div>
+          ? <p className="mt-4 whitespace-pre-line text-sm text-muted-foreground leading-relaxed">{subtitle}</p>
+          : <div className="mt-4 text-sm text-muted-foreground leading-relaxed">{subtitle}</div>
       )}
     </div>
   )

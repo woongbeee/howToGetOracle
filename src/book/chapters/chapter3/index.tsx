@@ -82,7 +82,7 @@ export function IndexChapterPage({ sectionId }: { sectionId: string }) {
     return (
       <PageContainer>
         <WipBanner />
-        <ChapterTitle icon="🔍" num={2} title="Index Simulator" subtitle={t.simDesc} />
+        <ChapterTitle icon="🔍" title="Index Simulator" subtitle={t.simDesc} />
         <SimulatorPlaceholder label="Index Simulator" color="violet" />
       </PageContainer>
     )

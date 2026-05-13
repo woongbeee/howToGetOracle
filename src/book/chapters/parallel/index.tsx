@@ -83,7 +83,7 @@ export function ParallelPage({ sectionId }: { sectionId: string }) {
   if (sectionId === 'parallel-simulator') {
     return (
       <PageContainer>
-        <ChapterTitle icon="⫴" num={8} title="Parallel Simulator" subtitle={t.simDesc} />
+        <ChapterTitle icon="⫴" title="Parallel Simulator" subtitle={t.simDesc} />
         <SimulatorPlaceholder label="Parallel Simulator" color="teal" />
       </PageContainer>
     )
@@ -94,7 +94,7 @@ export function ParallelPage({ sectionId }: { sectionId: string }) {
       <WipBanner />
       {sectionId === 'parallel-overview' && (
         <>
-          <ChapterTitle icon="⫴" num={8} title={t.chapterTitle} subtitle={t.chapterSubtitle} />
+          <ChapterTitle icon="⫴" title={t.chapterTitle} subtitle={t.chapterSubtitle} />
           <SectionTitle>{t.overviewTitle}</SectionTitle>
           <Prose>{t.overviewDesc}</Prose>
           <ConceptGrid items={t.overviewItems} />

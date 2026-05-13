@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { useSimulationStore } from '@/store/simulationStore'
 import {
-  ChapterTitle, Prose,
-  InfoBox, Table, ConceptGrid, WipBanner, AccordionSection,
+  PageContainer, ChapterTitle, Prose, SubTitle,
+  InfoBox, Table, ConceptGrid, AccordionSection,
 } from '../shared'
 import { cn } from '@/lib/utils'
 import { IconCube, IconArrowDown, IconArrowUp } from '@tabler/icons-react'
@@ -41,7 +41,7 @@ const INTRO_KO = (
       이 <B>Block → Extent → Segment → Tablespace</B> 4계층이 Oracle이 저장 공간을 관리하는 방식입니다.
       계층은 <B>논리적 단위</B>(Oracle 내부 개념)이며, 실제 파일 시스템에는 <B>.dbf 데이터 파일</B>로만 존재합니다.
     </p>
-    <p className="text-s text-muted-foreground/70">가장 작은 단위인 Block부터 하나씩 살펴봅니다.</p>
+    <p className="text-xs text-muted-foreground/70">가장 작은 단위인 Block부터 하나씩 살펴봅니다.</p>
   </div>
 )
 
@@ -77,7 +77,7 @@ const STORAGE_T = {
     blockTitle: 'Block — 최소 I/O 단위',
 
     extentTitle: 'Extent — 연속 블록의 묶음',
-    extentDesc: 'Block들이 모여 만들어지는 첫 번째 묶음 단위입니다. Oracle은 테이블이나 인덱스에 공간이 필요할 때 행 하나씩이 아니라 Extent 단위로 한꺼번에 할당합니다. Extent 안의 블록들은 디스크에서 물리적으로 연속된 주소에 놓이기 때문에 순차 읽기(Sequential I/O) 성능이 높아집니다.',
+    extentDesc: 'Block들이 모여 만들어지는 첫 번째 묶음 단위입니다. Oracle은 테이블이나 인덱스에 공간이 필요할 때 행 하나씩이 아니라 Extent 단위로 한꺼번에 할당합니다. Extent 안의 블록들은 디스크에서 물리적으로 연속된 주소에 놓이기 때문에 순차 읽기(Sequential I/O) 성능이 높아집니다.\n\nOracle의 기본 Extent 크기는 8개 블록(64 KB)입니다. 이는 너무 작으면 공간 할당을 자주 반복해 오버헤드가 커지고, 너무 크면 작은 테이블도 불필요하게 큰 공간을 차지하는 문제 사이의 절충점으로 Oracle이 설계한 값입니다.\n\nLMT(Locally Managed Tablespace)의 AUTOALLOCATE 모드에서는 Segment가 커질수록 Extent 크기를 자동으로 늘립니다. 처음 16개 Extent는 64 KB, 그 다음 63개는 1 MB, 이후 126개는 8 MB, 그 이상부터는 64 MB로 커집니다. 이렇게 단계적으로 키우는 이유는 작은 테이블은 공간 낭비 없이 시작하고, 대형 테이블은 Extent 수가 너무 많아지지 않도록 하기 위해서입니다.',
     extentSizeDesc: 'Extent 하나에 들어있는 블록 수와 크기는 Tablespace 관리 방식에 따라 달라집니다. Locally Managed Tablespace(현재 표준)에서 AUTOALLOCATE를 쓰면 Oracle이 Segment 크기에 맞게 자동으로 64 KB → 1 MB → 8 MB → 64 MB 순으로 Extent를 키워나갑니다. UNIFORM SIZE를 지정하면 처음부터 끝까지 같은 크기(예: 1 MB)로 고정됩니다.',
     extentSizeTable: [
       ['첫 번째 Extent', '64 KB (블록 8KB 기준 → 8개 블록)', 'AUTOALLOCATE 초기값'],
@@ -127,7 +127,7 @@ const STORAGE_T = {
     blockTitle: 'Block — Smallest I/O Unit',
 
     extentTitle: 'Extent — Group of Contiguous Blocks',
-    extentDesc: 'An Extent is the first grouping above individual Blocks. When a table or index needs more space, Oracle allocates an entire Extent at once — not row by row. Because the blocks within an Extent occupy physically contiguous disk addresses, sequential reads are fast.',
+    extentDesc: 'An Extent is the first grouping above individual Blocks. When a table or index needs more space, Oracle allocates an entire Extent at once — not row by row. Because the blocks within an Extent occupy physically contiguous disk addresses, sequential reads are fast.\n\nOracle\'s default Extent size is 8 blocks (64 KB). This is a deliberate design choice: too small and allocation overhead compounds quickly; too large and even tiny tables waste disk. 64 KB is Oracle\'s practical balance point.\n\nUnder LMT (Locally Managed Tablespace) AUTOALLOCATE, Oracle scales Extent sizes automatically as a Segment grows — the first 16 Extents are 64 KB, the next 63 are 1 MB, the next 126 are 8 MB, and beyond that 64 MB. The progressive sizing ensures small tables start lean while large tables don\'t accumulate an unmanageable number of tiny Extents.',
     extentSizeDesc: 'The number of blocks and the size of each Extent depend on how the Tablespace is managed. With AUTOALLOCATE (the default for Locally Managed Tablespaces), Oracle automatically scales Extent sizes from 64 KB → 1 MB → 8 MB → 64 MB as the Segment grows. With UNIFORM SIZE, every Extent in the tablespace stays the same size (e.g. 1 MB) from creation to the end.',
     extentSizeTable: [
       ['1st Extent', '64 KB (8 blocks at 8 KB each)', 'AUTOALLOCATE default'],
@@ -304,9 +304,9 @@ function BlockDiagram() {
   return (
     <div className="flex flex-col gap-6">
       {/* ── 타이틀 — 블록 시각과 정렬 맞춤 ── */}
-      <div className="flex items-center gap-2 mt-6">
-        <IconCube size={18} className="text-slate-600" stroke={1.5} />
-        <span className="font-mono text-sm font-bold text-slate-700">
+      <div className="mt-6 mb-2 flex items-center gap-2">
+        <IconCube size={16} className="text-slate-500" stroke={1.5} />
+        <span className="text-sm font-bold text-foreground/90">
           {isKo ? '오라클의 블록은 이렇게 생겼어요' : 'Anatomy of an Oracle Block'}
         </span>
       </div>
@@ -403,11 +403,11 @@ function BlockDiagram() {
           <span className={cn('rounded px-2.5 py-0.5 font-mono text-xs font-bold text-white', activeZone.badgeColor)}>
             {active.toUpperCase()}
           </span>
-          <span className="font-mono text-sm font-bold text-slate-700">
+          <span className="text-sm font-bold text-foreground/90">
             {isKo ? activeZone.titleKo : activeZone.titleEn}
           </span>
         </div>
-        <p className="border-b border-slate-100 px-5 py-3.5 text-[12px] leading-relaxed text-slate-500">
+        <p className="border-b border-slate-100 px-5 py-3.5 text-xs leading-relaxed text-muted-foreground">
           {isKo ? activeZone.descKo : activeZone.descEn}
         </p>
         <div className="flex flex-col divide-y divide-slate-100">
@@ -417,7 +417,7 @@ function BlockDiagram() {
                 <span className="font-mono font-bold text-slate-600">{isKo ? row.termKo : row.termEn}</span>
               </div>
               <div className="flex items-center px-4 py-3">
-                <span className="font-mono leading-snug text-slate-500">{isKo ? row.descKo : row.descEn}</span>
+                <span className="leading-snug text-muted-foreground">{isKo ? row.descKo : row.descEn}</span>
               </div>
             </div>
           ))}
@@ -470,7 +470,7 @@ function PctDiagram() {
     <div className="mt-8 flex flex-col gap-4">
       {/* ── 섹션 헤더 ── */}
       <div className="flex items-center gap-2 border-b border-slate-200 pb-3">
-        <span className="font-mono text-sm font-bold text-slate-700">
+        <span className="text-sm font-bold text-foreground/90">
           {isKo ? '데이터 블록에 데이터를 어떻게 저장하는 지 더 자세히 알아보기' : 'How Oracle Stores Data Inside a Block'}
         </span>
       </div>
@@ -535,9 +535,9 @@ function PctDiagram() {
             <div className="mb-1.5 flex items-center gap-2">
               <IconArrowDown size={14} className="text-green-600" stroke={2} />
               <span className="font-mono text-xs font-bold text-green-700">PCTFREE</span>
-              <span className="font-mono text-[10px] text-green-600">{isKo ? '= INSERT 상한선' : '= INSERT ceiling'}</span>
+              <span className="text-xs text-green-600">{isKo ? '= INSERT 상한선' : '= INSERT ceiling'}</span>
             </div>
-            <p className="font-mono text-[11px] leading-relaxed text-slate-600">
+            <p className="text-xs leading-relaxed text-muted-foreground">
               {isKo
                 ? '블록 전체 크기의 10%를 상단에 예약해 둡니다. 여유 공간이 이 비율 아래로 줄면 새 INSERT를 거부하고, 기존 행이 UPDATE로 길어질 때 쓸 공간으로 남겨 둡니다.'
                 : 'Reserves 10% of the total block size at the top. Once free space drops below this, new INSERTs are blocked — the space is kept for in-place UPDATE growth on existing rows.'}
@@ -549,9 +549,9 @@ function PctDiagram() {
             <div className="mb-1.5 flex items-center gap-2">
               <IconArrowUp size={14} className="text-blue-600" stroke={2} />
               <span className="font-mono text-xs font-bold text-blue-700">PCTUSED</span>
-              <span className="font-mono text-[10px] text-blue-600">{isKo ? '= Freelist 재진입 하한선' : '= Freelist re-entry floor'}</span>
+              <span className="text-xs text-blue-600">{isKo ? '= Freelist 재진입 하한선' : '= Freelist re-entry floor'}</span>
             </div>
-            <p className="font-mono text-[11px] leading-relaxed text-slate-600">
+            <p className="text-xs leading-relaxed text-muted-foreground">
               {isKo
                 ? '블록 전체 크기의 40%입니다. DELETE·UPDATE로 실제 Row Data 사용량이 이 비율 아래로 줄면, Oracle이 블록을 Freelist에 재등록해 새 INSERT를 받을 수 있게 합니다.'
                 : '40% of the total block size. When DELETE/UPDATE shrinks Row Data usage below this threshold, Oracle re-adds the block to the Freelist so it can accept new INSERTs again.'}
@@ -560,7 +560,7 @@ function PctDiagram() {
 
           {/* 관계 요약 */}
           <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-            <p className="font-mono text-[11px] leading-relaxed text-slate-500">
+            <p className="text-xs leading-relaxed text-muted-foreground">
               {isKo
                 ? 'INSERT → PCTFREE 도달 → INSERT 금지 → DELETE로 Row Data가 PCTUSED 이하 → Freelist 재등록 → INSERT 재개. PCTFREE + PCTUSED의 합이 100을 넘으면 안 됩니다.'
                 : 'INSERT → hits PCTFREE → blocked → DELETE brings Row Data below PCTUSED → re-added to Freelist → INSERTs resume. PCTFREE + PCTUSED must not exceed 100.'}
@@ -584,7 +584,7 @@ function ExtentDiagram() {
       <div className="mb-3 flex items-center gap-2">
         <span className="rounded bg-emerald-500 px-2 py-0.5 font-mono text-[10px] font-bold text-white">EXTENT</span>
         <span className="font-mono text-[11px] text-emerald-700">
-          {isKo ? '연속된 Block들의 묶음 — 할당의 기본 단위' : 'Contiguous Blocks — allocation unit'}
+          {isKo ? '8개의 Block이 모여 Extent 1개 = 64 KB' : '8 Blocks form 1 Extent = 64 KB'}
         </span>
       </div>
 
@@ -596,19 +596,20 @@ function ExtentDiagram() {
             className="flex flex-1 flex-col items-center justify-center rounded-lg border border-orange-300 bg-orange-100 py-3 gap-0.5"
           >
             <span className="font-mono text-[9px] font-bold text-orange-700">Block</span>
-            <span className="font-mono text-[8px] text-orange-500">#{i + 1}</span>
+            <span className="font-mono text-[8px] text-orange-500">8 KB</span>
           </div>
         ))}
       </div>
 
-      {/* 하단 설명 */}
+      {/* 하단 수식 */}
       <div className="mt-3 flex items-center gap-1.5">
         <div className="h-px flex-1 bg-emerald-300" />
         <span className="font-mono text-[9px] text-emerald-600 whitespace-nowrap">
-          {isKo ? '물리적으로 연속된 주소 공간' : 'Physically contiguous address space'}
+          {isKo ? '8 Blocks × 8 KB = 64 KB · 물리적으로 연속된 주소 공간' : '8 Blocks × 8 KB = 64 KB · physically contiguous'}
         </span>
         <div className="h-px flex-1 bg-emerald-300" />
       </div>
+
     </div>
   )
 }
@@ -660,21 +661,10 @@ function SegmentDiagram() {
               {Array.from({ length: stage.extents }).map((_, ei) => (
                 <div
                   key={ei}
-                  className="flex-1 rounded-lg border border-emerald-300 bg-emerald-50 p-1.5"
+                  className="flex flex-1 flex-col items-center justify-center rounded-lg border-2 border-emerald-300 bg-emerald-50 py-3 gap-0.5"
                 >
-                  <div className="mb-1 font-mono text-[8px] font-bold text-emerald-600">
-                    {isKo ? `Extent ${ei + 1}` : `Extent ${ei + 1}`}
-                  </div>
-                  <div className="flex gap-0.5">
-                    {Array.from({ length: 4 }).map((_, bi) => (
-                      <div
-                        key={bi}
-                        className="flex flex-1 items-center justify-center rounded border border-orange-200 bg-orange-100 py-1"
-                      >
-                        <span className="font-mono text-[7px] text-orange-500">B</span>
-                      </div>
-                    ))}
-                  </div>
+                  <span className="font-mono text-[10px] font-bold text-emerald-700">Extent {ei + 1}</span>
+                  <span className="font-mono text-[9px] text-emerald-500">64 KB · 8 blocks</span>
                 </div>
               ))}
               {/* 마지막 단계에 +추가 암시 */}
@@ -756,18 +746,9 @@ function TablespaceDiagram() {
               {/* Extent들 */}
               <div className="flex gap-1.5 ml-1">
                 {Array.from({ length: seg.extents }).map((_, ei) => (
-                  <div key={ei} className="flex-1 rounded border border-emerald-300 bg-emerald-50 p-1.5">
-                    <div className="mb-1 font-mono text-[8px] font-bold text-emerald-600">Extent {ei + 1}</div>
-                    <div className="flex gap-0.5">
-                      {Array.from({ length: 4 }).map((_, bi) => (
-                        <div
-                          key={bi}
-                          className="flex flex-1 items-center justify-center rounded border border-orange-200 bg-orange-100 py-0.5"
-                        >
-                          <span className="font-mono text-[7px] text-orange-500">B</span>
-                        </div>
-                      ))}
-                    </div>
+                  <div key={ei} className="flex flex-1 flex-col items-center justify-center rounded-lg border-2 border-emerald-300 bg-emerald-50 py-2.5 gap-0.5">
+                    <span className="font-mono text-[10px] font-bold text-emerald-700">Extent {ei + 1}</span>
+                    <span className="font-mono text-[9px] text-emerald-500">64 KB</span>
                   </div>
                 ))}
               </div>
@@ -812,87 +793,76 @@ export function StorageSection() {
   const io = IO_POPUP_T[lang]
 
   return (
-    <div className="mx-auto max-w-screen-2xl px-10 py-10">
-      <WipBanner />
+    <PageContainer className="max-w-5xl">
       <ChapterTitle title={t.sectionTitle} />
       {lang === 'ko' ? INTRO_KO : INTRO_EN}
 
-        {/* Block */}
-        <AccordionSection title={`${io.before}I/O${io.after}`}>
-          <Prose>{lang === 'ko'
-            ? 'Block은 Oracle이 디스크에서 데이터를 읽고 쓰는 최소 단위입니다. 행(Row) 하나가 아닌 Block 전체를 한 번에 읽어 메모리(Buffer Cache)에 올립니다.\n\nI/O(Input/Output)란 데이터를 읽거나 쓰는 작업입니다. 디스크에서 데이터를 읽는 것은 메모리에서 읽는 것보다 수백~수만 배 느리기 때문에, Oracle은 Block 단위로 한꺼번에 읽어 재사용함으로써 불필요한 I/O를 줄입니다. Block 크기를 크게 하면 한 번에 더 많은 행을 읽을 수 있지만, 필요한 행이 적을 때는 쓸모없는 데이터를 함께 읽는 낭비가 생깁니다. 기본값 8 KB는 이 두 가지를 절충한 크기입니다.'
-            : 'A Block is the smallest unit Oracle uses to read and write data on disk. Instead of fetching a single row, Oracle always reads an entire Block into memory (the Buffer Cache) at once.\n\nI/O (Input/Output) is any operation that reads or writes data. Disk I/O is hundreds to thousands of times slower than CPU work, so Oracle minimizes unnecessary I/O by loading data in Block-sized chunks and reusing what is already in memory. A larger Block size means more rows per read, but wastes I/O when only a few rows are needed. The default 8 KB is a practical balance between these two.'
-          }</Prose>
-          <BlockDiagram />
-          <PctDiagram />
-          <InfoBox variant="note">
-            {lang === 'ko'
-              ? '슬롯(Slot)이란 블록 안에 미리 잘라 놓은 고정 크기의 자리입니다. ITL 슬롯은 트랜잭션 1개가 들어갈 칸, Row Directory 슬롯은 행 1개의 위치 포인터가 들어갈 칸입니다. 배열의 인덱스처럼 번호로 관리되어, Oracle은 슬롯 번호만 알면 해당 데이터를 바로 찾아갑니다.'
-              : 'A slot is a pre-carved, fixed-size entry inside the block. An ITL slot holds one transaction\'s tracking data; a Row Directory slot holds the byte-offset pointer for one row. Slots are numbered like array indices — Oracle can locate any entry in O(1) given just the slot number.'}
-          </InfoBox>
-        </AccordionSection>
+      {/* Block */}
+      <AccordionSection title={`${io.before}I/O${io.after}`}>
+        <Prose>{lang === 'ko'
+          ? 'Block은 Oracle이 디스크에서 데이터를 읽고 쓰는 최소 단위입니다. 행(Row) 하나가 아닌 Block 전체를 한 번에 읽어 메모리(Buffer Cache)에 올립니다.\n\nI/O(Input/Output)란 데이터를 읽거나 쓰는 작업입니다. 디스크에서 데이터를 읽는 것은 메모리에서 읽는 것보다 수백~수만 배 느리기 때문에, Oracle은 Block 단위로 한꺼번에 읽어 재사용함으로써 불필요한 I/O를 줄입니다. Block 크기를 크게 하면 한 번에 더 많은 행을 읽을 수 있지만, 필요한 행이 적을 때는 쓸모없는 데이터를 함께 읽는 낭비가 생깁니다. 기본값 8 KB는 이 두 가지를 절충한 크기입니다.'
+          : 'A Block is the smallest unit Oracle uses to read and write data on disk. Instead of fetching a single row, Oracle always reads an entire Block into memory (the Buffer Cache) at once.\n\nI/O (Input/Output) is any operation that reads or writes data. Disk I/O is hundreds to thousands of times slower than CPU work, so Oracle minimizes unnecessary I/O by loading data in Block-sized chunks and reusing what is already in memory. A larger Block size means more rows per read, but wastes I/O when only a few rows are needed. The default 8 KB is a practical balance between these two.'
+        }</Prose>
+        <BlockDiagram />
+        <PctDiagram />
+        <InfoBox variant="note">
+          {lang === 'ko'
+            ? '슬롯(Slot)이란 블록 안에 미리 잘라 놓은 고정 크기의 자리입니다. ITL 슬롯은 트랜잭션 1개가 들어갈 칸, Row Directory 슬롯은 행 1개의 위치 포인터가 들어갈 칸입니다. 배열의 인덱스처럼 번호로 관리되어, Oracle은 슬롯 번호만 알면 해당 데이터를 바로 찾아갑니다.'
+            : 'A slot is a pre-carved, fixed-size entry inside the block. An ITL slot holds one transaction\'s tracking data; a Row Directory slot holds the byte-offset pointer for one row. Slots are numbered like array indices — Oracle can locate any entry in O(1) given just the slot number.'}
+        </InfoBox>
+      </AccordionSection>
 
-        {/* Extent */}
-        <AccordionSection title={t.extentTitle}>
-          <Prose>{t.extentDesc}</Prose>
-          <ExtentDiagram />
+      {/* Extent */}
+      <AccordionSection title={t.extentTitle}>
+        <Prose>{t.extentDesc}</Prose>
+        <ExtentDiagram />
 
-          {/* Extent 크기 */}
-          <div className="mt-6 mb-1 text-sm font-bold text-foreground/90">
-            {lang === 'ko' ? 'Extent 크기 — 블록이 몇 개나 들어갈까?' : 'Extent Size — how many blocks?'}
-          </div>
-          <Prose>{t.extentSizeDesc}</Prose>
-          <Table
-            headers={lang === 'ko'
-              ? ['Extent', '크기 / 블록 수', '조건']
-              : ['Extent', 'Size / Block Count', 'Condition']}
-            rows={t.extentSizeTable}
-          />
+        <SubTitle>{lang === 'ko' ? 'Extent 크기 — 블록이 몇 개나 들어갈까?' : 'Extent Size — how many blocks?'}</SubTitle>
+        <Prose>{t.extentSizeDesc}</Prose>
+        <Table
+          headers={lang === 'ko'
+            ? ['Extent', '크기 / 블록 수', '조건']
+            : ['Extent', 'Size / Block Count', 'Condition']}
+          rows={t.extentSizeTable}
+        />
 
-          {/* 파라미터 */}
-          <div className="mt-6 mb-1 text-sm font-bold text-foreground/90">
-            {lang === 'ko' ? 'Extent 관련 스토리지 파라미터' : 'Extent Storage Parameters'}
-          </div>
-          <Prose>{t.extentParamDesc}</Prose>
-          <Table
-            headers={lang === 'ko'
-              ? ['파라미터', '설명']
-              : ['Parameter', 'Description']}
-            rows={t.extentParams}
-          />
-          <InfoBox variant="note">
-            {lang === 'ko'
-              ? 'Oracle 10g 이후 Locally Managed Tablespace가 기본값입니다. INITIAL·NEXT·PCTINCREASE는 기존 코드 호환성을 위해 문법상 허용되지만 실제로는 Oracle이 무시하고 AUTOALLOCATE 규칙을 따릅니다. 신규 테이블스페이스는 별도 이유가 없다면 AUTOALLOCATE를 그대로 쓰는 게 권장됩니다.'
-              : 'Since Oracle 10g, Locally Managed Tablespaces are the default. INITIAL, NEXT, and PCTINCREASE are still accepted syntactically for backward compatibility, but Oracle ignores them and follows AUTOALLOCATE rules. For new tablespaces, sticking with AUTOALLOCATE is recommended unless you have a specific reason to use UNIFORM SIZE.'}
-          </InfoBox>
-        </AccordionSection>
+        <SubTitle>{lang === 'ko' ? 'Extent 관련 스토리지 파라미터' : 'Extent Storage Parameters'}</SubTitle>
+        <Prose>{t.extentParamDesc}</Prose>
+        <Table
+          headers={lang === 'ko'
+            ? ['파라미터', '설명']
+            : ['Parameter', 'Description']}
+          rows={t.extentParams}
+        />
+        <InfoBox variant="note">
+          {lang === 'ko'
+            ? 'Oracle 10g 이후 Locally Managed Tablespace가 기본값입니다. INITIAL·NEXT·PCTINCREASE는 기존 코드 호환성을 위해 문법상 허용되지만 실제로는 Oracle이 무시하고 AUTOALLOCATE 규칙을 따릅니다. 신규 테이블스페이스는 별도 이유가 없다면 AUTOALLOCATE를 그대로 쓰는 게 권장됩니다.'
+            : 'Since Oracle 10g, Locally Managed Tablespaces are the default. INITIAL, NEXT, and PCTINCREASE are still accepted syntactically for backward compatibility, but Oracle ignores them and follows AUTOALLOCATE rules. For new tablespaces, sticking with AUTOALLOCATE is recommended unless you have a specific reason to use UNIFORM SIZE.'}
+        </InfoBox>
+      </AccordionSection>
 
-        {/* Segment */}
-        <AccordionSection title={t.segmentTitle}>
-          <Prose>{t.segmentDesc}</Prose>
-          <SegmentDiagram />
-          <div className="mt-2 mb-1 text-sm font-bold text-foreground/90">
-            {lang === 'ko' ? 'Segment의 종류' : 'Types of Segment'}
-          </div>
-          <ConceptGrid items={t.segmentTypes} />
-        </AccordionSection>
+      {/* Segment */}
+      <AccordionSection title={t.segmentTitle}>
+        <Prose>{t.segmentDesc}</Prose>
+        <SegmentDiagram />
+        <SubTitle>{lang === 'ko' ? 'Segment의 종류' : 'Types of Segment'}</SubTitle>
+        <ConceptGrid items={t.segmentTypes} />
+      </AccordionSection>
 
-        {/* Tablespace */}
-        <AccordionSection title={t.tablespaceTitle}>
-          <Prose>{t.tablespaceDesc}</Prose>
-          <TablespaceDiagram />
-          <div className="mt-4 mb-1 text-sm font-bold text-foreground/90">
-            {lang === 'ko' ? 'Oracle 기본 Tablespace 목록' : 'Built-in Oracle Tablespaces'}
-          </div>
-          <Prose>{t.tablespaceFileDesc}</Prose>
-          <Table
-            headers={[lang === 'ko' ? 'Tablespace' : 'Tablespace', lang === 'ko' ? '용도' : 'Purpose']}
-            rows={t.tablespaceTable}
-          />
-          <InfoBox variant="tip">{t.tablespaceNote}</InfoBox>
-        </AccordionSection>
+      {/* Tablespace */}
+      <AccordionSection title={t.tablespaceTitle}>
+        <Prose>{t.tablespaceDesc}</Prose>
+        <TablespaceDiagram />
+        <SubTitle>{lang === 'ko' ? 'Oracle 기본 Tablespace 목록' : 'Built-in Oracle Tablespaces'}</SubTitle>
+        <Prose>{t.tablespaceFileDesc}</Prose>
+        <Table
+          headers={[lang === 'ko' ? 'Tablespace' : 'Tablespace', lang === 'ko' ? '용도' : 'Purpose']}
+          rows={t.tablespaceTable}
+        />
+        <InfoBox variant="tip">{t.tablespaceNote}</InfoBox>
+      </AccordionSection>
 
       <InfoBox variant="summary">{t.infoBody}</InfoBox>
-    </div>
+    </PageContainer>
   )
 }

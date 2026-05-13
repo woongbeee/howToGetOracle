@@ -112,7 +112,7 @@ export function OptimizerChapterPage({ sectionId }: { sectionId: string }) {
   if (sectionId === 'optimizer-simulator') {
     return (
       <PageContainer>
-        <ChapterTitle icon="⚡" num={4} title="Optimizer Simulator" subtitle={t.simDesc} />
+        <ChapterTitle icon="⚡" title="Optimizer Simulator" subtitle={t.simDesc} />
         <SimulatorPlaceholder label="Optimizer Simulator" color="orange" />
       </PageContainer>
     )
@@ -123,7 +123,7 @@ export function OptimizerChapterPage({ sectionId }: { sectionId: string }) {
       <WipBanner />
       {sectionId === 'optimizer-overview' && (
         <>
-          <ChapterTitle icon="⚡" num={4} title={t.chapterTitle} subtitle={t.chapterSubtitle} />
+          <ChapterTitle icon="⚡" title={t.chapterTitle} subtitle={t.chapterSubtitle} />
           <SectionTitle>{t.overviewTitle}</SectionTitle>
           <Prose>{t.overviewDesc}</Prose>
           <ConceptGrid items={t.overviewItems} />

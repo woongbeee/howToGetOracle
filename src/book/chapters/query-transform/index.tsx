@@ -124,7 +124,7 @@ export function QueryTransformPage({ sectionId }: { sectionId: string }) {
   if (sectionId === 'qt-simulator') {
     return (
       <PageContainer>
-        <ChapterTitle icon="🔄" num={5} title="Query Transform Simulator" subtitle={t.simDesc} />
+        <ChapterTitle icon="🔄" title="Query Transform Simulator" subtitle={t.simDesc} />
         <SimulatorPlaceholder label="Query Transform Simulator" color="cyan" />
       </PageContainer>
     )
@@ -135,7 +135,7 @@ export function QueryTransformPage({ sectionId }: { sectionId: string }) {
       <WipBanner />
       {sectionId === 'qt-overview' && (
         <>
-          <ChapterTitle icon="🔄" num={5} title={t.chapterTitle} subtitle={t.chapterSubtitle} />
+          <ChapterTitle icon="🔄" title={t.chapterTitle} subtitle={t.chapterSubtitle} />
           <SectionTitle>{t.overviewTitle}</SectionTitle>
           <Prose>{t.overviewDesc}</Prose>
           <ConceptGrid items={t.overviewItems} />

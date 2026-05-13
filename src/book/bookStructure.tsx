@@ -166,28 +166,20 @@ export const BOOK_CHAPTERS: BookChapter[] = [
       {
         id: 'internals-overview',
         title: { ko: '오라클의 내부 구조', en: 'Oracle Internal Structure' },
+        children: [
+          {
+            id: 'internals-overview-buffer',
+            title: { ko: 'Buffer Cache 원리', en: 'Buffer Cache Internals' },
+          },
+          {
+            id: 'internals-overview-flow',
+            title: { ko: 'UPDATE 실행 흐름', en: 'UPDATE Execution Flow' },
+          },
+        ],
       },
       {
         id: 'internals-storage',
         title: { ko: '데이터 저장 구조', en: 'Data Storage Structure' },
-      },
-      {
-        id: 'internals-sga',
-        title: {
-          ko: 'SGA — System Global Area',
-          en: 'SGA — System Global Area',
-        },
-      },
-      {
-        id: 'internals-pga',
-        title: {
-          ko: 'PGA — Program Global Area',
-          en: 'PGA — Program Global Area',
-        },
-      },
-      {
-        id: 'internals-processes',
-        title: { ko: '백그라운드 프로세스', en: 'Background Processes' },
       },
     ],
   },

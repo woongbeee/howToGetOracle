@@ -99,7 +99,7 @@ export function JoinPage({ sectionId }: { sectionId: string }) {
   if (sectionId === 'join-simulator') {
     return (
       <PageContainer>
-        <ChapterTitle icon="🔗" num={3} title="Join Simulator" subtitle={t.simDesc} />
+        <ChapterTitle icon="🔗" title="Join Simulator" subtitle={t.simDesc} />
         <SimulatorPlaceholder label="Join Simulator" color="emerald" />
       </PageContainer>
     )
@@ -110,7 +110,7 @@ export function JoinPage({ sectionId }: { sectionId: string }) {
       <WipBanner />
       {sectionId === 'join-overview' && (
         <>
-          <ChapterTitle icon="🔗" num={3} title={t.chapterTitle} subtitle={t.chapterSubtitle} />
+          <ChapterTitle icon="🔗" title={t.chapterTitle} subtitle={t.chapterSubtitle} />
           <SectionTitle>{t.overviewTitle}</SectionTitle>
           <Prose>{t.overviewDesc}</Prose>
           <ConceptGrid items={t.overviewItems} />
