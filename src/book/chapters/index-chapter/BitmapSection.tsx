@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useSimulationStore } from '@/store/simulationStore'
 import { cn } from '@/lib/utils'
 import { getLargeTable } from '@/data/largeDataGenerator'
+import { WipBanner } from '../shared'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -176,6 +177,7 @@ export function BitmapSection() {
 
   return (
     <div className="mx-auto max-w-6xl space-y-8 px-8 py-8">
+      <WipBanner />
 
       {/* Structure explanation */}
       <section>

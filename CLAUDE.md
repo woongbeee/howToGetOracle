@@ -57,7 +57,7 @@ interface Props {
 | `intro-` | `IntroductionPage` | `src/book/chapters/introduction/IntroductionPage.tsx` |
 | `sql-basics-` | `SqlBasicsPage` | `src/book/chapters/sql-basics/index.tsx` |
 | `internals-` | `InternalsPage` | `src/book/chapters/internals/index.tsx` |
-| `index-` | `IndexChapterPage` | `src/book/chapters/chapter3/index.tsx` |
+| `index-` | `IndexChapterPage` | `src/book/chapters/index-chapter/index.tsx` |
 | `join-` | `JoinPage` | `src/book/chapters/join/index.tsx` |
 | `optimizer-` | `OptimizerChapterPage` | `src/book/chapters/optimizer/index.tsx` |
 | `qt-` | `QueryTransformPage` | `src/book/chapters/query-transform/index.tsx` |
@@ -126,7 +126,7 @@ Internals 시뮬레이터를 구성하는 핵심 컴포넌트들:
 - `OptimizerPanel.tsx` — CBO 실행 계획 3단계 시각화
 - `DataPanel.tsx` — 스키마·샘플 데이터 브라우저 (`SchemaView`, `TableView` named export)
 - `SchemaDiagram.tsx` — React Flow 기반 ERD
-- Index 챕터 전용 서브 컴포넌트들(`BTreeSection`, `BitmapSection`, `CompositeSection`, `IndexTypesOverview`)은 `src/book/chapters/chapter3/`에 위치. `IndexPage.tsx`도 같은 폴더에 존재하지만 미사용(dead code); 실제 진입점은 `index.tsx`의 `IndexChapterPage`
+- Index 챕터 전용 서브 컴포넌트들(`BTreeSection`, `BitmapSection`, `CompositeSection`, `IndexTypesOverview`)은 `src/book/chapters/index-chapter/`에 위치. `IndexPage.tsx`도 같은 폴더에 존재하지만 미사용(dead code); 실제 진입점은 `index.tsx`의 `IndexChapterPage`
 
 ### 데이터 스키마 (`src/data/`)
 
@@ -163,7 +163,7 @@ const T = {
 
 ### 복잡한 챕터의 서브 컴포넌트 분리
 
-콘텐츠가 많은 챕터(Index 등)는 섹션별 서브 컴포넌트를 챕터 폴더 안에 분리한다. 예: Index 챕터는 `src/book/chapters/chapter3/` 안에 `BTreeSection.tsx`, `BitmapSection.tsx`, `CompositeSection.tsx`, `IndexTypesOverview.tsx`를 둔다. 챕터 페이지(`IndexChapterPage.tsx`)가 이를 import해 조합한다.
+콘텐츠가 많은 챕터(Index 등)는 섹션별 서브 컴포넌트를 챕터 폴더 안에 분리한다. 예: Index 챕터는 `src/book/chapters/index-chapter/` 안에 `BTreeSection.tsx`, `BitmapSection.tsx`, `CompositeSection.tsx`, `IndexTypesOverview.tsx`를 둔다. 챕터 페이지(`IndexChapterPage.tsx`)가 이를 import해 조합한다.
 
 콘텐츠가 많은 챕터는 섹션별 파일로 추가 분리된다:
 
@@ -193,7 +193,13 @@ const T = {
   3. SQL은 어떤 순서로 실행될까?
   ```
 
-- `internals/` — `StorageSection.tsx`, `OverviewSection.tsx`, `SgaSection.tsx`, `PgaSection.tsx`, `ProcessesSection.tsx`, `SimulatorSection.tsx`, `OracleInstanceMap.tsx` + `shared.tsx`(TwoColLayout, MapPanel, TourPanel)
+- `internals/` — `StorageSection.tsx`, `OverviewSection.tsx`, `BufferCachePage.tsx`, `UpdateFlowPage.tsx`, `SimulatorSection.tsx`, `OracleInstanceMap.tsx` + `shared.tsx`(TwoColLayout, MapPanel, TourPanel)
+
+  `OverviewSection.tsx`는 `BufferCachePage`·`UpdateFlowPage`를 re-export한다. `internals/index.tsx`는 4개 섹션으로 라우팅:
+  - `internals-overview` → `OverviewSection`
+  - `internals-overview-buffer` → `BufferCachePage` (Buffer Cache 상태 머신 인터랙션)
+  - `internals-overview-flow` → `UpdateFlowPage` (UPDATE 실행 흐름 스텝 투어)
+  - `internals-storage` → `StorageSection`
 
   **`StorageSection.tsx` 구성 패턴:**
   - 파일 상단에 `B` / `Hi` 인라인 헬퍼 컴포넌트 정의 (bold·color 강조용)
@@ -206,11 +212,61 @@ const T = {
     - `SegmentDiagram` — Extent 1개→2개→4개로 성장하는 3단계 흐름 시각화
     - `TablespaceDiagram` — USERS Tablespace 박스 안에 Segment→Extent→Block 계층 + 하단 .dbf 파일 연결
 
+**`internals` TOC 구조 (현재):**
+```
+2. 오라클 내부 구조와 프로세스
+   2.1 오라클의 내부 구조
+       2.1.1 Buffer Cache 원리
+       2.1.2 UPDATE 실행 흐름
+   2.2 데이터 저장 구조
+```
+
 나머지 챕터(join, optimizer, sort, partition, parallel, query-transform, index-chapter)는 `index.tsx` 단일 파일로 구성된다.
+
+- `index-chapter/` — B-Tree 섹션 하위 페이지들이 `children`으로 분리되어 있다:
+
+  **`index-chapter` TOC 구조 (현재):**
+  ```
+  3. 인덱스 원리와 활용, 스캔 방식
+     3.1 인덱스란?
+     3.2 B-Tree 인덱스
+         3.2.1 ROWID 구조              → RowidSection.tsx
+         3.2.2 인덱스를 못 쓰는 케이스 → IndexUnusableSection.tsx
+         3.2.3 Index Range Scan        → RangeScanSection.tsx
+         3.2.4 Index Unique Scan       → UniqueScanSection.tsx
+         3.2.5 Index Full Scan         → FullScanSection.tsx
+         3.2.6 Index Fast Full Scan    → FastFullScanSection.tsx
+         3.2.7 Index Skip Scan         → SkipScanSection.tsx
+     3.3 Bitmap 인덱스                 (WipBanner 표시 중)
+     3.4 복합 인덱스                   (WipBanner 표시 중)
+  ```
+
+  **공유 다이어그램 컴포넌트 (`ScanDiagram.tsx`):**
+  - Index Scan 방법별 페이지들이 공통으로 사용하는 시각화 컴포넌트
+  - `ScanConfig` 타입: `{ leaves, entryStates, blockStates, scanArrows, keyLabel, legend }`
+  - `EntryState`: `'idle' | 'visited' | 'matched' | 'skipped'` — 엔트리별 색상 결정
+  - `ScanDiagram` — Root/Branch 요약 바 + Leaf 블록 행 + 범례 렌더링
+  - `ScanStepList` — 번호 붙은 단계 카드 목록
+  - 각 Scan 페이지는 `ScanConfig`만 계산해서 넘기면 됨 (다이어그램 로직 중복 없음)
+
+  **`IndexUnusableSection.tsx` 구성 패턴:**
+  - 8가지 인덱스 미사용 케이스를 아코디언으로 구성
+  - 각 케이스: 이유 설명 + Bad SQL / Good SQL 나란히 비교(`sm:grid-cols-2`) + 수정 팁
+  - `SqlBlock`은 `sql` prop 사용 (`code` 아님)
+  - 마지막에 핵심 원칙 요약(`InfoBox variant="warning"`) + EXPLAIN PLAN 확인 방법
 
 #### Index 챕터 우측 패널 (`HRSchemaPanel`)
 
 `IndexChapterPage.tsx`의 `IndexLayout`은 좌측 스크롤 영역 + 우측 고정 `HRSchemaPanel`로 구성된다. `HRSchemaPanel`은 **스키마 탭**(HR 전체 7개 테이블 구조)과 **데이터 탭**(테이블 선택 버튼 + 해당 테이블 행 데이터)을 제공한다. `DataPanel.tsx`의 `SchemaView`·`TableView`를 재사용하며, `HR_SCHEMA` 배열 전체를 데이터 소스로 사용한다. `index-simulator` 섹션만 `IndexLayout` 외부(`PageContainer`)로 렌더링된다.
+
+### TOC 활성화 상태 (`TableOfContents.tsx`)
+
+`isReady = chapter.num <= N` 조건으로 활성화된 챕터와 미완성 챕터를 구분한다. `isReady`가 `false`인 챕터는 흐린 글씨(`text-muted-foreground/30`)로 표시되고 클릭해도 hover 효과가 약하다.
+
+- **현재 활성화 범위: `chapter.num <= 3`** (Chapter 0·1·2·3)
+- 새 챕터 콘텐츠가 완성되면 이 숫자를 올려서 활성화
+- active 챕터 제목 색: `text-foreground` (갈색 `text-ios-orange-dark` 사용 안 함)
+- `WipBanner` — 콘텐츠가 아직 미완성인 섹션 최상단에 추가. 현재 `BitmapSection`, `CompositeSection`에 적용 중
 
 ### 챕터 공통 UI (`src/book/chapters/shared.tsx`)
 

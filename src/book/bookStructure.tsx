@@ -195,11 +195,41 @@ export const BOOK_CHAPTERS: BookChapter[] = [
     sections: [
       {
         id: 'index-overview',
-        title: { ko: '인덱스 개요', en: 'Index Overview' },
+        title: { ko: '인덱스란?', en: 'Index Overview' },
       },
       {
         id: 'index-btree',
         title: { ko: 'B-Tree 인덱스', en: 'B-Tree Index' },
+        children: [
+          {
+            id: 'index-btree-rowid',
+            title: { ko: 'ROWID 구조', en: 'ROWID Structure' },
+          },
+          {
+            id: 'index-unusable',
+            title: { ko: '인덱스를 못 쓰는 케이스', en: 'When Indexes Are Not Used' },
+          },
+          {
+            id: 'index-scan-range',
+            title: { ko: 'Index Range Scan', en: 'Index Range Scan' },
+          },
+          {
+            id: 'index-scan-unique',
+            title: { ko: 'Index Unique Scan', en: 'Index Unique Scan' },
+          },
+          {
+            id: 'index-scan-full',
+            title: { ko: 'Index Full Scan', en: 'Index Full Scan' },
+          },
+          {
+            id: 'index-scan-fast-full',
+            title: { ko: 'Index Fast Full Scan', en: 'Index Fast Full Scan' },
+          },
+          {
+            id: 'index-scan-skip',
+            title: { ko: 'Index Skip Scan', en: 'Index Skip Scan' },
+          },
+        ],
       },
       {
         id: 'index-bitmap',

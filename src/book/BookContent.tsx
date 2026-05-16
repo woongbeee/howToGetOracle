@@ -9,7 +9,7 @@ import { IconArrowLeft, IconArrowRight, IconChevronRight } from '@tabler/icons-r
 import { IntroductionPage } from './chapters/introduction/IntroductionPage'
 import { SqlBasicsPage } from './chapters/sql-basics'
 import { InternalsPage } from './chapters/internals'
-import { IndexChapterPage } from './chapters/chapter3'
+import { IndexChapterPage } from './chapters/index-chapter'
 import { JoinPage } from './chapters/join'
 import { OptimizerChapterPage } from './chapters/optimizer'
 import { QueryTransformPage } from './chapters/query-transform'

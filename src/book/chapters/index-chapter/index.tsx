@@ -1,11 +1,16 @@
-import { useState } from 'react'
 import { useSimulationStore } from '@/store/simulationStore'
-import { PageContainer, ChapterTitle, SimulatorPlaceholder, WipBanner } from '../shared'
+import { PageContainer, ChapterTitle, SimulatorPlaceholder } from '../shared'
 import { IndexTypesOverview } from './IndexTypesOverview'
 import { BTreeSection } from './BTreeSection'
+import { RowidSection } from './RowidSection'
+import { RangeScanSection } from './RangeScanSection'
+import { UniqueScanSection } from './UniqueScanSection'
+import { FullScanSection } from './FullScanSection'
+import { FastFullScanSection } from './FastFullScanSection'
+import { SkipScanSection } from './SkipScanSection'
+import { IndexUnusableSection } from './IndexUnusableSection'
 import { BitmapSection } from './BitmapSection'
 import { CompositeSection } from './CompositeSection'
-import { GlossaryPanel } from '@/book/GlossaryPanel'
 
 const T = {
   ko: {
@@ -22,20 +27,10 @@ const T = {
 
 // ── Layout wrapper: main content (left, scrollable) + glossary panel (right) ──
 
-function IndexLayout({ sectionId, children }: { sectionId: string; children: React.ReactNode }) {
-  const [glossaryOpen, setGlossaryOpen] = useState(true)
-
+function IndexLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex h-full overflow-hidden">
-      <div className="min-w-0 flex-1 overflow-x-hidden overflow-y-auto">
-        <WipBanner />
-        {children}
-      </div>
-      <GlossaryPanel
-        sectionId={sectionId}
-        open={glossaryOpen}
-        onToggle={() => setGlossaryOpen((v) => !v)}
-      />
+    <div className="h-full overflow-x-hidden overflow-y-auto">
+      {children}
     </div>
   )
 }
@@ -48,7 +43,7 @@ export function IndexChapterPage({ sectionId }: { sectionId: string }) {
 
   if (sectionId === 'index-overview') {
     return (
-      <IndexLayout sectionId={sectionId}>
+      <IndexLayout>
         <IndexTypesOverview />
       </IndexLayout>
     )
@@ -56,15 +51,31 @@ export function IndexChapterPage({ sectionId }: { sectionId: string }) {
 
   if (sectionId === 'index-btree') {
     return (
-      <IndexLayout sectionId={sectionId}>
+      <IndexLayout>
         <BTreeSection />
       </IndexLayout>
     )
   }
 
+  if (sectionId === 'index-btree-rowid') {
+    return (
+      <IndexLayout>
+        <RowidSection />
+      </IndexLayout>
+    )
+  }
+
+  if (sectionId === 'index-unusable')       return <IndexLayout><IndexUnusableSection /></IndexLayout>
+
+  if (sectionId === 'index-scan-range')     return <IndexLayout><RangeScanSection /></IndexLayout>
+  if (sectionId === 'index-scan-unique')    return <IndexLayout><UniqueScanSection /></IndexLayout>
+  if (sectionId === 'index-scan-full')      return <IndexLayout><FullScanSection /></IndexLayout>
+  if (sectionId === 'index-scan-fast-full') return <IndexLayout><FastFullScanSection /></IndexLayout>
+  if (sectionId === 'index-scan-skip')      return <IndexLayout><SkipScanSection /></IndexLayout>
+
   if (sectionId === 'index-bitmap') {
     return (
-      <IndexLayout sectionId={sectionId}>
+      <IndexLayout>
         <BitmapSection />
       </IndexLayout>
     )
@@ -72,7 +83,7 @@ export function IndexChapterPage({ sectionId }: { sectionId: string }) {
 
   if (sectionId === 'index-composite') {
     return (
-      <IndexLayout sectionId={sectionId}>
+      <IndexLayout>
         <CompositeSection />
       </IndexLayout>
     )
@@ -81,7 +92,6 @@ export function IndexChapterPage({ sectionId }: { sectionId: string }) {
   if (sectionId === 'index-simulator') {
     return (
       <PageContainer>
-        <WipBanner />
         <ChapterTitle icon="🔍" title="Index Simulator" subtitle={t.simDesc} />
         <SimulatorPlaceholder label="Index Simulator" color="violet" />
       </PageContainer>

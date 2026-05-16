@@ -51,7 +51,7 @@ export function TableOfContents({ activeSectionId, onSelect, onToggle }: Props) 
         const hasActive   = chapter.sections.some(
           (s) => s.id === activeSectionId || s.children?.some((c) => c.id === activeSectionId)
         )
-        const isReady  = chapter.num <= 2
+        const isReady  = chapter.num <= 3
 
         return (
           <div key={chapter.id} className="flex flex-col">
@@ -86,7 +86,7 @@ export function TableOfContents({ activeSectionId, onSelect, onToggle }: Props) 
                 className={cn(
                   'min-w-0 flex-1 truncate font-mono text-[11px] leading-tight transition-colors',
                   isReady
-                    ? hasActive ? 'font-bold text-ios-orange-dark' : 'font-bold text-foreground/80 group-hover:text-foreground'
+                    ? hasActive ? 'font-bold text-foreground' : 'font-bold text-foreground/80 group-hover:text-foreground'
                     : 'font-medium text-muted-foreground/30',
                 )}
               >
@@ -112,7 +112,7 @@ export function TableOfContents({ activeSectionId, onSelect, onToggle }: Props) 
                     {chapter.sections.map((section, idx) => {
                       const isActive    = section.id === activeSectionId
                       const isSimulator = section.hasSimulator
-                      const isReady  = chapter.num <= 2
+                      const isReady  = chapter.num <= 3
                       const hasChildren = !!section.children?.length
                       const childActive = section.children?.some((c) => c.id === activeSectionId) ?? false
 

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useSimulationStore } from '@/store/simulationStore'
 import { cn } from '@/lib/utils'
+import { WipBanner } from '../shared'
 
 // ── Text ──────────────────────────────────────────────────────────────────────
 
@@ -9,7 +10,7 @@ const T = {
   ko: {
     compositeTitle: '복합 인덱스 (Composite Index)',
     compositeDesc:
-      '두 개 이상의 컬럼을 하나의 인덱스로 묶습니다. 컬럼 순서가 핵심 — Leading Column이 WHERE 절에 없으면 인덱스를 효율적으로 사용할 수 없습니다. Leading Column의 카디널리티가 낮다면 Index Skip Scan이 유효할 수 있습니다.',
+      '@두 개 이상의 컬럼을 하나의 인덱스로 묶습니다. 컬럼 순서가 핵심 — Leading Column이 WHERE 절에 없으면 인덱스를 효율적으로 사용할 수 없습니다. Leading Column의 카디널리티가 낮다면 Index Skip Scan이 유효할 수 있습니다.',
     orderTitle: '컬럼 순서 규칙',
     orderRules: [
       { rule: 'Leading Column 포함 → Index Range Scan', ok: true, example: 'WHERE dept_id = 60' },
@@ -118,6 +119,7 @@ export function CompositeSection() {
 
   return (
     <div className="mx-auto max-w-6xl space-y-8 px-8 py-8">
+      <WipBanner />
 
       {/* Composite index */}
       <section>
